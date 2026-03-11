@@ -723,7 +723,11 @@ function createOrUpdateUserPayload(
     fullHonorificName: user.fullHonorificName,
     fields: {
       ...(user.nationality && { nationality: user.nationality }),
+      ...(user.idType && { idType: user.idType }),
       ...(user.nid && { nid: user.nid }),
+      ...(user.passport && { passport: user.passport }),
+      ...(user.alienId && { alienId: user.alienId }),
+      ...(user.refugeeId && { refugeeId: user.refugeeId }),
       ...(user.facility && { facility: user.facility })
     }
   }

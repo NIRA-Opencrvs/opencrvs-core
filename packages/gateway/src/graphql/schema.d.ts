@@ -273,7 +273,11 @@ export interface GQLUser {
   device?: string
   searches?: Array<GQLBookmarkedSeachItem>
   nationality?: string
+  idType?: string
   nid?: string
+  passport?: string
+  alienId?: string
+  refugeeId?: string
   facility?: string
 }
 
@@ -600,7 +604,11 @@ export interface GQLUserInput {
   device?: string
   signature?: GQLSignatureInput
   nationality?: string
+  idType?: string
   nid?: string
+  passport?: string
+  alienId?: string
+  refugeeId?: string
   facility?: string
 }
 
@@ -4314,7 +4322,11 @@ export interface GQLUserTypeResolver<TParent = any> {
   device?: UserToDeviceResolver<TParent>
   searches?: UserToSearchesResolver<TParent>
   nationality?: UserToNationalityResolver<TParent>
+  idType?: UserToIdTypeResolver<TParent>
   nid?: UserToNidResolver<TParent>
+  passport?: UserToPassportResolver<TParent>
+  alienId?: UserToAlienIdResolver<TParent>
+  refugeeId?: UserToRefugeeIdResolver<TParent>
   facility?: UserToFacilityResolver<TParent>
 }
 
@@ -4501,7 +4513,43 @@ export interface UserToNationalityResolver<TParent = any, TResult = any> {
   ): TResult
 }
 
+export interface UserToIdTypeResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
 export interface UserToNidResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface UserToPassportResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface UserToAlienIdResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface UserToRefugeeIdResolver<TParent = any, TResult = any> {
   (
     parent: TParent,
     args: {},

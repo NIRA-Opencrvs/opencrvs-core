@@ -130,10 +130,55 @@ function userSectionFormType(): ISerializedFormSection {
             type: SELECT_WITH_OPTIONS,
             label: userFormMessages.nationality,
             required: true,
-            initialValue: '',
+            initialValue: 'UGA',
             validator: [],
             placeholder: userFormMessages.formSelectPlaceholder,
             options: { resource: 'countries' }
+          },
+          {
+            name: 'idType',
+            type: SELECT_WITH_OPTIONS,
+            label: userFormMessages.idType,
+            required: true,
+            initialValue: '',
+            validator: [],
+            placeholder: userFormMessages.formSelectPlaceholder,
+            optionCondition:
+              "({ field, values }) => values.nationality === 'UGA' ? field.value === 'NATIONAL_ID' : ['PASSPORT', 'ALIEN_ID', 'REFUGEE_ID'].includes(field.value)",
+            options: [
+              {
+                value: 'NATIONAL_ID',
+                label: {
+                  id: 'form.field.label.iDTypeNationalID',
+                  defaultMessage: 'National ID',
+                  description: 'Option for form field: Type of ID'
+                }
+              },
+              {
+                value: 'PASSPORT',
+                label: {
+                  id: 'form.field.label.iDTypePassport',
+                  defaultMessage: 'Passport',
+                  description: 'Option for form field: Type of ID'
+                }
+              },
+              {
+                value: 'ALIEN_ID',
+                label: {
+                  id: 'form.field.label.iDTypeAlienID',
+                  defaultMessage: 'Alien ID',
+                  description: 'Option for form field: Type of ID'
+                }
+              },
+              {
+                value: 'REFUGEE_ID',
+                label: {
+                  id: 'form.field.label.iDTypeRefugeeID',
+                  defaultMessage: 'Refugee ID',
+                  description: 'Option for form field: Type of ID'
+                }
+              }
+            ]
           },
           {
             name: 'nid',
@@ -141,11 +186,53 @@ function userSectionFormType(): ISerializedFormSection {
             label: userFormMessages.nid,
             required: true,
             initialValue: '',
+            validator: [{ operation: 'validIDNumber', parameters: ['NATIONAL_ID'] }],
+            conditionals: [
+              {
+                action: 'hide',
+                expression: 'values.idType !== "NATIONAL_ID"'
+              }
+            ]
+          },
+          {
+            name: 'passport',
+            type: TEXT,
+            label: userFormMessages.passport,
+            required: true,
+            initialValue: '',
             validator: [],
             conditionals: [
               {
                 action: 'hide',
-                expression: 'values.nationality !== "UGA"'
+                expression: 'values.idType !== "PASSPORT"'
+              }
+            ]
+          },
+          {
+            name: 'alienId',
+            type: TEXT,
+            label: userFormMessages.alienId,
+            required: true,
+            initialValue: '',
+            validator: [],
+            conditionals: [
+              {
+                action: 'hide',
+                expression: 'values.idType !== "ALIEN_ID"'
+              }
+            ]
+          },
+          {
+            name: 'refugeeId',
+            type: TEXT,
+            label: userFormMessages.refugeeId,
+            required: true,
+            initialValue: '',
+            validator: [],
+            conditionals: [
+              {
+                action: 'hide',
+                expression: 'values.idType !== "REFUGEE_ID"'
               }
             ]
           },

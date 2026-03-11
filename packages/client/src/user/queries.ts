@@ -134,7 +134,11 @@ export const GET_USER = gql`
         data
       }
       nationality
+      idType
       nid
+      passport
+      alienId
+      refugeeId
       facility
     }
   }

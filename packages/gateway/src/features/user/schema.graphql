@@ -46,7 +46,11 @@ input UserInput {
   device: String
   signature: SignatureInput
   nationality: String
+  idType: String
   nid: String
+  passport: String
+  alienId: String
+  refugeeId: String
   facility: String
 }
 
@@ -95,7 +99,11 @@ type User {
   device: String
   searches: [BookmarkedSeachItem!]
   nationality: String
+  idType: String
   nid: String
+  passport: String
+  alienId: String
+  refugeeId: String
   facility: String
 }
 
