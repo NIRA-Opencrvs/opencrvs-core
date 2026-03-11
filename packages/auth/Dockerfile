@@ -1,5 +1,5 @@
 ARG  BRANCH=develop
-FROM ghcr.io/opencrvs/ocrvs-base:${BRANCH}
+FROM ghcr.io/NIRA-Opencrvs/ocrvs-base:${BRANCH}
 
 USER node
 WORKDIR /app/packages/auth
