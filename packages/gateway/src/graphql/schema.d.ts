@@ -272,6 +272,9 @@ export interface GQLUser {
   avatar?: GQLAvatar
   device?: string
   searches?: Array<GQLBookmarkedSeachItem>
+  nationality?: string
+  nid?: string
+  facility?: string
 }
 
 export interface GQLSearchUserResult {
@@ -596,6 +599,9 @@ export interface GQLUserInput {
   primaryOffice?: string
   device?: string
   signature?: GQLSignatureInput
+  nationality?: string
+  nid?: string
+  facility?: string
 }
 
 export interface GQLSecurityQuestionAnswer {
@@ -4307,6 +4313,9 @@ export interface GQLUserTypeResolver<TParent = any> {
   avatar?: UserToAvatarResolver<TParent>
   device?: UserToDeviceResolver<TParent>
   searches?: UserToSearchesResolver<TParent>
+  nationality?: UserToNationalityResolver<TParent>
+  nid?: UserToNidResolver<TParent>
+  facility?: UserToFacilityResolver<TParent>
 }
 
 export interface UserToIdResolver<TParent = any, TResult = any> {
@@ -4475,6 +4484,33 @@ export interface UserToDeviceResolver<TParent = any, TResult = any> {
 }
 
 export interface UserToSearchesResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface UserToNationalityResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface UserToNidResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface UserToFacilityResolver<TParent = any, TResult = any> {
   (
     parent: TParent,
     args: {},

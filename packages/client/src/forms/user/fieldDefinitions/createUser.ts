@@ -126,6 +126,41 @@ function userSectionFormType(): ISerializedFormSection {
             hidden: true
           },
           {
+            name: 'nationality',
+            type: SELECT_WITH_OPTIONS,
+            label: userFormMessages.nationality,
+            required: true,
+            initialValue: '',
+            validator: [],
+            placeholder: userFormMessages.formSelectPlaceholder,
+            options: { resource: 'countries' }
+          },
+          {
+            name: 'nid',
+            type: TEXT,
+            label: userFormMessages.nid,
+            required: true,
+            initialValue: '',
+            validator: [],
+            conditionals: [
+              {
+                action: 'hide',
+                expression: 'values.nationality !== "UGA"'
+              }
+            ]
+          },
+          {
+            name: 'facility',
+            type: LOCATION_SEARCH_INPUT,
+            label: userFormMessages.facility,
+            required: true,
+            initialValue: '',
+            searchableResource: ['activeFacilities'],
+            searchableType: ['HEALTH_FACILITY'],
+            validator: [{ operation: 'facilityMustBeSelected' }],
+            locationList: []
+          },
+          {
             name: 'phoneNumber',
             type: TEXT,
             label: userFormMessages.phoneNumber,

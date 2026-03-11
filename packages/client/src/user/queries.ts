@@ -133,6 +133,9 @@ export const GET_USER = gql`
         type
         data
       }
+      nationality
+      nid
+      facility
     }
   }
 `

@@ -45,6 +45,9 @@ input UserInput {
   primaryOffice: String
   device: String
   signature: SignatureInput
+  nationality: String
+  nid: String
+  facility: String
 }
 
 type Signature {
@@ -91,6 +94,9 @@ type User {
   avatar: Avatar
   device: String
   searches: [BookmarkedSeachItem!]
+  nationality: String
+  nid: String
+  facility: String
 }
 
 type SearchUserResult {

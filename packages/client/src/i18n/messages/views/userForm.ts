@@ -129,5 +129,25 @@ export const messages = {
     defaultMessage: 'Updating user',
     description: 'label for updating user',
     id: 'form.field.label.updatingUser'
+  },
+  nationality: {
+    defaultMessage: 'Nationality',
+    description: 'Input label for nationality select',
+    id: 'form.field.label.nationality'
+  },
+  nid: {
+    defaultMessage: 'NIN',
+    description: 'Input label for national identification number',
+    id: 'form.field.label.nid'
+  },
+  facility: {
+    defaultMessage: 'Facility',
+    description: 'Input label for facility search',
+    id: 'form.field.label.facility'
+  },
+  formSelectPlaceholder: {
+    defaultMessage: 'Select',
+    description: 'Placeholder text for select inputs',
+    id: 'form.field.label.formSelectPlaceholder'
   }
 }

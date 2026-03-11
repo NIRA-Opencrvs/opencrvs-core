@@ -402,6 +402,9 @@ type User {
   avatar: Avatar
   device: String
   searches: [BookmarkedSeachItem!]
+  nationality: String
+  nid: String
+  facility: String
 }
 
 type SearchUserResult {
@@ -713,6 +716,9 @@ input UserInput {
   primaryOffice: String
   device: String
   signature: SignatureInput
+  nationality: String
+  nid: String
+  facility: String
 }
 
 input SecurityQuestionAnswer {
