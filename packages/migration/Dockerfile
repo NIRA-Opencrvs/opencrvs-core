@@ -1,5 +1,5 @@
 ARG  BRANCH=develop
-FROM ghcr.io/opencrvs/ocrvs-base:${BRANCH}
+FROM ghcr.io/nira-opencrvs/ocrvs-base:${BRANCH}
 
 USER root
 # Install envsubst and clean up apt cache

@@ -20,13 +20,13 @@ load('../infrastructure/tilt/opencrvs.tilt', 'setup_opencrvs')
 ############################################################
 
 # Build baseimage
-docker_build("ghcr.io/opencrvs/ocrvs-base", ".",
+docker_build("ghcr.io/nira-opencrvs/ocrvs-base", ".",
               dockerfile="packages/Dockerfile.base",
               only=["packages/commons","package.json","yarn.lock"],
               network="host")
 
 # Build services
-docker_build("ghcr.io/opencrvs/ocrvs-client:local", ".",
+docker_build("ghcr.io/nira-opencrvs/ocrvs-client:local", ".",
               dockerfile="packages/client/Dockerfile",
               only=[
                 "infrastructure",
@@ -36,11 +36,11 @@ docker_build("ghcr.io/opencrvs/ocrvs-client:local", ".",
                 "packages/gateway"
               ],
               network="host")
-docker_build("ghcr.io/opencrvs/ocrvs-login:local", ".",
+docker_build("ghcr.io/nira-opencrvs/ocrvs-login:local", ".",
               dockerfile="packages/login/Dockerfile",
               only=["infrastructure", "packages/components", "packages/login"],
               network="host")
-docker_build("ghcr.io/opencrvs/ocrvs-gateway:local", ".",
+docker_build("ghcr.io/nira-opencrvs/ocrvs-gateway:local", ".",
               dockerfile="packages/gateway/Dockerfile",
               only=["packages/components","packages/gateway", "packages/events"],
               network="host")
@@ -62,7 +62,7 @@ apps = [
 def build_services():
   for app in apps:
     docker_build(
-        "ghcr.io/opencrvs/ocrvs-{}:local".format(app), ".",
+        "ghcr.io/nira-opencrvs/ocrvs-{}:local".format(app), ".",
         dockerfile="packages/{}/Dockerfile".format(app),
         only="packages/{}".format(app),
         network="host"
