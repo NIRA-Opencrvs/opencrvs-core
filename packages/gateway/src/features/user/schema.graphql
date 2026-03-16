@@ -30,6 +30,26 @@ enum Status {
   disabled
 }
 
+type UserData {
+  nationality: String
+  idType: String
+  nid: String
+  passport: String
+  alienId: String
+  refugeeId: String
+  facility: String
+}
+
+input UserDataInput {
+  nationality: String
+  idType: String
+  nid: String
+  passport: String
+  alienId: String
+  refugeeId: String
+  facility: String
+}
+
 # Create user form does not ask email, username
 input UserInput {
   id: ID
@@ -45,13 +65,7 @@ input UserInput {
   primaryOffice: String
   device: String
   signature: SignatureInput
-  nationality: String
-  idType: String
-  nid: String
-  passport: String
-  alienId: String
-  refugeeId: String
-  facility: String
+  data: UserDataInput
 }
 
 type Signature {
@@ -98,13 +112,7 @@ type User {
   avatar: Avatar
   device: String
   searches: [BookmarkedSeachItem!]
-  nationality: String
-  idType: String
-  nid: String
-  passport: String
-  alienId: String
-  refugeeId: String
-  facility: String
+  data: UserData
 }
 
 type SearchUserResult {

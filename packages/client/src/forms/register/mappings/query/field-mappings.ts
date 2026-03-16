@@ -597,6 +597,18 @@ export const nestedValueToFieldTransformer =
     return transformedData
   }
 
+export function dataToFieldTransformer(
+  transformedData: IFormData,
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  queryData: any,
+  sectionId: string,
+  field: IFormField
+) {
+  transformedData[sectionId][field.name] =
+    queryData[sectionId]?.data?.[field.name]
+  return transformedData
+}
+
 export const booleanTransformer = (
   transformedData: IFormData,
   queryData: QueryData,

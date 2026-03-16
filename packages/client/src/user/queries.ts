@@ -133,13 +133,15 @@ export const GET_USER = gql`
         type
         data
       }
-      nationality
-      idType
-      nid
-      passport
-      alienId
-      refugeeId
-      facility
+      data {
+        nationality
+        idType
+        nid
+        passport
+        alienId
+        refugeeId
+        facility
+      }
     }
   }
 `

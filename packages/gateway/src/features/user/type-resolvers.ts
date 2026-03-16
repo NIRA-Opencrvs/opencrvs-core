@@ -67,7 +67,7 @@ export interface IUserModelData {
   device: string
   auditHistory?: IAuditHistory[]
   avatar?: IAvatar
-  fields?: Record<string, string>
+  data?: Record<string, string>
 }
 
 export interface ISystemModelData {
@@ -265,26 +265,8 @@ export const userTypeResolvers: GQLResolver = {
         data: presignedUrl
       }
     },
-    nationality(userModel: IUserModelData) {
-      return userModel.fields?.nationality
-    },
-    idType(userModel: IUserModelData) {
-      return userModel.fields?.idType
-    },
-    nid(userModel: IUserModelData) {
-      return userModel.fields?.nid
-    },
-    passport(userModel: IUserModelData) {
-      return userModel.fields?.passport
-    },
-    alienId(userModel: IUserModelData) {
-      return userModel.fields?.alienId
-    },
-    refugeeId(userModel: IUserModelData) {
-      return userModel.fields?.refugeeId
-    },
-    facility(userModel: IUserModelData) {
-      return userModel.fields?.facility
+    data(userModel: IUserModelData) {
+      return userModel.data
     }
   },
 

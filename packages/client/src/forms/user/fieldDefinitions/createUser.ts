@@ -133,7 +133,11 @@ function userSectionFormType(): ISerializedFormSection {
             initialValue: 'UGA',
             validator: [],
             placeholder: userFormMessages.formSelectPlaceholder,
-            options: { resource: 'countries' }
+            options: { resource: 'countries' },
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
           },
           {
             name: 'idType',
@@ -178,7 +182,11 @@ function userSectionFormType(): ISerializedFormSection {
                   description: 'Option for form field: Type of ID'
                 }
               }
-            ]
+            ],
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
           },
           {
             name: 'nid',
@@ -192,7 +200,11 @@ function userSectionFormType(): ISerializedFormSection {
                 action: 'hide',
                 expression: 'values.idType !== "NATIONAL_ID"'
               }
-            ]
+            ],
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
           },
           {
             name: 'passport',
@@ -206,7 +218,11 @@ function userSectionFormType(): ISerializedFormSection {
                 action: 'hide',
                 expression: 'values.idType !== "PASSPORT"'
               }
-            ]
+            ],
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
           },
           {
             name: 'alienId',
@@ -220,7 +236,11 @@ function userSectionFormType(): ISerializedFormSection {
                 action: 'hide',
                 expression: 'values.idType !== "ALIEN_ID"'
               }
-            ]
+            ],
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
           },
           {
             name: 'refugeeId',
@@ -234,7 +254,11 @@ function userSectionFormType(): ISerializedFormSection {
                 action: 'hide',
                 expression: 'values.idType !== "REFUGEE_ID"'
               }
-            ]
+            ],
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
           },
           {
             name: 'facility',
@@ -245,7 +269,11 @@ function userSectionFormType(): ISerializedFormSection {
             searchableResource: ['activeFacilities'],
             searchableType: ['HEALTH_FACILITY'],
             validator: [{ operation: 'facilityMustBeSelected' }],
-            locationList: []
+            locationList: [],
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
           },
           {
             name: 'phoneNumber',

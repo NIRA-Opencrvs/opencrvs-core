@@ -87,7 +87,7 @@ export default async function updateUser(
   existingUser.localRegistrar = user.localRegistrar
   existingUser.device = user.device
   existingUser.role = user.role
-  existingUser.fields = user.fields ?? existingUser.fields
+  existingUser.data = user.data ?? existingUser.data
 
   if (existingUser.primaryOfficeId !== user.primaryOfficeId) {
     if (request.auth.credentials?.scope?.includes(SCOPES.CONFIG_UPDATE_ALL)) {

@@ -139,7 +139,7 @@ export interface IUser {
   auditHistory?: IAuditHistory[]
   avatar?: IAvatar
   searches?: ISearch[]
-  fields?: Record<string, string>
+  data?: Record<string, string>
 }
 
 export interface IUserModel extends IUser, Document {}
@@ -325,7 +325,7 @@ const userSchema = new Schema({
   auditHistory: [AuditHistory],
   avatar: Avatar,
   searches: [SearchesSchema],
-  fields: { type: Object }
+  data: { type: Object }
 })
 
 export default model<IUserModel>('User', userSchema)
