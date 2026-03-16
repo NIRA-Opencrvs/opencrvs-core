@@ -67,7 +67,7 @@ const FETCH_USER = gql`
         passport
         alienId
         refugeeId
-        facility
+        facilityId
       }
       avatar {
         type

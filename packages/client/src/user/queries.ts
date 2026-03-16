@@ -140,7 +140,7 @@ export const GET_USER = gql`
         passport
         alienId
         refugeeId
-        facility
+        facilityId
       }
     }
   }

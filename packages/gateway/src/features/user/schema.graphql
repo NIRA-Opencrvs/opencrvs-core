@@ -37,7 +37,7 @@ type UserData {
   passport: String
   alienId: String
   refugeeId: String
-  facility: String
+  facilityId: String
 }
 
 input UserDataInput {
@@ -47,7 +47,7 @@ input UserDataInput {
   passport: String
   alienId: String
   refugeeId: String
-  facility: String
+  facilityId: String
 }
 
 # Create user form does not ask email, username

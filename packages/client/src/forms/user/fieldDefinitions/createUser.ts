@@ -261,7 +261,7 @@ function userSectionFormType(): ISerializedFormSection {
             }
           },
           {
-            name: 'facility',
+            name: 'facilityId',
             type: LOCATION_SEARCH_INPUT,
             label: userFormMessages.facility,
             required: true,
