@@ -35,6 +35,7 @@ export type SystemVariables = {
     device?: string
     avatar?: string
     signature?: string
+    data?: Record<string, string>
   }
   $window: {
     location: {
