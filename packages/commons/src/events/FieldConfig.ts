@@ -642,7 +642,11 @@ export type FileUploadWithOptions = z.infer<typeof FileUploadWithOptions>
 
 const Facility = BaseField.extend({
   type: z.literal(FieldType.FACILITY),
-  defaultValue: NonEmptyTextValue.optional()
+  defaultValue: z.union([
+    NonEmptyTextValue,
+    SerializedUserField,
+    SerializedUserDataField
+  ])
 }).describe('Input field for a facility')
 
 export type Facility = z.infer<typeof Facility>
