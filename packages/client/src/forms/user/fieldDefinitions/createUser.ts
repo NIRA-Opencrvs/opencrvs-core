@@ -194,7 +194,9 @@ function userSectionFormType(): ISerializedFormSection {
             label: userFormMessages.nid,
             required: true,
             initialValue: '',
-            validator: [{ operation: 'validIDNumber', parameters: ['NATIONAL_ID'] }],
+            validator: [
+              { operation: 'validIDNumber', parameters: ['NATIONAL_ID'] }
+            ],
             conditionals: [
               {
                 action: 'hide',
@@ -261,21 +263,6 @@ function userSectionFormType(): ISerializedFormSection {
             }
           },
           {
-            name: 'facilityId',
-            type: LOCATION_SEARCH_INPUT,
-            label: userFormMessages.facility,
-            required: true,
-            initialValue: '',
-            searchableResource: ['activeFacilities'],
-            searchableType: ['HEALTH_FACILITY'],
-            validator: [{ operation: 'facilityMustBeSelected' }],
-            locationList: [],
-            mapping: {
-              mutation: { operation: 'fieldToDataTransformer' },
-              query: { operation: 'dataToFieldTransformer' }
-            }
-          },
-          {
             name: 'phoneNumber',
             type: TEXT,
             label: userFormMessages.phoneNumber,
@@ -332,6 +319,27 @@ function userSectionFormType(): ISerializedFormSection {
             validator: [],
             options: [],
             conditionals: []
+          },
+          {
+            name: 'facilityId',
+            type: LOCATION_SEARCH_INPUT,
+            label: userFormMessages.facility,
+            conditionals: [
+              {
+                action: 'hide',
+                expression: 'values.role !== "HEALTH_FACILITY_ADMINISTRATOR"'
+              }
+            ],
+            required: true,
+            initialValue: '',
+            searchableResource: ['activeFacilities'],
+            searchableType: ['HEALTH_FACILITY'],
+            validator: [{ operation: 'facilityMustBeSelected' }],
+            locationList: [],
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
           },
           {
             name: 'device',
