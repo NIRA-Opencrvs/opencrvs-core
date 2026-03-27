@@ -19,6 +19,212 @@ import {
 } from '@client/forms/index'
 import { messages as userFormMessages } from '@client/i18n/messages/views/userForm'
 
+const NATIONALITY = {
+  Afghan: 'Afghan',
+  Albanian: 'Albanian',
+  Algerian: 'Algerian',
+  American: 'American',
+  Andorran: 'Andorran',
+  Angolan: 'Angolan',
+  Antiguans: 'Antiguans',
+  Argentinean: 'Argentinean',
+  Armenian: 'Armenian',
+  Australian: 'Australian',
+  Austrian: 'Austrian',
+  Azerbaijani: 'Azerbaijani',
+  Bahamian: 'Bahamian',
+  Bahraini: 'Bahraini',
+  Bangladeshi: 'Bangladeshi',
+  Barbadian: 'Barbadian',
+  Barbudans: 'Barbudans',
+  Batswana: 'Batswana',
+  Belarusian: 'Belarusian',
+  Belgian: 'Belgian',
+  Belizean: 'Belizean',
+  Beninese: 'Beninese',
+  Bhutanese: 'Bhutanese',
+  Bolivian: 'Bolivian',
+  Bosnian: 'Bosnian',
+  Brazilian: 'Brazilian',
+  British: 'British',
+  Bruneian: 'Bruneian',
+  Bulgarian: 'Bulgarian',
+  Burkinabe: 'Burkinabe',
+  Burmese: 'Burmese',
+  Burundian: 'Burundian',
+  Cambodian: 'Cambodian',
+  Cameroonian: 'Cameroonian',
+  Canadian: 'Canadian',
+  Cape_Verdean: 'Cape Verdean',
+  Central_African: 'Central African',
+  Chadian: 'Chadian',
+  Chilean: 'Chilean',
+  Chinese: 'Chinese',
+  Colombian: 'Colombian',
+  Comoran: 'Comoran',
+  Congolese: 'Congolese',
+  Costa_Rican: 'Costa Rican',
+  Croatian: 'Croatian',
+  Cuban: 'Cuban',
+  Cypriot: 'Cypriot',
+  Czech: 'Czech',
+  Danish: 'Danish',
+  Djibouti: 'Djibouti',
+  Dominican: 'Dominican',
+  Dutch: 'Dutch',
+  East_Timorese: 'East Timorese',
+  Ecuadorean: 'Ecuadorean',
+  Egyptian: 'Egyptian',
+  Emirian: 'Emirian',
+  Equatorial_Guinean: 'Equatorial Guinean',
+  Eritrean: 'Eritrean',
+  Estonian: 'Estonian',
+  Ethiopian: 'Ethiopian',
+  Fijian: 'Fijian',
+  Filipino: 'Filipino',
+  Finnish: 'Finnish',
+  French: 'French',
+  Gabonese: 'Gabonese',
+  Gambian: 'Gambian',
+  Georgian: 'Georgian',
+  German: 'German',
+  Ghanaian: 'Ghanaian',
+  Greek: 'Greek',
+  Grenadian: 'Grenadian',
+  Guatemalan: 'Guatemalan',
+  Guinea_Bissauan: 'Guinea-Bissauan',
+  Guinean: 'Guinean',
+  Guyanese: 'Guyanese',
+  Haitian: 'Haitian',
+  Herzegovinian: 'Herzegovinian',
+  Honduran: 'Honduran',
+  Hungarian: 'Hungarian',
+  I_Kiribati: 'I-Kiribati',
+  Icelander: 'Icelander',
+  Indian: 'Indian',
+  Indonesian: 'Indonesian',
+  Iranian: 'Iranian',
+  Iraqi: 'Iraqi',
+  Irish: 'Irish',
+  Israeli: 'Israeli',
+  Italian: 'Italian',
+  Ivorian: 'Ivorian',
+  Jamaican: 'Jamaican',
+  Japanese: 'Japanese',
+  Jordanian: 'Jordanian',
+  Kazakhstani: 'Kazakhstani',
+  Kenyan: 'Kenyan',
+  Kittian_and_Nevisian: 'Kittian and Nevisian',
+  Kuwaiti: 'Kuwaiti',
+  Kyrgyz: 'Kyrgyz',
+  Laotian: 'Laotian',
+  Latvian: 'Latvian',
+  Lebanese: 'Lebanese',
+  Liberian: 'Liberian',
+  Libyan: 'Libyan',
+  Liechtensteiner: 'Liechtensteiner',
+  Lithuanian: 'Lithuanian',
+  Luxembourger: 'Luxembourger',
+  Macedonian: 'Macedonian',
+  Malagasy: 'Malagasy',
+  Malawian: 'Malawian',
+  Malaysian: 'Malaysian',
+  Maldivian: 'Maldivian',
+  Malian: 'Malian',
+  Maltese: 'Maltese',
+  Marshallese: 'Marshallese',
+  Mauritanian: 'Mauritanian',
+  Mauritian: 'Mauritian',
+  Mexican: 'Mexican',
+  Micronesian: 'Micronesian',
+  Moldovan: 'Moldovan',
+  Monacan: 'Monacan',
+  Mongolian: 'Mongolian',
+  Moroccan: 'Moroccan',
+  Mosotho: 'Mosotho',
+  Motswana: 'Motswana',
+  Mozambican: 'Mozambican',
+  Namibian: 'Namibian',
+  Nauruan: 'Nauruan',
+  Nepalese: 'Nepalese',
+  New_Zealander: 'New Zealander',
+  Ni_Vanuatu: 'Ni-Vanuatu',
+  Nicaraguan: 'Nicaraguan',
+  Nigerian: 'Nigerian',
+  Nigerien: 'Nigerien',
+  North_Korean: 'North Korean',
+  Northern_Irish: 'Northern Irish',
+  Norwegian: 'Norwegian',
+  Omani: 'Omani',
+  Pakistani: 'Pakistani',
+  Palauan: 'Palauan',
+  Panamanian: 'Panamanian',
+  Papua_New_Guinean: 'Papua New Guinean',
+  Paraguayan: 'Paraguayan',
+  Peruvian: 'Peruvian',
+  Polish: 'Polish',
+  Portuguese: 'Portuguese',
+  Qatari: 'Qatari',
+  Romanian: 'Romanian',
+  Russian: 'Russian',
+  Rwandan: 'Rwandan',
+  Saint_Lucian: 'Saint Lucian',
+  Salvadoran: 'Salvadoran',
+  Samoan: 'Samoan',
+  San_Marinese: 'San Marinese',
+  Sao_Tomean: 'Sao Tomean',
+  Saudi: 'Saudi',
+  Scottish: 'Scottish',
+  Senegalese: 'Senegalese',
+  Serbian: 'Serbian',
+  Seychellois: 'Seychellois',
+  Sierra_Leonean: 'Sierra Leonean',
+  Singaporean: 'Singaporean',
+  Slovakian: 'Slovakian',
+  Slovenian: 'Slovenian',
+  Solomon_Islander: 'Solomon Islander',
+  Somali: 'Somali',
+  South_African: 'South African',
+  South_Korean: 'South Korean',
+  Spanish: 'Spanish',
+  Sri_Lankan: 'Sri Lankan',
+  Sudanese: 'Sudanese',
+  Surinamer: 'Surinamer',
+  Swazi: 'Swazi',
+  Swedish: 'Swedish',
+  Swiss: 'Swiss',
+  Syrian: 'Syrian',
+  Taiwanese: 'Taiwanese',
+  Tajik: 'Tajik',
+  Tanzanian: 'Tanzanian',
+  Thai: 'Thai',
+  Togolese: 'Togolese',
+  Tongan: 'Tongan',
+  Trinidadian_or_Tobagonian: 'Trinidadian or Tobagonian',
+  Tunisian: 'Tunisian',
+  Turkish: 'Turkish',
+  Tuvaluan: 'Tuvaluan',
+  Ugandan: 'Ugandan',
+  Ukrainian: 'Ukrainian',
+  Uruguayan: 'Uruguayan',
+  Uzbekistani: 'Uzbekistani',
+  Venezuelan: 'Venezuelan',
+  Vietnamese: 'Vietnamese',
+  Welsh: 'Welsh',
+  Yemenite: 'Yemenite',
+  Zambian: 'Zambian',
+  Zimbabwean: 'Zimbabwean'
+} as const
+
+const nationalityOptions = Object.keys(NATIONALITY).map((nat) => ({
+  value: nat,
+  label: {
+    defaultMessage: nat,
+    description: `label for ${nat}`,
+    id: `nationality.${nat}`
+  }
+}))
+
 function userSectionFormType(): ISerializedFormSection {
   return {
     id: UserSection.User,
@@ -126,6 +332,143 @@ function userSectionFormType(): ISerializedFormSection {
             hidden: true
           },
           {
+            name: 'nationality',
+            type: SELECT_WITH_OPTIONS,
+            label: userFormMessages.nationality,
+            required: true,
+            initialValue: 'Ugandan',
+            validator: [],
+            placeholder: userFormMessages.formSelectPlaceholder,
+            options: nationalityOptions,
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
+          },
+          {
+            name: 'idType',
+            type: SELECT_WITH_OPTIONS,
+            label: userFormMessages.idType,
+            required: true,
+            initialValue: '',
+            validator: [],
+            placeholder: userFormMessages.formSelectPlaceholder,
+            optionCondition:
+              "({ field, values }) => values.nationality === 'Ugandan' ? field.value === 'NATIONAL_ID' : ['PASSPORT', 'ALIEN_ID', 'REFUGEE_ID'].includes(field.value)",
+            options: [
+              {
+                value: 'NATIONAL_ID',
+                label: {
+                  id: 'form.field.label.iDTypeNationalID',
+                  defaultMessage: 'National ID',
+                  description: 'Option for form field: Type of ID'
+                }
+              },
+              {
+                value: 'PASSPORT',
+                label: {
+                  id: 'form.field.label.iDTypePassport',
+                  defaultMessage: 'Passport',
+                  description: 'Option for form field: Type of ID'
+                }
+              },
+              {
+                value: 'ALIEN_ID',
+                label: {
+                  id: 'form.field.label.iDTypeAlienID',
+                  defaultMessage: 'Alien ID',
+                  description: 'Option for form field: Type of ID'
+                }
+              },
+              {
+                value: 'REFUGEE_ID',
+                label: {
+                  id: 'form.field.label.iDTypeRefugeeID',
+                  defaultMessage: 'Refugee ID',
+                  description: 'Option for form field: Type of ID'
+                }
+              }
+            ],
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
+          },
+          {
+            name: 'nid',
+            type: TEXT,
+            label: userFormMessages.nid,
+            required: true,
+            initialValue: '',
+            validator: [
+              { operation: 'validIDNumber', parameters: ['NATIONAL_ID'] }
+            ],
+            conditionals: [
+              {
+                action: 'hide',
+                expression: 'values.idType !== "NATIONAL_ID"'
+              }
+            ],
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
+          },
+          {
+            name: 'passport',
+            type: TEXT,
+            label: userFormMessages.passport,
+            required: true,
+            initialValue: '',
+            validator: [],
+            conditionals: [
+              {
+                action: 'hide',
+                expression: 'values.idType !== "PASSPORT"'
+              }
+            ],
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
+          },
+          {
+            name: 'alienId',
+            type: TEXT,
+            label: userFormMessages.alienId,
+            required: true,
+            initialValue: '',
+            validator: [],
+            conditionals: [
+              {
+                action: 'hide',
+                expression: 'values.idType !== "ALIEN_ID"'
+              }
+            ],
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
+          },
+          {
+            name: 'refugeeId',
+            type: TEXT,
+            label: userFormMessages.refugeeId,
+            required: true,
+            initialValue: '',
+            validator: [],
+            conditionals: [
+              {
+                action: 'hide',
+                expression: 'values.idType !== "REFUGEE_ID"'
+              }
+            ],
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
+          },
+          {
             name: 'phoneNumber',
             type: TEXT,
             label: userFormMessages.phoneNumber,
@@ -182,6 +525,27 @@ function userSectionFormType(): ISerializedFormSection {
             validator: [],
             options: [],
             conditionals: []
+          },
+          {
+            name: 'facilityId',
+            type: LOCATION_SEARCH_INPUT,
+            label: userFormMessages.facility,
+            conditionals: [
+              {
+                action: 'hide',
+                expression: 'values.role !== "HEALTH_FACILITY_ADMINISTRATOR"'
+              }
+            ],
+            required: true,
+            initialValue: '',
+            searchableResource: ['activeFacilities'],
+            searchableType: ['HEALTH_FACILITY'],
+            validator: [{ operation: 'facilityMustBeSelected' }],
+            locationList: [],
+            mapping: {
+              mutation: { operation: 'fieldToDataTransformer' },
+              query: { operation: 'dataToFieldTransformer' }
+            }
           },
           {
             name: 'device',

@@ -402,6 +402,7 @@ type User {
   avatar: Avatar
   device: String
   searches: [BookmarkedSeachItem!]
+  data: UserData
 }
 
 type SearchUserResult {
@@ -713,6 +714,7 @@ input UserInput {
   primaryOffice: String
   device: String
   signature: SignatureInput
+  data: UserDataInput
 }
 
 input SecurityQuestionAnswer {
@@ -974,6 +976,16 @@ type BookmarkedSeachItem {
   searchId: String!
   name: String!
   parameters: AdvancedSeachParameters!
+}
+
+type UserData {
+  nationality: String
+  idType: String
+  nid: String
+  passport: String
+  alienId: String
+  refugeeId: String
+  facilityId: String
 }
 
 type SearchFieldAgentResponse {
@@ -1270,6 +1282,16 @@ input UserIdentifierInput {
 input SignatureInput {
   data: String!
   type: String
+}
+
+input UserDataInput {
+  nationality: String
+  idType: String
+  nid: String
+  passport: String
+  alienId: String
+  refugeeId: String
+  facilityId: String
 }
 
 input SystemSettingsInput {

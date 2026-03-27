@@ -720,7 +720,8 @@ function createOrUpdateUserPayload(
     device: user.device as string,
     signature: user.signature,
     ...(user.username && { username: user.username }),
-    fullHonorificName: user.fullHonorificName
+    fullHonorificName: user.fullHonorificName,
+    ...(user.data && { data: user.data as Record<string, string> })
   }
   if (user.id) {
     userPayload.id = user.id

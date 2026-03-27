@@ -15,6 +15,7 @@ import {
   isFieldConfigDefaultValue,
   InteractiveFieldType,
   SerializedUserField,
+  SerializedUserDataField,
   isNonInteractiveFieldType,
   FieldType,
   NameField
@@ -27,10 +28,19 @@ function isSerializedUserField(value: any): value is SerializedUserField {
   return !!value && typeof value === 'object' && '$userField' in value
 }
 
+function isSerializedUserDataField(
+  value: unknown
+): value is SerializedUserDataField {
+  return !!value && typeof value === 'object' && '$userDataField' in value
+}
+
 function resolveUserFieldDefault(
-  defaultValue: SerializedUserField,
+  defaultValue: SerializedUserField | SerializedUserDataField,
   systemVariables: SystemVariables
 ) {
+  if (isSerializedUserDataField(defaultValue)) {
+    return systemVariables.user.data?.[defaultValue.$userDataField]
+  }
   const user = systemVariables.user
   const field = defaultValue.$userField
   return user[field] // e.g., user('role'), user('fullHonorificName'), etc.
@@ -89,7 +99,10 @@ export function handleDefaultValue({
     })
   }
 
-  if (isSerializedUserField(defaultValue)) {
+  if (
+    isSerializedUserField(defaultValue) ||
+    isSerializedUserDataField(defaultValue)
+  ) {
     return resolveUserFieldDefault(defaultValue, systemVariables)
   }
 

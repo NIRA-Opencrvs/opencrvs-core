@@ -37,7 +37,10 @@ import {
 } from './CompositeFieldValue'
 import { extendZodWithOpenApi } from 'zod-openapi'
 import { UUID } from '../uuid'
-import { SerializedUserField } from './serializers/user/serializer'
+import {
+  SerializedUserField,
+  SerializedUserDataField
+} from './serializers/user/serializer'
 import { SearchQuery } from './EventIndex'
 import { JSONSchema } from '../client'
 import { SerializedNowDateTime } from './serializers/date/serializer'
@@ -159,7 +162,9 @@ export type Divider = z.infer<typeof Divider>
 
 export const TextField = BaseField.extend({
   type: z.literal(FieldType.TEXT),
-  defaultValue: z.union([NonEmptyTextValue, SerializedUserField]).optional(),
+  defaultValue: z
+    .union([NonEmptyTextValue, SerializedUserField, SerializedUserDataField])
+    .optional(),
   configuration: z
     .object({
       maxLength: z.number().optional().describe('Maximum length of the text'),
@@ -637,7 +642,9 @@ export type FileUploadWithOptions = z.infer<typeof FileUploadWithOptions>
 
 const Facility = BaseField.extend({
   type: z.literal(FieldType.FACILITY),
-  defaultValue: NonEmptyTextValue.optional()
+  defaultValue: z
+    .union([NonEmptyTextValue, SerializedUserField, SerializedUserDataField])
+    .optional()
 }).describe('Input field for a facility')
 
 export type Facility = z.infer<typeof Facility>

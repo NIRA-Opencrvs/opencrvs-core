@@ -46,3 +46,17 @@ export function userSerializer(userField: SerializedUserField['$userField']) {
     }
   }
 }
+
+export const SerializedUserDataField = z.object({
+  $userDataField: z.string()
+})
+export type SerializedUserDataField = z.infer<typeof SerializedUserDataField>
+
+export function userDataSerializer(key: string) {
+  return {
+    $userDataField: key,
+    toJSON() {
+      return { $userDataField: key }
+    }
+  }
+}

@@ -13,7 +13,7 @@ import { EventDocument } from '../events/EventDocument'
 import { EventState } from '../events/ActionDocument'
 import { ITokenPayload as TokenPayload, Scope } from '../authentication'
 import { PartialSchema as AjvJSONSchemaType } from 'ajv/dist/types/json-schema'
-import { userSerializer } from '../events/serializers/user/serializer'
+import { userSerializer, userDataSerializer } from '../events/serializers/user/serializer'
 import { omitKeyDeep } from '../utils'
 import { UUID } from '../uuid'
 import { todayDateTimeValueSerializer } from '../events/serializers/date/serializer'
@@ -239,7 +239,8 @@ export const user = Object.assign(userSerializer, {
     $user: {
       $location: adminLevelId
     }
-  })
+  }),
+  data: (fieldName: string) => userDataSerializer(fieldName)
 })
 
 export function isFieldReference(value: unknown): value is FieldReference {

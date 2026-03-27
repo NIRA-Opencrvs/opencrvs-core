@@ -129,5 +129,45 @@ export const messages = {
     defaultMessage: 'Updating user',
     description: 'label for updating user',
     id: 'form.field.label.updatingUser'
+  },
+  nationality: {
+    defaultMessage: 'Nationality',
+    description: 'Input label for nationality select',
+    id: 'form.field.label.nationality'
+  },
+  nid: {
+    defaultMessage: 'NIN',
+    description: 'Input label for national identification number',
+    id: 'form.field.label.nid'
+  },
+  facility: {
+    defaultMessage: 'Facility',
+    description: 'Input label for facility search',
+    id: 'form.field.label.facility'
+  },
+  formSelectPlaceholder: {
+    defaultMessage: 'Select',
+    description: 'Placeholder text for select inputs',
+    id: 'form.field.label.formSelectPlaceholder'
+  },
+  idType: {
+    defaultMessage: 'Type of ID',
+    description: 'Label for ID type select in user form',
+    id: 'form.field.label.iDType'
+  },
+  passport: {
+    defaultMessage: 'Passport Number',
+    description: 'Input label for passport number',
+    id: 'form.field.label.passport'
+  },
+  alienId: {
+    defaultMessage: 'Alien ID',
+    description: 'Input label for alien ID number',
+    id: 'form.field.label.alienId'
+  },
+  refugeeId: {
+    defaultMessage: 'Refugee ID',
+    description: 'Input label for refugee ID number',
+    id: 'form.field.label.refugeeId'
   }
 }

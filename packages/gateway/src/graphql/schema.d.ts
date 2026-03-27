@@ -272,6 +272,7 @@ export interface GQLUser {
   avatar?: GQLAvatar
   device?: string
   searches?: Array<GQLBookmarkedSeachItem>
+  data?: GQLUserData
 }
 
 export interface GQLSearchUserResult {
@@ -596,6 +597,7 @@ export interface GQLUserInput {
   primaryOffice?: string
   device?: string
   signature?: GQLSignatureInput
+  data?: GQLUserDataInput
 }
 
 export interface GQLSecurityQuestionAnswer {
@@ -857,6 +859,16 @@ export interface GQLBookmarkedSeachItem {
   searchId: string
   name: string
   parameters: GQLAdvancedSeachParameters
+}
+
+export interface GQLUserData {
+  nationality?: string
+  idType?: string
+  nid?: string
+  passport?: string
+  alienId?: string
+  refugeeId?: string
+  facilityId?: string
 }
 
 export interface GQLSearchFieldAgentResponse {
@@ -1177,6 +1189,16 @@ export interface GQLUserIdentifierInput {
 export interface GQLSignatureInput {
   data: string
   type?: string
+}
+
+export interface GQLUserDataInput {
+  nationality?: string
+  idType?: string
+  nid?: string
+  passport?: string
+  alienId?: string
+  refugeeId?: string
+  facilityId?: string
 }
 
 export interface GQLSystemSettingsInput {
@@ -1711,6 +1733,7 @@ export interface GQLResolver {
   Identifier?: GQLIdentifierTypeResolver
   Signature?: GQLSignatureTypeResolver
   BookmarkedSeachItem?: GQLBookmarkedSeachItemTypeResolver
+  UserData?: GQLUserDataTypeResolver
   SearchFieldAgentResponse?: GQLSearchFieldAgentResponseTypeResolver
   Estimation?: GQLEstimationTypeResolver
   EventMetrics?: GQLEventMetricsTypeResolver
@@ -4307,6 +4330,7 @@ export interface GQLUserTypeResolver<TParent = any> {
   avatar?: UserToAvatarResolver<TParent>
   device?: UserToDeviceResolver<TParent>
   searches?: UserToSearchesResolver<TParent>
+  data?: UserToDataResolver<TParent>
 }
 
 export interface UserToIdResolver<TParent = any, TResult = any> {
@@ -4475,6 +4499,15 @@ export interface UserToDeviceResolver<TParent = any, TResult = any> {
 }
 
 export interface UserToSearchesResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface UserToDataResolver<TParent = any, TResult = any> {
   (
     parent: TParent,
     args: {},
@@ -7083,6 +7116,79 @@ export interface BookmarkedSeachItemToParametersResolver<
   TParent = any,
   TResult = any
 > {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface GQLUserDataTypeResolver<TParent = any> {
+  nationality?: UserDataToNationalityResolver<TParent>
+  idType?: UserDataToIdTypeResolver<TParent>
+  nid?: UserDataToNidResolver<TParent>
+  passport?: UserDataToPassportResolver<TParent>
+  alienId?: UserDataToAlienIdResolver<TParent>
+  refugeeId?: UserDataToRefugeeIdResolver<TParent>
+  facilityId?: UserDataToFacilityIdResolver<TParent>
+}
+
+export interface UserDataToNationalityResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface UserDataToIdTypeResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface UserDataToNidResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface UserDataToPassportResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface UserDataToAlienIdResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface UserDataToRefugeeIdResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface UserDataToFacilityIdResolver<TParent = any, TResult = any> {
   (
     parent: TParent,
     args: {},
