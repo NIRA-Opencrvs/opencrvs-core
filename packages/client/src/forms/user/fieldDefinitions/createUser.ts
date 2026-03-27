@@ -356,7 +356,7 @@ function userSectionFormType(): ISerializedFormSection {
             conditionals: [
               {
                 action: 'hide',
-                expression: 'values.nationality !== Ugandan'
+                expression: 'values.nationality !== "Ugandan"'
               }
             ],
             options: [
@@ -385,7 +385,7 @@ function userSectionFormType(): ISerializedFormSection {
             conditionals: [
               {
                 action: 'hide',
-                expression: 'values.nationality === Ugandan'
+                expression: 'values.nationality === "Ugandan"'
               }
             ],
             options: [
