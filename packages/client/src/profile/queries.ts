@@ -60,6 +60,15 @@ const FETCH_USER = gql`
           type
         }
       }
+      data {
+        nationality
+        idType
+        nid
+        passport
+        alienId
+        refugeeId
+        facilityId
+      }
       avatar {
         type
         data

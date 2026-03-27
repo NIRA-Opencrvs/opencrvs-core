@@ -41,6 +41,7 @@ export const User = z.object({
   primaryOfficeId: UUID,
   device: z.string().optional(),
   fullHonorificName: z.string().optional(),
+  data: z.record(z.string()).optional(),
   type: TokenUserType.extract(['user'])
 })
 export type User = z.infer<typeof User>

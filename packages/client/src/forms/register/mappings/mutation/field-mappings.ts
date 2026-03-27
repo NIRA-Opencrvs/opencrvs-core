@@ -67,6 +67,19 @@ export function ignoreFieldTransformer(
   return transformedData
 }
 
+export function fieldToDataTransformer(
+  transformedData: TransformedData,
+  draftData: IFormData,
+  sectionId: string,
+  field: IFormField
+) {
+  if (!transformedData[sectionId].data) {
+    transformedData[sectionId].data = {}
+  }
+  transformedData[sectionId].data[field.name] = draftData[sectionId][field.name]
+  return transformedData
+}
+
 export function fieldToArrayTransformer(
   transformedData: TransformedData,
   draftData: IFormData,
