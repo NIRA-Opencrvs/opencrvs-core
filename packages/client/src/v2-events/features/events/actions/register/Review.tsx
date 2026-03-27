@@ -16,6 +16,7 @@ import {
   useTypedParams,
   useTypedSearchParams
 } from 'react-router-typesafe-routes/dom'
+import { useSelector } from 'react-redux'
 import {
   getCurrentEventState,
   ActionType,
@@ -43,6 +44,7 @@ import { useSaveAndExitModal } from '@client/v2-events/components/SaveAndExitMod
 import { useIntlFormatMessageWithFlattenedParams } from '@client/v2-events/messages/utils'
 import { makeFormFieldIdFormikCompatible } from '@client/v2-events/components/forms/utils'
 import { useValidatorContext } from '@client/v2-events/hooks/useValidatorContext'
+import { getUserDetails } from '@client/profile/profileSelectors'
 import { reviewMessages } from '../messages'
 
 function getTranslations(hasErrors: boolean) {
@@ -73,6 +75,8 @@ export function Review() {
   const event = events.getEvent.getFromCache(eventId)
   const validatorContext = useValidatorContext(event)
 
+  const legacyUser = useSelector(getUserDetails)
+
   const previousAnnotation = getActionAnnotation({
     event,
     actionType: ActionType.REGISTER
@@ -90,6 +94,15 @@ export function Review() {
   const currentEventState = getCurrentEventState(event, config)
   const previousFormValues = currentEventState.declaration
   const form = getFormValues()
+
+  const creationAction = event.actions.find(
+    (action) => action.type === ActionType.CREATE
+  )
+
+  const createdByHFA =
+    creationAction?.createdByRole === 'HEALTH_FACILITY_ADMINISTRATOR'
+  const currentUserIsHFA =
+    legacyUser?.role.id === 'HEALTH_FACILITY_ADMINISTRATOR'
 
   const incomplete = validationErrorsInActionFormExist({
     formConfig,
@@ -215,6 +228,7 @@ export function Review() {
         form={form}
         formConfig={formConfig}
         previousFormValues={previousFormValues}
+        readonlyMode={createdByHFA && !currentUserIsHFA}
         reviewFields={reviewConfig.fields}
         title={formatMessage(reviewConfig.title, form)}
         validatorContext={validatorContext}
