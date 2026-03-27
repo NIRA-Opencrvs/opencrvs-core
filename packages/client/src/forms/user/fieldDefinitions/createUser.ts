@@ -350,15 +350,11 @@ function userSectionFormType(): ISerializedFormSection {
             type: SELECT_WITH_OPTIONS,
             label: userFormMessages.idType,
             required: true,
-            initialValue: 'NATIONAL_ID',
+            initialValue: '',
             validator: [],
             placeholder: userFormMessages.formSelectPlaceholder,
-            conditionals: [
-              {
-                action: 'hide',
-                expression: 'values.nationality !== "Ugandan"'
-              }
-            ],
+            optionCondition:
+              "({ field, values }) => values.nationality === 'Ugandan' ? field.value === 'NATIONAL_ID' : ['PASSPORT', 'ALIEN_ID', 'REFUGEE_ID'].includes(field.value)",
             options: [
               {
                 value: 'NATIONAL_ID',
@@ -367,28 +363,7 @@ function userSectionFormType(): ISerializedFormSection {
                   defaultMessage: 'National ID',
                   description: 'Option for form field: Type of ID'
                 }
-              }
-            ],
-            mapping: {
-              mutation: { operation: 'fieldToDataTransformer' },
-              query: { operation: 'dataToFieldTransformer' }
-            }
-          },
-          {
-            name: 'idType',
-            type: SELECT_WITH_OPTIONS,
-            label: userFormMessages.idType,
-            required: true,
-            initialValue: '',
-            validator: [],
-            placeholder: userFormMessages.formSelectPlaceholder,
-            conditionals: [
-              {
-                action: 'hide',
-                expression: 'values.nationality === "Ugandan"'
-              }
-            ],
-            options: [
+              },
               {
                 value: 'PASSPORT',
                 label: {
