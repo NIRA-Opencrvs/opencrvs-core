@@ -473,7 +473,9 @@ export type BulletList = z.infer<typeof BulletList>
 
 const Select = BaseField.extend({
   type: z.literal(FieldType.SELECT),
-  defaultValue: TextValue.optional(),
+  defaultValue: z
+    .union([NonEmptyTextValue, SerializedUserDataField])
+    .optional(),
   options: z.array(SelectOption).describe('A list of options'),
   noOptionsMessage: TranslationConfig.optional().describe(
     `
