@@ -10,7 +10,7 @@
  */
 /*  eslint-disable max-lines */
 import { z } from 'zod'
-import { Conditional, FieldConditional } from './Conditional'
+import { ActionConditional, Conditional, FieldConditional } from './Conditional'
 import { TranslationConfig } from './TranslationConfig'
 import { FieldType } from './FieldType'
 import {
@@ -416,7 +416,8 @@ export const SelectOption = z.object({
   value: z.string().describe('The value of the option'),
   label: z
     .union([z.string(), TranslationConfig])
-    .describe('The label of the option')
+    .describe('The label of the option'),
+  conditionals: z.array(ActionConditional).default([]).optional()
 })
 
 const NumberWithUnitField = BaseField.extend({
@@ -472,7 +473,9 @@ export type BulletList = z.infer<typeof BulletList>
 
 const Select = BaseField.extend({
   type: z.literal(FieldType.SELECT),
-  defaultValue: TextValue.optional(),
+  defaultValue: z
+    .union([NonEmptyTextValue, SerializedUserDataField])
+    .optional(),
   options: z.array(SelectOption).describe('A list of options'),
   noOptionsMessage: TranslationConfig.optional().describe(
     `
@@ -560,7 +563,9 @@ const PhoneField = BaseField.extend({
 }).describe('Phone input field')
 
 const IdField = BaseField.extend({
-  defaultValue: NonEmptyTextValue.optional(),
+  defaultValue: z
+    .union([NonEmptyTextValue, SerializedUserDataField])
+    .optional(),
   type: z.literal(FieldType.ID)
 }).describe('ID input field')
 
@@ -573,7 +578,13 @@ export type Checkbox = z.infer<typeof Checkbox>
 
 const Country = BaseField.extend({
   type: z.literal(FieldType.COUNTRY),
-  defaultValue: NonEmptyTextValue.optional()
+  defaultValue: NonEmptyTextValue.optional(),
+  optionOverrides: z
+    .array(SelectOption.omit({ label: true }))
+    .optional()
+    .describe(
+      'Conditionals for specific countries. Countries not listed are always shown and enabled.'
+    )
 }).describe('Country select field')
 
 export type Country = z.infer<typeof Country>
@@ -586,19 +597,14 @@ export const AdministrativeAreas = z.enum([
 
 const AdministrativeAreaConfiguration = z
   .object({
-    partOf: z
-      .object({
-        $declaration: z.string()
-      })
-      .optional()
-      .describe('Parent location'),
+    partOf: FieldReference.optional(),
     type: AdministrativeAreas
   })
   .describe('Administrative area options')
 
 const AdministrativeArea = BaseField.extend({
   type: z.literal(FieldType.ADMINISTRATIVE_AREA),
-  defaultValue: NonEmptyTextValue.optional(),
+  defaultValue: z.union([NonEmptyTextValue, SerializedUserField]).optional(),
   configuration: AdministrativeAreaConfiguration
 }).describe('Administrative area input field e.g. facility, office')
 
@@ -662,13 +668,32 @@ export const DefaultAddressFieldValue = DomesticAddressFieldValue.extend({
 
 export type DefaultAddressFieldValue = z.infer<typeof DefaultAddressFieldValue>
 
+const commonDomesticFieldProps = {
+  id: true,
+  type: true,
+  label: true,
+  conditionals: true,
+  required: true
+} satisfies { [key in keyof (Country | AdministrativeArea)]?: boolean }
+
+const DomesticAddressField = Country.partial()
+  .pick({
+    ...commonDomesticFieldProps,
+    optionOverrides: true
+  })
+  .required({ id: true, type: true })
+  .or(
+    AdministrativeArea.partial()
+      .pick(commonDomesticFieldProps)
+      .required({ id: true, type: true })
+  )
+
 const Address = BaseField.extend({
   type: z.literal(FieldType.ADDRESS),
   configuration: z
     .object({
       lineSeparator: z.string().optional(),
-      fields: z.array(z.enum(['country', 'administrativeArea'])).optional(),
-      administrativeLevels: z.array(z.string()).optional(),
+      fields: z.array(DomesticAddressField).optional(),
       streetAddressForm: z
         .array(
           z.object({
@@ -732,6 +757,22 @@ const ButtonField = BaseField.extend({
 }).describe('Generic button without any built-in functionality')
 
 export type ButtonField = z.infer<typeof ButtonField>
+
+const FieldGroup = BaseField.extend({
+  type: z.literal(FieldType.FIELD_GROUP),
+  // eslint-disable-next-line @typescript-eslint/no-use-before-define
+  fields: z.lazy(() => z.array(FieldConfig))
+})
+
+// This needs to be explicit to avoid circular types
+type FieldGroupInput = z.input<typeof BaseField> & {
+  type: typeof FieldType.FIELD_GROUP
+  fields: FieldConfigInput[]
+}
+export type FieldGroup = BaseField & {
+  type: typeof FieldType.FIELD_GROUP
+  fields: FieldConfig[]
+}
 
 // This is an alpha version of the print button and it is not recommended for use and will change in the future
 const AlphaPrintButton = BaseField.extend({
@@ -892,6 +933,7 @@ export type LoaderField = z.infer<typeof LoaderField>
 
 /** @knipignore */
 export type FieldConfig =
+  | FieldGroup
   | z.infer<typeof Address>
   | z.infer<typeof TextField>
   | z.infer<typeof NumberField>
@@ -938,6 +980,7 @@ export type FieldConfig =
  * This is the type that should be used for the input of the FieldConfig. Useful when config uses zod defaults.
  */
 export type FieldConfigInput =
+  | FieldGroupInput
   | z.input<typeof Address>
   | z.input<typeof TextField>
   | z.input<typeof TimeField>
@@ -990,6 +1033,7 @@ export const FieldConfig: z.ZodType<
   FieldConfigInput
 > = z
   .discriminatedUnion('type', [
+    FieldGroup,
     Address,
     TextField,
     NumberField,
