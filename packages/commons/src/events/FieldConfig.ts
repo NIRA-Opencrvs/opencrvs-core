@@ -561,7 +561,9 @@ const PhoneField = BaseField.extend({
 }).describe('Phone input field')
 
 const IdField = BaseField.extend({
-  defaultValue: NonEmptyTextValue.optional(),
+  defaultValue: z
+    .union([NonEmptyTextValue, SerializedUserDataField])
+    .optional(),
   type: z.literal(FieldType.ID)
 }).describe('ID input field')
 
