@@ -57,7 +57,9 @@ function userDeserializer(
     serializedUserField.$userField === 'middlename' ||
     serializedUserField.$userField === 'province' ||
     serializedUserField.$userField === 'district' ||
-    serializedUserField.$userField === 'surname'
+    serializedUserField.$userField === 'surname' ||
+    serializedUserField.$userField === 'email' ||
+    serializedUserField.$userField === 'mobile'
   ) {
     throw new Error(
       `Deserializer for ${serializedUserField.$userField} is not implemented yet`

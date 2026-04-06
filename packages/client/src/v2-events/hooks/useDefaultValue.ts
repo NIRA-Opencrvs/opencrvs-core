@@ -10,6 +10,7 @@
  */
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
+import { isEmpty } from 'lodash'
 import {
   FieldConfig,
   SystemVariables,
@@ -21,7 +22,9 @@ import {
   FieldType,
   FieldValue,
   EventState,
-  buildFormState
+  buildFormState,
+  ValidatorContext,
+  isFieldVisible
 } from '@opencrvs/commons/client'
 import {
   getAdminLevelHierarchy,
@@ -181,7 +184,7 @@ export function mapFieldToDefaultValue(
   }
 }
 
-export function useDefaultValue() {
+export function useDefaultValue(validatorContext: ValidatorContext) {
   const systemVariables = useSystemVariables()
   const { config } = useSelector(getOfflineData)
   const { getLocations } = useLocations()
@@ -191,13 +194,40 @@ export function useDefaultValue() {
     [config.ADMIN_STRUCTURE]
   )
   function getDefaultValue(field: FieldConfig): FieldValue | undefined
-  function getDefaultValue(fields: FieldConfig[]): EventState
   function getDefaultValue(
-    fieldOrFields: FieldConfig | FieldConfig[]
+    fields: FieldConfig[],
+    formContext?: EventState
+  ): EventState
+  function getDefaultValue(
+    fieldOrFields: FieldConfig | FieldConfig[],
+    formContext?: EventState
   ): FieldValue | EventState | undefined {
     if (Array.isArray(fieldOrFields)) {
       const fields = fieldOrFields
-      return buildFormState(fields, (field) => getDefaultValue(field))
+      return fields.reduce((acc, field) => {
+        if (field.type === FieldType.FIELD_GROUP) {
+          const nestedState = getDefaultValue(field.fields, {
+            ...formContext,
+            ...acc
+          })
+          if (isEmpty(nestedState)) {
+            return acc
+          }
+          acc[field.id] = nestedState
+          return acc
+        }
+        if (
+          !isFieldVisible(field, { ...formContext, ...acc }, validatorContext)
+        ) {
+          return acc
+        }
+        const defaultValue = getDefaultValue(field)
+        if (defaultValue === undefined) {
+          return acc
+        }
+        acc[field.id] = defaultValue
+        return acc
+      }, {} as EventState)
     }
     const field = fieldOrFields
     if (isNonInteractiveFieldType(field)) {

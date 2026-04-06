@@ -201,7 +201,7 @@ export function FormSectionComponent({
   useOnlineStatus()
   const prevIdRef = useRef(id)
 
-  const getDefaultValue = useDefaultValue()
+  const getDefaultValue = useDefaultValue(validatorContext)
   const { cacheHiddenFieldValue, popHiddenFieldValue } = useEventFormData()
 
   const fullFormFields = eventConfig ? findAllFields(eventConfig) : pageFields

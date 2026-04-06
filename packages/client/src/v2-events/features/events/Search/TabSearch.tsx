@@ -145,7 +145,7 @@ export function TabSearch({
   const intl = useIntl()
   const navigate = useNavigate()
   const validatorContext = useValidatorContext()
-  const getDefaultValues = useDefaultValue()
+  const getDefaultValues = useDefaultValue(validatorContext)
 
   const advancedSearchSections = resolveAdvancedSearchConfig(currentEvent)
 
