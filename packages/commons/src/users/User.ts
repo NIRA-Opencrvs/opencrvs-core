@@ -42,7 +42,9 @@ export const User = z.object({
   device: z.string().optional(),
   fullHonorificName: z.string().optional(),
   data: z.record(z.string()).optional(),
-  type: TokenUserType.extract(['user'])
+  type: TokenUserType.extract(['user']),
+  mobile: z.string().optional(),
+  email: z.string().optional()
 })
 export type User = z.infer<typeof User>
 

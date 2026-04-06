@@ -261,7 +261,7 @@ export const EmailField = BaseField.extend({
     })
     .default({ maxLength: 10 })
     .optional(),
-  defaultValue: NonEmptyTextValue.optional()
+  defaultValue: z.union([NonEmptyTextValue, SerializedUserField]).optional()
 })
 
 export type EmailField = z.infer<typeof EmailField>
@@ -558,7 +558,7 @@ const NameField = BaseField.extend({
 }).describe('Name input field')
 
 const PhoneField = BaseField.extend({
-  defaultValue: NonEmptyTextValue.optional(),
+  defaultValue: z.union([NonEmptyTextValue, SerializedUserField]).optional(),
   type: z.literal(FieldType.PHONE)
 }).describe('Phone input field')
 

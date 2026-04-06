@@ -32,7 +32,8 @@ type UserAPIResult = {
   device?: string
   name: IUserName[]
   username: string
-  email: string
+  emailForNotification: string
+  mobile: string
   role: string
   fullHonorificName?: string
   data?: Record<string, string>
@@ -117,7 +118,9 @@ export async function getUserOrSystem(
       fullHonorificName: user.fullHonorificName
         ? user.fullHonorificName
         : undefined,
-      data: user.data ? user.data : undefined
+      data: user.data ? user.data : undefined,
+      mobile: user.mobile,
+      email: user.emailForNotification
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_) {
