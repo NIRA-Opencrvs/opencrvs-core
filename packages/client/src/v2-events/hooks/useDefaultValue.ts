@@ -144,6 +144,9 @@ export function mapFieldToDefaultValue(
 
       return `${hours}:${minutes}`
     }
+    case FieldType.CHECKBOX: {
+      return field.defaultValue
+    }
     case FieldType.TEXT:
     case FieldType.TEXTAREA:
     case FieldType.LOCATION:
@@ -157,7 +160,6 @@ export function mapFieldToDefaultValue(
     case FieldType.NUMBER_WITH_UNIT:
     case FieldType.EMAIL:
     case FieldType.AGE:
-    case FieldType.CHECKBOX:
     case FieldType.DATE_RANGE:
     case FieldType.SELECT_DATE_RANGE:
     case FieldType.PHONE:
