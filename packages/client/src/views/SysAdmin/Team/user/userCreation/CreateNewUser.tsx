@@ -22,7 +22,6 @@ import {
   clearUserFormData,
   fetchAndStoreUserData
 } from '@client/user/userReducer'
-import { replaceInitialValues } from '@client/views/RegisterForm/RegisterForm'
 import { UserForm } from '@client/views/SysAdmin/Team/user/userCreation/UserForm'
 import { UserReviewForm } from '@client/views/SysAdmin/Team/user/userCreation/UserReviewForm'
 import { ActionPageLight } from '@opencrvs/components/lib/ActionPageLight'
@@ -35,7 +34,6 @@ import { connect } from 'react-redux'
 import { gqlToDraftTransformer } from '@client/transformer'
 import { messages as userFormMessages } from '@client/i18n/messages/views/userForm'
 import { CREATE_USER_ON_LOCATION } from '@client/navigation/routes'
-import { getOfflineData } from '@client/offline/selectors'
 import { getScope, getUserDetails } from '@client/profile/profileSelectors'
 import {
   RouteComponentProps,
@@ -221,7 +219,6 @@ function addJurisdictionFilterToLocationSearchInput(
 }
 
 const mapStateToProps = (state: IStoreState, props: RouteComponentProps) => {
-  const config = getOfflineData(state)
   const user = getUserDetails(state)
   const scopes = getScope(state) ?? []
   const sectionId =
@@ -280,13 +277,6 @@ const mapStateToProps = (state: IStoreState, props: RouteComponentProps) => {
     (group) => group.id === groupId
   ) as IFormSectionGroup
 
-  const fields = replaceInitialValues(
-    group.fields,
-    formData,
-    { userForm: formData },
-    config,
-    user
-  )
   const nextGroupId = getNextSectionIds(
     state.userForm.userForm!.sections,
     section,
@@ -302,10 +292,7 @@ const mapStateToProps = (state: IStoreState, props: RouteComponentProps) => {
     submitting: state.userForm.submitting,
     userDetailsStored: state.userForm.userDetailsStored,
     loadingRoles: state.userForm.loadingRoles,
-    activeGroup: {
-      ...group,
-      fields
-    },
+    activeGroup: group,
     nextSectionId: nextGroupId && nextGroupId.sectionId,
     nextGroupId: nextGroupId && nextGroupId.groupId
   }

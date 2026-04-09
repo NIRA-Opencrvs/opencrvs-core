@@ -351,7 +351,7 @@ function userSectionFormType(userOfficeId?: UUID): ISerializedFormSection {
             type: SELECT_WITH_OPTIONS,
             label: userFormMessages.idType,
             required: true,
-            initialValue: '',
+            initialValue: { experession: '', dependsOn: ['nationality'] },
             validator: [],
             placeholder: userFormMessages.formSelectPlaceholder,
             optionCondition:
@@ -400,7 +400,7 @@ function userSectionFormType(userOfficeId?: UUID): ISerializedFormSection {
             type: TEXT,
             label: userFormMessages.nid,
             required: true,
-            initialValue: '',
+            initialValue: { experession: '', dependsOn: ['idType'] },
             validator: [
               { operation: 'validIDNumber', parameters: ['NATIONAL_ID'] }
             ],
@@ -420,7 +420,7 @@ function userSectionFormType(userOfficeId?: UUID): ISerializedFormSection {
             type: TEXT,
             label: userFormMessages.passport,
             required: true,
-            initialValue: '',
+            initialValue: { experession: '', dependsOn: ['idType'] },
             validator: [],
             conditionals: [
               {
@@ -438,7 +438,7 @@ function userSectionFormType(userOfficeId?: UUID): ISerializedFormSection {
             type: TEXT,
             label: userFormMessages.alienId,
             required: true,
-            initialValue: '',
+            initialValue: { experession: '', dependsOn: ['idType'] },
             validator: [],
             conditionals: [
               {
@@ -456,7 +456,7 @@ function userSectionFormType(userOfficeId?: UUID): ISerializedFormSection {
             type: TEXT,
             label: userFormMessages.refugeeId,
             required: true,
-            initialValue: '',
+            initialValue: { experession: '', dependsOn: ['idType'] },
             validator: [],
             conditionals: [
               {
