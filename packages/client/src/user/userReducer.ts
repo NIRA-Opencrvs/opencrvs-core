@@ -177,18 +177,21 @@ export interface IRoleLoadedAction {
   payload: {
     loggedInUserScopes: string[]
     userRoles: UserRole[]
+    primaryOfficeId?: string
   }
 }
 
 export function rolesLoaded(
   loggedInUserScopes: string[],
-  userRoles: UserRole[]
+  userRoles: UserRole[],
+  primaryOfficeId?: string
 ): IRoleLoadedAction {
   return {
     type: ROLES_LOADED,
     payload: {
       loggedInUserScopes,
-      userRoles
+      userRoles,
+      primaryOfficeId
     }
   }
 }
@@ -278,7 +281,11 @@ function withScopes<T extends Record<string, unknown>>(
 
 const fetchRoles = async (getState: () => IStoreState) => {
   const roles = await roleQueries.fetchRoles()
-  return [getState().profile.tokenPayload?.scope, roles.data.getUserRoles]
+  return [
+    getState().profile.tokenPayload?.scope,
+    roles.data.getUserRoles,
+    getState().profile.userDetails?.primaryOffice.id
+  ]
 }
 
 export const userFormReducer: LoopReducer<IUserFormState, UserFormAction> = (
@@ -294,8 +301,11 @@ export const userFormReducer: LoopReducer<IUserFormState, UserFormAction> = (
           loadingRoles: true
         },
         Cmd.run(fetchRoles, {
-          successActionCreator: ([loggedInUserScopes, roles]) =>
-            rolesLoaded(loggedInUserScopes, roles),
+          successActionCreator: ([
+            loggedInUserScopes,
+            roles,
+            primaryOfficeId
+          ]) => rolesLoaded(loggedInUserScopes, roles, primaryOfficeId),
           args: [Cmd.getState]
         })
       )
@@ -406,7 +416,7 @@ export const userFormReducer: LoopReducer<IUserFormState, UserFormAction> = (
       )
 
     case ROLES_LOADED:
-      const { loggedInUserScopes, userRoles } = action.payload
+      const { loggedInUserScopes, userRoles, primaryOfficeId } = action.payload
 
       const creatableRoleIds =
         findScope(loggedInUserScopes, 'user.create')?.options?.role ?? []
@@ -416,7 +426,7 @@ export const userFormReducer: LoopReducer<IUserFormState, UserFormAction> = (
 
       const allowedRoleIds = [...creatableRoleIds, ...editableRoleIds]
 
-      const form = deserializeForm(getCreateUserForm(), validators)
+      const form = deserializeForm(getCreateUserForm(primaryOfficeId), validators)
 
       const modifiedForm = modifyFormField(
         form,

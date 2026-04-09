@@ -1441,7 +1441,8 @@ const MemoizedLocationList: React.FC<{
         }, {}),
         intl,
         (location) => field.searchableType.includes(location.type),
-        field.userOfficeId
+        field.userOfficeId &&
+          offlineCountryConfig.activeOffices[field.userOfficeId]
       ),
     [field, offlineCountryConfig, intl]
   )

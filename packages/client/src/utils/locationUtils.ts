@@ -120,10 +120,25 @@ export function generateSearchableLocations(
   locations: ILocation[],
   offlineLocations: { [key: string]: ILocation },
   intl: IntlShape,
-  officeId?: UUID
+  jurisdictionId?: UUID
 ) {
-  const filteredLocations = officeId
-    ? getAssociatedLocationsAndOffices(officeId, locations)
+  const adminStructures = Object.fromEntries(
+    Object.entries(offlineLocations).filter(
+      (locationTuple): locationTuple is [string, AdminStructure] =>
+        locationTuple[1].type === 'ADMIN_STRUCTURE'
+    )
+  )
+  const filteredLocations = jurisdictionId
+    ? locations.filter((location) => {
+        const locationId =
+          location.type === 'ADMIN_STRUCTURE'
+            ? location.id
+            : location.partOf.split('/').at(1)!
+
+        return Object.values(
+          getLocationHierarchy(locationId, adminStructures)
+        ).includes(jurisdictionId)
+      })
     : locations
 
   const generated: ISearchLocation[] = filteredLocations.map(
@@ -160,7 +175,7 @@ export function generateLocations(
   locations: { [key: string]: ILocation },
   intl: IntlShape,
   filter?: (location: ILocation) => boolean,
-  officeId?: UUID
+  office?: ILocation
 ) {
   let locationArray = Object.values(locations)
 
@@ -168,7 +183,12 @@ export function generateLocations(
     locationArray = locationArray.filter(filter)
   }
 
-  return generateSearchableLocations(locationArray, locations, intl, officeId)
+  return generateSearchableLocations(
+    locationArray,
+    locations,
+    intl,
+    office?.partOf.split('/').at(1) as UUID | undefined
+  )
 }
 
 export function getJurisidictionType(
@@ -271,37 +291,6 @@ export function isOfficeUnderJurisdiction(
   }
   const hierarchy = getLocationHierarchy(otherOfficeLocationId, locations)
   return Object.values(hierarchy).includes(parentLocation.id)
-}
-
-function getAssociatedLocationsAndOffices(
-  officeId: string,
-  locations: ILocation[]
-): ILocation[] {
-  const office = locations.find(
-    (location) => location.id === officeId && location.type === 'CRVS_OFFICE'
-  )
-
-  if (!office) {
-    return []
-  }
-
-  const associatedLocations: ILocation[] = locations.filter((location) => {
-    let currentLocationId = office.partOf.split('/').at(1)
-
-    while (currentLocationId) {
-      const targetLocationId = currentLocationId
-      if (location.id === currentLocationId) {
-        return true
-      }
-
-      const nextLocation = locations.find((loc) => loc.id === targetLocationId)
-      currentLocationId = nextLocation?.partOf.split('/').at(1)
-    }
-
-    return false
-  })
-
-  return [office, ...associatedLocations]
 }
 
 export function generateFullAddress(
