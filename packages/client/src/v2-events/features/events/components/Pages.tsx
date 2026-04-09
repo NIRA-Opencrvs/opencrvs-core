@@ -73,7 +73,7 @@ export function Pages({
 }: PagesProps & DeclarationProps) {
   const intl = useIntl()
   const visiblePages = formPages.filter((page) =>
-    isPageVisible(page, formData, validatorContext)
+    isPageVisible(page, { ...declaration, ...formData }, validatorContext)
   )
 
   const pageIdx = visiblePages.findIndex((p) => p.id === pageId)
@@ -89,7 +89,7 @@ export function Pages({
 
   function switchToNextPage(formValues: EventState = formData) {
     const currentVisiblePages = formPages.filter((p) =>
-      isPageVisible(p, formValues, validatorContext)
+      isPageVisible(p, { ...declaration, ...formValues }, validatorContext)
     )
     const currentPageIdx = currentVisiblePages.findIndex((p) => p.id === pageId)
     const nextPageIdx = currentPageIdx + 1
