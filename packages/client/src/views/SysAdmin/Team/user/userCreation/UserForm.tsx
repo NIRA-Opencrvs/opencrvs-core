@@ -160,6 +160,7 @@ class UserFormComponent extends React.Component<IFullProps, IState> {
             <FormFieldGenerator
               key={activeGroup.id}
               id={section.id}
+              initialValues={formData}
               onChange={(values) => this.modifyData(values)}
               setAllFieldsDirty={false}
               fields={getVisibleGroupFields(activeGroup)}
