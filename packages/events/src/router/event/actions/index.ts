@@ -33,7 +33,10 @@ import {
   ActionInputWithType,
   EventConfig
 } from '@opencrvs/commons/events'
-import { TokenWithBearer } from '@opencrvs/commons/authentication'
+import {
+  TokenUserType,
+  TokenWithBearer
+} from '@opencrvs/commons/authentication'
 import * as middleware from '@events/router/middleware'
 import {
   requiresAnyOfScopes,
@@ -44,6 +47,7 @@ import { systemProcedure } from '@events/router/trpc'
 import {
   getEventById,
   addAction,
+  addAsyncRejectAction,
   throwConflictIfActionNotAllowed,
   ensureEventIndexed,
   processAction
@@ -447,20 +451,15 @@ export function getDefaultActionProcedures(
       }),
 
     reject: systemProcedure
-      .input(actionConfig.inputSchema.merge(asyncAcceptInputFields))
+      .input(AsyncActionConfirmationResponseSchema)
       .use(middleware.requireActionConfirmationAuthorization)
       .mutation(async ({ input, ctx }) => {
-        const { token, user } = ctx
         const { eventId, actionId } = input
         const event = await getEventById(eventId)
         const action = event.actions.find((a) => a.id === actionId)
         const confirmationAction = event.actions.find(
           (a) => a.originalActionId === actionId
         )
-        const configuration = await getEventConfigurationById({
-          token,
-          eventType: event.type
-        })
 
         // Action is not found
         if (!action) {
@@ -477,16 +476,17 @@ export function getDefaultActionProcedures(
           return getEventById(input.eventId)
         }
 
-        return processAction(
-          { ...input, originalActionId: actionId },
-          {
-            event,
-            user,
-            token,
-            status: ActionStatus.Rejected,
-            configuration
-          }
-        )
+        return addAsyncRejectAction({
+          ...input,
+          originalActionId: actionId,
+          type: actionType,
+          createdBy: ctx.user.id,
+          createdByUserType: TokenUserType.Enum.user,
+          createdByRole: ctx.user.role,
+          createdAtLocation: ctx.user.primaryOfficeId ?? undefined,
+          token: ctx.token,
+          eventType: event.type
+        })
       })
   }
 }
