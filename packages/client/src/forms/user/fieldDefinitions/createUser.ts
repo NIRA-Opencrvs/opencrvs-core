@@ -470,22 +470,12 @@ function userSectionFormType(userOfficeId?: UUID): ISerializedFormSection {
             }
           },
           {
-            name: 'phoneNumber',
+            name: 'mobile',
             type: TEXT,
             label: userFormMessages.phoneNumber,
             required: window.config.USER_NOTIFICATION_DELIVERY_METHOD === 'sms',
             initialValue: '',
-            validator: [{ operation: 'phoneNumberFormat' }],
-            mapping: {
-              mutation: {
-                operation: 'msisdnTransformer',
-                parameters: ['user.mobile']
-              },
-              query: {
-                operation: 'localPhoneTransformer',
-                parameters: ['user.mobile']
-              }
-            }
+            validator: [{ operation: 'phoneNumberFormat' }]
           },
           {
             name: 'email',
