@@ -227,6 +227,18 @@ export async function defaultRequestHandler(
   if (responseStatus === ActionConfirmationResponse.Rejected) {
     status = ActionStatus.Rejected
 
+    try {
+      parsedBody = inputSchema.partial().parse(confirmationResponse ?? {})
+    } catch (error) {
+      logger.error(error)
+
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message:
+          'Invalid payload received from country config action confirmation API'
+      })
+    }
+
     logger.debug(
       {
         transactionId: input.transactionId,
