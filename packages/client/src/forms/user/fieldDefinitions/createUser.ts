@@ -18,7 +18,6 @@ import {
   UserSection
 } from '@client/forms/index'
 import { messages as userFormMessages } from '@client/i18n/messages/views/userForm'
-import { UUID } from '@opencrvs/commons/client'
 
 const NATIONALITY = {
   Afghan: 'Afghan',
@@ -226,7 +225,7 @@ const nationalityOptions = Object.keys(NATIONALITY).map((nat) => ({
   }
 }))
 
-function userSectionFormType(userOfficeId?: UUID): ISerializedFormSection {
+function userSectionFormType(): ISerializedFormSection {
   return {
     id: UserSection.User,
     viewType: 'form',
@@ -533,7 +532,6 @@ function userSectionFormType(userOfficeId?: UUID): ISerializedFormSection {
             searchableType: ['HEALTH_FACILITY'],
             validator: [{ operation: 'facilityMustBeSelected' }],
             locationList: [],
-            userOfficeId,
             mapping: {
               mutation: { operation: 'fieldToDataTransformer' },
               query: { operation: 'dataToFieldTransformer' }
@@ -603,11 +601,8 @@ const userSectionPreviewType: ISerializedFormSection = {
   groups: getPreviewGroups()
 }
 
-export function getCreateUserForm(userOfficeId?: string) {
+export function getCreateUserForm() {
   return {
-    sections: [
-      userSectionFormType(userOfficeId as UUID),
-      userSectionPreviewType
-    ]
+    sections: [userSectionFormType(), userSectionPreviewType]
   }
 }

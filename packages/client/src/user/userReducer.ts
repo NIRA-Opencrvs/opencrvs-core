@@ -281,11 +281,7 @@ function withScopes<T extends Record<string, unknown>>(
 
 const fetchRoles = async (getState: () => IStoreState) => {
   const roles = await roleQueries.fetchRoles()
-  return [
-    getState().profile.tokenPayload?.scope,
-    roles.data.getUserRoles,
-    getState().profile.userDetails?.primaryOffice.id
-  ]
+  return [getState().profile.tokenPayload?.scope, roles.data.getUserRoles]
 }
 
 export const userFormReducer: LoopReducer<IUserFormState, UserFormAction> = (
@@ -301,11 +297,8 @@ export const userFormReducer: LoopReducer<IUserFormState, UserFormAction> = (
           loadingRoles: true
         },
         Cmd.run(fetchRoles, {
-          successActionCreator: ([
-            loggedInUserScopes,
-            roles,
-            primaryOfficeId
-          ]) => rolesLoaded(loggedInUserScopes, roles, primaryOfficeId),
+          successActionCreator: ([loggedInUserScopes, roles]) =>
+            rolesLoaded(loggedInUserScopes, roles),
           args: [Cmd.getState]
         })
       )
@@ -416,7 +409,7 @@ export const userFormReducer: LoopReducer<IUserFormState, UserFormAction> = (
       )
 
     case ROLES_LOADED:
-      const { loggedInUserScopes, userRoles, primaryOfficeId } = action.payload
+      const { loggedInUserScopes, userRoles } = action.payload
 
       const creatableRoleIds =
         findScope(loggedInUserScopes, 'user.create')?.options?.role ?? []
@@ -426,7 +419,7 @@ export const userFormReducer: LoopReducer<IUserFormState, UserFormAction> = (
 
       const allowedRoleIds = [...creatableRoleIds, ...editableRoleIds]
 
-      const form = deserializeForm(getCreateUserForm(primaryOfficeId), validators)
+      const form = deserializeForm(getCreateUserForm(), validators)
 
       const modifiedForm = modifyFormField(
         form,

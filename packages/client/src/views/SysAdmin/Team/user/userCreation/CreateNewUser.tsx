@@ -277,6 +277,16 @@ const mapStateToProps = (state: IStoreState, props: RouteComponentProps) => {
     (group) => group.id === groupId
   ) as IFormSectionGroup
 
+  group.fields = group.fields.map((field) => {
+    if (field.name !== 'facilityId' || field.type !== 'LOCATION_SEARCH_INPUT') {
+      return field
+    }
+    return {
+      ...field,
+      userOfficeId: formData.registrationOffice as UUID
+    }
+  })
+
   const nextGroupId = getNextSectionIds(
     state.userForm.userForm!.sections,
     section,
