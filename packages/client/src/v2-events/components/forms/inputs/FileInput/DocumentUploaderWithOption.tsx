@@ -68,7 +68,7 @@ const DocumentTypeRequiredError = {
  * If you don't need to select a document type, use @see SimpleDocumentUploader.
  */
 function DocumentUploaderWithOption({
-  value,
+  value: files,
   onChange,
   name,
   description,
@@ -100,7 +100,6 @@ function DocumentUploaderWithOption({
     DocumentTypeRequiredError
   )
 
-  const [files, setFiles] = useState(value)
   const [filesBeingProcessed, setFilesBeingProcessed] = useState<
     Array<{ label: string }>
   >([])
@@ -128,7 +127,6 @@ function DocumentUploaderWithOption({
 
       setFilesBeingProcessed((prev) => prev.filter(({ label }) => label !== id))
 
-      setFiles((prevFiles) => getUpdatedFiles(prevFiles, newFile))
       onChange(getUpdatedFiles(files, newFile))
       setSelectedOption(undefined)
     }
@@ -171,13 +169,7 @@ function DocumentUploaderWithOption({
   })
 
   const onDeleteFile = (path: FullDocumentPath) => {
-    setFiles((prevFiles) => {
-      const updatedFiles = prevFiles.filter((file) => file.path !== path)
-      onChange(updatedFiles)
-
-      return updatedFiles
-    })
-
+    onChange(files.filter((file) => file.path !== path))
     setPreviewImage(null)
   }
 
@@ -204,7 +196,7 @@ function DocumentUploaderWithOption({
         }
         maxFileSize={maxFileSize}
         name={name}
-        value={value[0]}
+        value={files[0]}
         width={'full'}
         onChange={(file) => {
           if (file) {
