@@ -652,6 +652,19 @@ export const isAValidNIDNumberFormat = (value: string): boolean => {
   return new RegExp(pattern).test(value)
 }
 
+export const validAlienIdNumber: Validation = (value: string) => {
+  return new RegExp(/^(AM|AF|am|af)[A-Za-z0-9]{12}$/).test(value)
+    ? undefined
+    : {
+        message: {
+          defaultMessage:
+            'Invalid Alien ID. It must be 14 characters long and start with AM or AF.',
+          description: 'Validation error for invalid Alien ID format',
+          id: 'error.invalidAlienId'
+        }
+      }
+}
+
 export const validIDNumber =
   (typeOfID: string): Validation =>
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */

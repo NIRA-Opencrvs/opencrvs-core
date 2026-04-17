@@ -438,7 +438,7 @@ function userSectionFormType(): ISerializedFormSection {
             label: userFormMessages.alienId,
             required: true,
             initialValue: { experession: '', dependsOn: ['idType'] },
-            validator: [],
+            validator: [{ operation: 'validAlienIdNumber' }],
             conditionals: [
               {
                 action: 'hide',
