@@ -59,6 +59,10 @@ function FileInput({
   })
   const { processImageFile } = useImageProcessing()
 
+  React.useEffect(() => {
+    setFile(value)
+  }, [value])
+
   const { uploadFile } = useFileUpload(name, {
     onSuccess: ({ path, originalFilename, type }) => {
       setFile({
