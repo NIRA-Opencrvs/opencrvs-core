@@ -10,7 +10,7 @@
  */
 import * as React from 'react'
 import { useIntl } from 'react-intl'
-import { WorkqueueLayout } from '@client/v2-events/layouts/workqueues'
+import { WorkqueueLayout } from '@client/v2-events/layouts'
 import { AdministrativeLevels } from '@client/views/Organisation/AdministrativeLevels'
 
 const organisationsTitle = {
