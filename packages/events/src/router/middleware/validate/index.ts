@@ -84,7 +84,9 @@ export function getFieldErrors(
 
   // Add errors if there are any hidden fields sent in the payloa
   const hiddenFieldErrors = hiddenFieldIds.flatMap((fieldId) => {
-    if (data[fieldId as keyof typeof data]) {
+    const field = fields.find((f) => f.id === fieldId)
+
+    if (data[fieldId as keyof typeof data] && !field?.persistWhenHidden) {
       return {
         message: errorMessages.hiddenField.defaultMessage,
         id: fieldId,
@@ -94,7 +96,6 @@ export function getFieldErrors(
 
     return []
   })
-
   // For visible fields, run the field validations as configured
   const visibleFieldErrors = visibleFields.flatMap((field) => {
     const fieldErrors = flattenFormState(

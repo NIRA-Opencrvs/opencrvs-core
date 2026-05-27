@@ -31,7 +31,7 @@ import { ActionTypeSpecificContent } from './components'
 export const eventHistoryStatusMessage = {
   id: 'events.history.status',
   defaultMessage:
-    '{status, select, Requested {Waiting for external validation} other {{action, select, CREATE {Draft} NOTIFY {Sent incomplete} VALIDATE {Validated} DRAFT {Draft} DECLARE {Sent for review} REGISTER {Registered} PRINT_CERTIFICATE {Certified} REJECT {Rejected} ARCHIVE {Archived} DUPLICATE_DETECTED {Flagged as potential duplicate} MARK_AS_DUPLICATE {Marked as a duplicate} CORRECTED {Record corrected} REQUEST_CORRECTION {Correction requested} APPROVE_CORRECTION {Correction approved} REJECT_CORRECTION {Correction rejected} READ {Viewed} ASSIGN {Assigned} UNASSIGN {Unassigned} UPDATE {Updated} other {Unknown}}}}'
+    '{status, select, Requested {Waiting for external validation} other {{action, select, CREATE {Draft} NOTIFY {Sent incomplete} VALIDATE {Validated} ESCALATE {Escalated} DRAFT {Draft} DECLARE {Sent for review} REGISTER {Registered} PRINT_CERTIFICATE {Certified} REJECT {Rejected} ARCHIVE {Archived} DUPLICATE_DETECTED {Flagged as potential duplicate} MARK_AS_DUPLICATE {Marked as a duplicate} CORRECTED {Record corrected} REQUEST_CORRECTION {Correction requested} APPROVE_CORRECTION {Correction approved} REJECT_CORRECTION {Correction rejected} READ {Viewed} ASSIGN {Assigned} UNASSIGN {Unassigned} UPDATE {Updated} other {Unknown}}}}'
 }
 
 const messages = defineMessages({
@@ -73,7 +73,10 @@ function prepareComments(history: EventHistoryActionDocument) {
 function prepareReason(history: EventHistoryActionDocument) {
   const reason: { message?: string } = {}
 
-  if (history.type === ActionType.REJECT_CORRECTION) {
+  if (
+    history.type === ActionType.REJECT_CORRECTION ||
+    history.type === ActionType.ESCALATE
+  ) {
     reason.message = history.content.reason
   }
 
@@ -123,10 +126,17 @@ export function EventHistoryDialog({
   const intl = useIntl()
   const { getActionTypeForHistory } = useActionForHistory()
   const history = getAcceptedActions(fullEvent)
-  const title = intl.formatMessage(eventHistoryStatusMessage, {
-    action: getActionTypeForHistory(history, action),
-    status: action.status
-  })
+
+  const historyAction = getActionTypeForHistory(history, action)
+
+  // Escalation flow for title text
+  const title =
+    historyAction === 'ESCALATE'
+      ? 'Escalated'
+      : intl.formatMessage(eventHistoryStatusMessage, {
+          action: historyAction,
+          status: action.status
+        })
 
   const comments = prepareComments(action)
   const reason = prepareReason(action)

@@ -265,6 +265,11 @@ const actionMessagesToDefine: Record<RegAction, MessageDescriptor> = {
     defaultMessage: 'Viewed',
     description: 'Viewed Record action'
   },
+  ESCALATE: {
+    id: 'recordAudit.regAction.escalate',
+    defaultMessage: 'Escalated',
+    description: 'Escalated action'
+  },
   MARKED_AS_DUPLICATE: {
     id: 'recordAudit.regAction.markedAsDuplicate',
     defaultMessage: 'Marked as a duplicate',

@@ -418,10 +418,19 @@ export function EventHistory({
             font="bold14"
             onClick={() => onHistoryRowClick(action, actionCreatorName)}
           >
-            {intl.formatMessage(eventHistoryStatusMessage, {
-              action: getActionTypeForHistory(history, action),
-              status: action.status
-            })}
+            {/* Escalation text in table */}
+            {(() => {
+              const historyAction = getActionTypeForHistory(history, action)
+
+              if (historyAction === 'ESCALATE') {
+                return 'Escalated'
+              }
+
+              return intl.formatMessage(eventHistoryStatusMessage, {
+                action: historyAction,
+                status: action.status
+              })
+            })()}
           </Link>
         ),
         date: format(

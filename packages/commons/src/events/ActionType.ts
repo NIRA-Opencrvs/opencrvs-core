@@ -23,6 +23,9 @@ export const ActionType = {
   DECLARE: 'DECLARE',
   VALIDATE: 'VALIDATE',
   REGISTER: 'REGISTER',
+
+  ESCALATE: 'ESCALATE',
+
   // Declaration system actions. Non-configurable.
   DUPLICATE_DETECTED: 'DUPLICATE_DETECTED',
   REJECT: 'REJECT', // REJECT_DECLARATION
@@ -49,6 +52,7 @@ export const ConfirmableActions = [
   ActionType.REGISTER,
   ActionType.REJECT,
   ActionType.ARCHIVE,
+  ActionType.ESCALATE,
   ActionType.PRINT_CERTIFICATE,
   ActionType.REQUEST_CORRECTION,
   ActionType.APPROVE_CORRECTION,
@@ -63,6 +67,7 @@ export const ActionTypes = z.enum([
   'DECLARE',
   'VALIDATE',
   'REGISTER',
+  'ESCALATE', 
   'DUPLICATE_DETECTED',
   'REJECT',
   'MARK_AS_DUPLICATE',

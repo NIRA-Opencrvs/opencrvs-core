@@ -51,6 +51,13 @@ export function useReviewActionConfig({
   })
 
   const { isActionAllowed } = useUserAllowedActions(eventType)
+  // removed escalation data while performing other action
+  const cleanDeclaration = {
+    ...declaration,
+    'review.escalated': false,
+    'review.escalationRole': '',
+    'review.escalationComment': ''
+  }
 
   if (isActionAllowed(ActionType.REGISTER)) {
     return {
@@ -60,14 +67,14 @@ export function useReviewActionConfig({
         if (status === EventStatus.Enum.NOTIFIED) {
           return events.customActions.registerOnDeclare.mutate({
             eventId,
-            declaration,
+            declaration: cleanDeclaration,
             transactionId: uuid(),
             annotation
           })
         }
         return events.customActions.registerOnValidate.mutate({
           eventId,
-          declaration,
+          declaration: cleanDeclaration,
           transactionId: uuid(),
           annotation
         })
@@ -87,14 +94,14 @@ export function useReviewActionConfig({
         if (status === EventStatus.Enum.NOTIFIED) {
           return events.customActions.validateOnDeclare.mutate({
             eventId,
-            declaration,
+            declaration: cleanDeclaration,
             annotation,
             transactionId: uuid()
           })
         }
         return events.actions.validate.mutate({
           eventId,
-          declaration,
+          declaration: cleanDeclaration,
           annotation,
           transactionId: uuid()
         })

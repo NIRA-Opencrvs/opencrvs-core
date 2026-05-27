@@ -61,6 +61,16 @@ export const ValidateActionInput = BaseActionInput.merge(
 
 export type ValidateActionInput = z.infer<typeof ValidateActionInput>
 
+export const EscalateActionInput = BaseActionInput.merge(
+  z.object({
+    type: z.literal(ActionType.ESCALATE).default(ActionType.ESCALATE),
+    content: ReasonContent
+  })
+)
+export type EscalateActionInput = z.infer<
+  typeof EscalateActionInput
+>
+
 export const NotifyActionInput = BaseActionInput.merge(
   z.object({
     type: z.literal(ActionType.NOTIFY).default(ActionType.NOTIFY)
@@ -230,6 +240,7 @@ export const ActionInput = z
   .discriminatedUnion('type', [
     CreateActionInput.openapi({ ref: 'CreateActionInput' }),
     ValidateActionInput.openapi({ ref: 'ValidateActionInput' }),
+    EscalateActionInput.openapi({ ref: 'EscalateActionInput' }),
     RegisterActionInput.openapi({ ref: 'RegisterActionInput' }),
     NotifyActionInput.openapi({ ref: 'NotifyActionInput' }),
     DeclareActionInput.openapi({ ref: 'DeclareActionInput' }),

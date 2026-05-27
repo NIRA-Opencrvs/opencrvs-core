@@ -148,6 +148,13 @@ const BaseField = z
       .optional()
       .describe(
         'Indicates whether the field is included in analytics. When enabled, its value becomes available in the analytics dashboard.'
+      ),
+    persistWhenHidden: z
+      .boolean()
+      .default(false)
+      .optional()
+      .describe(
+        'Preserves field value during hidden field cleanup.'
       )
   })
   .describe('Common properties shared across all field types.')
