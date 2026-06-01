@@ -61,6 +61,12 @@ const ValidateConfig = DeclarationActionBase.merge(
   })
 )
 
+const EscalateConfig = DeclarationActionBase.merge(
+  z.object({
+    type: z.literal(ActionType.ESCALATE)
+  })
+)
+
 const RegisterConfig = DeclarationActionBase.merge(
   z.object({
     type: z.literal(ActionType.REGISTER)
@@ -122,6 +128,7 @@ export type AllActionConfigFields =
   | typeof ReadActionConfig
   | typeof DeclareConfig
   | typeof ValidateConfig
+  | typeof EscalateConfig
   | typeof RejectDeclarationConfig
   | typeof ArchiveConfig
   | typeof RegisterConfig
@@ -136,6 +143,7 @@ export type InferredActionConfig =
   | z.infer<typeof ReadActionConfig>
   | z.infer<typeof DeclareConfig>
   | z.infer<typeof ValidateConfig>
+  | z.infer<typeof EscalateConfig>
   | z.infer<typeof RejectDeclarationConfig>
   | z.infer<typeof ArchiveConfig>
   | z.infer<typeof RegisterConfig>
@@ -154,6 +162,7 @@ export const ActionConfig = z
     ReadActionConfig.openapi({ ref: 'ReadActionConfig' }),
     DeclareConfig.openapi({ ref: 'DeclareActionConfig' }),
     ValidateConfig.openapi({ ref: 'ValidateActionConfig' }),
+    EscalateConfig.openapi({ ref: 'EscalateActionConfig' }),
     RejectDeclarationConfig.openapi({ ref: 'RejectDeclarationActionConfig' }),
     ArchiveConfig.openapi({ ref: 'ArchiveActionConfig' }),
     RegisterConfig.openapi({ ref: 'RegisterActionConfig' }),
@@ -178,6 +187,7 @@ export type ActionConfig = InferredActionConfig
 export const DeclarationActionConfig = z.discriminatedUnion('type', [
   DeclareConfig,
   ValidateConfig,
+  EscalateConfig,
   RegisterConfig
 ])
 

@@ -364,11 +364,18 @@ function FormReview({
             (field) => !field.uncorrectable
           )
 
+          const escalationRole = form['review.escalationRole']
+
+          const shouldHideEditActions =
+            escalationRole === 'CID_OFFICER' ||
+            escalationRole === 'LEGAL_OFFICER'
+
           // If the page has any correctable fields, show the change all link
           const showChangeAllLink =
             !readonlyMode &&
             (!isCorrection || hasCorrectableFields) &&
-            !isReviewCorrection
+            !isReviewCorrection &&
+            !shouldHideEditActions
 
           const hasMandatoryFields = page.fields.some(
             (field) => !!field.required
@@ -412,7 +419,8 @@ function FormReview({
                       const shouldHideEditLink =
                         readonlyMode ||
                         (isCorrection && uncorrectable) ||
-                        isReviewCorrection
+                        isReviewCorrection ||
+                        shouldHideEditActions
 
                       return (
                         <ListReview.Row
@@ -615,34 +623,85 @@ const ActionContainer = styled.div`
   display: flex;
   flex-flow: row wrap;
   align-items: center;
-
-  button:first-child {
-    margin-right: 16px;
-  }
+  gap: 16px;
 
   & > button {
     margin-bottom: 8px;
   }
 `
 
+const EscalateButton = styled(Button)`
+  && {
+    background: #b45309;
+    border-color: #b45309;
+    color: #fff;
+
+    &:hover {
+      background: #92400e;
+      border-color: #92400e;
+    }
+  }
+`
+
+const EscalatereviewMessages = defineMessages({
+  escalateModalTitle: {
+    id: 'escalateModal.title',
+    defaultMessage: 'Escalate Record',
+    description: 'Title for escalate modal'
+  },
+  escalateModalDescription: {
+    id: 'escalateModal.description',
+    defaultMessage:
+      'Select the role to escalate this record to and provide a reason.',
+    description: 'Description for escalate modal'
+  },
+  escalateModalButton: {
+    id: 'escalateModal.button',
+    defaultMessage: 'Escalate',
+    description: 'Escalate confirm button'
+  },
+  escalateModalCancel: {
+    id: 'escalateModal.cancel',
+    defaultMessage: 'Cancel',
+    description: 'Cancel button'
+  },
+  escalateModalRole: {
+    id: 'escalateModal.role',
+    defaultMessage: 'Escalate to',
+    description: 'Escalation role label'
+  },
+  escalateModalPlaceholder: {
+    id: 'escalateModal.placeholder',
+    defaultMessage: 'Reason for escalation...',
+    description: 'Escalation reason placeholder'
+  }
+})
+
 function ReviewActionComponent({
   incomplete,
   onConfirm,
   onReject,
+  onEscalate,
+  onApproveEscalation,
   messages,
   primaryButtonType,
   canSendIncomplete,
   icon
 }: {
   incomplete: boolean
-  onConfirm: () => void
+  onConfirm?: () => void
   onReject?: () => void
+  onEscalate?: () => void
+  onApproveEscalation?: () => void
+
   messages: {
     title: MessageDescriptor
     description: MessageDescriptor
     onConfirm: MessageDescriptor
     onReject?: MessageDescriptor
+    onApproveEscalation?: MessageDescriptor
   }
+
   primaryButtonType?: 'positive' | 'primary'
   canSendIncomplete?: boolean
   icon: IconProps['name']
@@ -656,27 +715,56 @@ function ReviewActionComponent({
       <UnderLayBackground background={background}>
         <Content>
           <Title>{intl.formatMessage(messages.title)}</Title>
+
           <Description>{intl.formatMessage(messages.description)}</Description>
+
           <ActionContainer>
-            <Button
-              disabled={!!incomplete && !canSendIncomplete}
-              id="validateDeclarationBtn"
-              size="large"
-              type={primaryButtonType ?? 'positive'}
-              onClick={onConfirm}
-            >
-              <Icon color="white" name={icon} />
-              {intl.formatMessage(messages.onConfirm)}
-            </Button>
+            {onConfirm && (
+              <Button
+                disabled={!!incomplete && !canSendIncomplete}
+                id="validateDeclarationBtn"
+                size="large"
+                type={primaryButtonType ?? 'positive'}
+                onClick={onConfirm}
+              >
+                <Icon color="white" name={icon} />
+                {intl.formatMessage(messages.onConfirm)}
+              </Button>
+            )}
+
             {onReject && messages.onReject && (
               <Button
                 id="review-reject"
                 size="large"
-                type={'negative'}
+                type="negative"
                 onClick={onReject}
               >
                 <Icon name="X" />
                 {intl.formatMessage(messages.onReject)}
+              </Button>
+            )}
+
+            {onEscalate && (
+              <EscalateButton
+                id="escalateDeclarationBtn"
+                size="large"
+                type="primary"
+                onClick={onEscalate}
+              >
+                <Icon name="WarningCircle" color="white" />
+                Escalate Record
+              </EscalateButton>
+            )}
+
+            {onApproveEscalation && (
+              <Button
+                id="approveEscalationBtn"
+                size="large"
+                type="positive"
+                onClick={onApproveEscalation}
+              >
+                <Icon name="Check" color="white" />
+                Submit Comment
               </Button>
             )}
           </ActionContainer>
@@ -905,12 +993,197 @@ function RejectActionModal({
   )
 }
 
+export interface EscalationState {
+  escalationRole:
+    | 'CID_OFFICER'
+    | 'COMMISSIONER_CIVIL_REGISTRATION'
+    | 'SENIOR_REGISTRAR_OFFICER'
+    | 'LEGAL_OFFICER'
+  comment: string
+}
+
+function EscalateActionModal({
+  close,
+  currentUserRole
+}: {
+  close: (result: EscalationState | null) => void
+  currentUserRole?: EscalationState['escalationRole']
+}) {
+  const allEscalationOptions = [
+    { value: 'CID_OFFICER' as const, label: 'CID Officer' },
+    {
+      value: 'SENIOR_REGISTRAR_OFFICER' as const,
+      label: 'Senior Registration Officer'
+    },
+    { value: 'LEGAL_OFFICER' as const, label: 'Legal Officer' }
+  ]
+
+  const escalationOptions = allEscalationOptions.filter(
+    (o) => o.value !== currentUserRole
+  )
+  const [state, setState] = useState<EscalationState>({
+    escalationRole: escalationOptions[0]?.value ?? 'CID_OFFICER',
+    comment: ''
+  })
+  const intl = useIntl()
+
+  return (
+    <ResponsiveModal
+      showHeaderBorder
+      autoHeight
+      width={600}
+      show={true}
+      id="escalate-modal"
+      title={intl.formatMessage(EscalatereviewMessages.escalateModalTitle)}
+      handleClose={() => close(null)}
+      actions={[
+        <Button
+          key="cancel_escalate"
+          id="cancel_escalate"
+          type="tertiary"
+          onClick={() => close(null)}
+        >
+          {intl.formatMessage(EscalatereviewMessages.escalateModalCancel)}
+        </Button>,
+        <Button
+          key="confirm_escalate"
+          id="confirm_escalate"
+          type="primary"
+          disabled={!state.comment}
+          style={{
+            background: '#B45309',
+            borderColor: '#B45309',
+            color: '#FFF'
+          }}
+          onClick={() => close(state)}
+        >
+          {intl.formatMessage(EscalatereviewMessages.escalateModalButton)}
+        </Button>
+      ]}
+    >
+      <Stack alignItems="left" direction="column" gap={16}>
+        <Text color="grey500" element="p" variant="reg16">
+          {intl.formatMessage(EscalatereviewMessages.escalateModalDescription)}
+        </Text>
+        <Stack direction="column" gap={8}>
+          <Text element="p" variant="bold14">
+            {intl.formatMessage(EscalatereviewMessages.escalateModalRole)}
+          </Text>
+
+          <select
+            id="escalate-role-select"
+            name="escalationRole"
+            value={state.escalationRole}
+            onChange={(e) =>
+              setState((prev) => ({
+                ...prev,
+                escalationRole: e.target
+                  .value as EscalationState['escalationRole']
+              }))
+            }
+            style={{
+              width: '100%',
+              padding: '12px 14px',
+              borderRadius: '8px',
+              border: '1px solid #D6D9E0',
+              fontSize: '16px',
+              background: '#FFF',
+              outline: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            {escalationOptions.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </Stack>
+
+        <TextArea
+          rows={5}
+          data-testid="escalate-comment"
+          required={true}
+          value={state.comment}
+          placeholder={intl.formatMessage(
+            EscalatereviewMessages.escalateModalPlaceholder
+          )}
+          onChange={(e) =>
+            setState((prev) => ({ ...prev, comment: e.target.value }))
+          }
+        />
+      </Stack>
+    </ResponsiveModal>
+  )
+}
+
+function ApproveEscalationActionModal({
+  close
+}: {
+  close: (result: { comment: string } | null) => void
+}) {
+  const [comment, setComment] = useState('')
+  const intl = useIntl()
+
+  return (
+    <ResponsiveModal
+      showHeaderBorder
+      autoHeight
+      width={600}
+      show={true}
+      id="approve-escalation-modal"
+      title="Submit Comment"
+      handleClose={() => close(null)}
+      actions={[
+        <Button
+          key="cancel_approve_escalation"
+          id="cancel_approve_escalation"
+          type="tertiary"
+          onClick={() => close(null)}
+        >
+          Cancel
+        </Button>,
+
+        <Button
+          key="confirm_approve_escalation"
+          id="confirm_approve_escalation"
+          type="primary"
+          disabled={!comment.trim()}
+          onClick={() =>
+            close({
+              comment
+            })
+          }
+        >
+          Submit
+        </Button>
+      ]}
+    >
+      <Stack alignItems="left" direction="column" gap={16}>
+        <Text color="grey500" element="p" variant="reg16">
+          Add comment
+        </Text>
+
+        <TextArea
+          rows={5}
+          required={true}
+          value={comment}
+          placeholder="Enter comment"
+          onChange={(e) => setComment(e.target.value)}
+        />
+      </Stack>
+    </ResponsiveModal>
+  )
+}
+
 export const Review = {
   Body: withSuspense(ReviewComponent),
   Actions: ReviewActionComponent,
   EditModal,
   ActionModal: {
     Accept: AcceptActionModal,
-    Reject: RejectActionModal
+    Reject: RejectActionModal,
+    Escalate: EscalateActionModal,
+    Approval: ApproveEscalationActionModal
   }
 }

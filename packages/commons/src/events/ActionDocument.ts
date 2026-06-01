@@ -144,6 +144,13 @@ export const ReasonContent = z.object({
     )
 })
 
+const EscalateAction = ActionBase.merge(
+  z.object({
+    type: z.literal(ActionType.ESCALATE),
+    content: ReasonContent
+  })
+)
+
 const RejectAction = ActionBase.merge(
   z.object({
     type: z.literal(ActionType.REJECT),
@@ -253,6 +260,7 @@ export const ActionDocument = z
   .discriminatedUnion('type', [
     CreatedAction.openapi({ ref: 'CreatedAction' }),
     ValidateAction.openapi({ ref: 'ValidateAction' }),
+    EscalateAction.openapi({ ref: 'EscalateAction' }),
     RejectAction.openapi({ ref: 'RejectAction' }),
     DuplicateDetectedAction.openapi({ ref: 'DuplicateDetectedAction' }),
     MarkNotDuplicateAction.openapi({ ref: 'MarkNotDuplicateAction' }),

@@ -1636,6 +1636,7 @@ export enum RegAction {
   Assigned = 'ASSIGNED',
   Corrected = 'CORRECTED',
   Downloaded = 'DOWNLOADED',
+  Escalate = 'ESCALATE',
   FlaggedAsPotentialDuplicate = 'FLAGGED_AS_POTENTIAL_DUPLICATE',
   MarkedAsDuplicate = 'MARKED_AS_DUPLICATE',
   MarkedAsNotDuplicate = 'MARKED_AS_NOT_DUPLICATE',
@@ -2026,6 +2027,7 @@ export type User = {
   __typename?: 'User'
   avatar?: Maybe<Avatar>
   creationDate: Scalars['String']
+  data?: Maybe<UserData>
   device?: Maybe<Scalars['String']>
   email?: Maybe<Scalars['String']>
   fullHonorificName?: Maybe<Scalars['String']>
@@ -2076,6 +2078,27 @@ export type UserAuditLogResultSet = {
   total: Scalars['Int']
 }
 
+export type UserData = {
+  __typename?: 'UserData'
+  alienId?: Maybe<Scalars['String']>
+  facilityId?: Maybe<Scalars['String']>
+  idType?: Maybe<Scalars['String']>
+  nationality?: Maybe<Scalars['String']>
+  nid?: Maybe<Scalars['String']>
+  passport?: Maybe<Scalars['String']>
+  refugeeId?: Maybe<Scalars['String']>
+}
+
+export type UserDataInput = {
+  alienId?: InputMaybe<Scalars['String']>
+  facilityId?: InputMaybe<Scalars['String']>
+  idType?: InputMaybe<Scalars['String']>
+  nationality?: InputMaybe<Scalars['String']>
+  nid?: InputMaybe<Scalars['String']>
+  passport?: InputMaybe<Scalars['String']>
+  refugeeId?: InputMaybe<Scalars['String']>
+}
+
 export type UserIdentifierInput = {
   system?: InputMaybe<Scalars['String']>
   use?: InputMaybe<Scalars['String']>
@@ -2083,6 +2106,7 @@ export type UserIdentifierInput = {
 }
 
 export type UserInput = {
+  data?: InputMaybe<UserDataInput>
   device?: InputMaybe<Scalars['String']>
   email?: InputMaybe<Scalars['String']>
   fullHonorificName?: InputMaybe<Scalars['String']>
@@ -2560,6 +2584,16 @@ export type FetchUserQuery = {
         type?: string | null
       } | null
     } | null
+    data?: {
+      __typename?: 'UserData'
+      nationality?: string | null
+      idType?: string | null
+      nid?: string | null
+      passport?: string | null
+      alienId?: string | null
+      refugeeId?: string | null
+      facilityId?: string | null
+    } | null
     avatar?: { __typename?: 'Avatar'; type: string; data: string } | null
     searches?: Array<{
       __typename?: 'BookmarkedSeachItem'
@@ -2929,6 +2963,16 @@ export type GetUserQuery = {
       data?: string | null
     } | null
     avatar?: { __typename?: 'Avatar'; type: string; data: string } | null
+    data?: {
+      __typename?: 'UserData'
+      nationality?: string | null
+      idType?: string | null
+      nid?: string | null
+      passport?: string | null
+      alienId?: string | null
+      refugeeId?: string | null
+      facilityId?: string | null
+    } | null
   } | null
 }
 

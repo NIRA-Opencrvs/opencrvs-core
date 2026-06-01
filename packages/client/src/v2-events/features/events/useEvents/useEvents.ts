@@ -200,6 +200,7 @@ export function useEvents() {
       notify: useEventAction(trpc.event.actions.notify.request),
       declare: useEventAction(trpc.event.actions.declare.request),
       register: useEventAction(trpc.event.actions.register.request),
+      escalate: useEventAction(trpc.event.actions.escalate.request),
       correction: {
         request: useEventAction(trpc.event.actions.correction.request.request),
         approve: useEventAction(trpc.event.actions.correction.approve.request),

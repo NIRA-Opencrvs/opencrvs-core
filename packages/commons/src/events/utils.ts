@@ -218,10 +218,18 @@ export function omitHiddenFields<T extends EventState | ActionUpdate>(
         (f) => !isFieldVisible(f, prevVisibilityContext, validatorContext)
       )
 
+      const shouldPersist = fieldConfig.some(
+        (f) => f.persistWhenHidden
+      )
+
       if (!isHidden) {
         return false
       }
 
+      if (shouldPersist) {
+        return false
+      }
+      
       if (includeHiddenFieldsWithNullValues && value === null) {
         return false
       }

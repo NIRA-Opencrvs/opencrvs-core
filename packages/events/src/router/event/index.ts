@@ -224,6 +224,7 @@ export const eventRouter = router({
     reject: router(getDefaultActionProcedures(ActionType.REJECT)),
     archive: router(getDefaultActionProcedures(ActionType.ARCHIVE)),
     register: router(getDefaultActionProcedures(ActionType.REGISTER)),
+    escalate: router(getDefaultActionProcedures(ActionType.ESCALATE)),
     printCertificate: router(
       getDefaultActionProcedures(ActionType.PRINT_CERTIFICATE)
     ),

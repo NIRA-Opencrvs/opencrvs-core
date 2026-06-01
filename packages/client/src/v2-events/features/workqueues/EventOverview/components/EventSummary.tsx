@@ -144,6 +144,11 @@ const flagMessages = {
     id: 'flags.builtin.pending-certification.label',
     defaultMessage: 'Pending certification',
     description: 'Flag label for pending certification'
+  },
+  [InherentFlags.ESCALATED]: {
+    id: 'flags.builtin.escalated.label',
+    defaultMessage: 'Escalated',
+    description: 'Flag label for escalation'
   }
 } satisfies Record<InherentFlags, TranslationConfig>
 

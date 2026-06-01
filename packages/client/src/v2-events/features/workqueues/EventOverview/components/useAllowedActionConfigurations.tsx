@@ -121,6 +121,12 @@ export const actionLabels = {
       'This is shown as the action name anywhere the user can trigger the action from',
     id: 'event.birth.action.validate.label'
   },
+  [ActionType.ESCALATE]: {
+    defaultMessage: 'Escalate',
+    description:
+      'This is shown as the action name anywhere the user can trigger the action from',
+    id: 'event.birth.action.escalate.label'
+  },
   [ActionType.ARCHIVE]: {
     defaultMessage: 'Archive',
     description: 'Label for archive record button in dropdown menu',
@@ -362,6 +368,12 @@ function useViewableActionConfigurations(
         },
         disabled: !isDownloadedAndAssignedToUser
       },
+      [ActionType.ESCALATE]: {
+        label: actionLabels[ActionType.ESCALATE],
+        icon: 'ArrowRight' as const,
+        onClick: async () => {},
+        disabled: !isDownloadedAndAssignedToUser
+      },
       [ActionType.ARCHIVE]: {
         label: actionLabels[ActionType.ARCHIVE],
         icon: 'Archive' as const,
@@ -559,6 +571,7 @@ export function useAllowedActionConfigurations(
     // We need to transform data and filter out hidden actions to ensure hasOnlyMetaAction receives the correct values.
     .map((a) => ({ ...config[a], type: a }))
     .filter((a: ActionConfig) => !a.hidden)
+    .filter((a) => a.type !== ActionType.ESCALATE)
 
   // Check if the user can perform any action other than READ, ASSIGN, or UNASSIGN
   const hasOnlyMetaActions = allowedWorkqueueConfigs.every(({ type }) =>

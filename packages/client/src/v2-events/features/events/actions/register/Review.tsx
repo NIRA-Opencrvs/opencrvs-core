@@ -20,6 +20,7 @@ import { useSelector } from 'react-redux'
 import {
   getCurrentEventState,
   ActionType,
+  EventStatus,
   getActionAnnotation,
   getDeclaration,
   getActionReview,
@@ -30,6 +31,7 @@ import { useEvents } from '@client/v2-events/features/events/useEvents/useEvents
 import {
   REJECT_ACTIONS,
   RejectionState,
+  EscalationState,
   Review as ReviewComponent
 } from '@client/v2-events/features/events/components/Review'
 import { useModal } from '@client/v2-events/hooks/useModal'
@@ -104,6 +106,38 @@ export function Review() {
   const currentUserIsHFA =
     legacyUser?.role.id === 'HEALTH_FACILITY_ADMINISTRATOR'
 
+  const ESCALATE_ROLES = [
+    'REGISTRATION_OFFICER',
+    'CID_OFFICER',
+    'LEGAL_OFFICER',
+    'COMMISSIONER_CIVIL_REGISTRATION',
+    'SENIOR_REGISTRAR_OFFICER'
+  ]
+
+  const isEscalatedRecord =
+    !!currentEventState.declaration?.['review.escalationRole']
+
+  const showEscalateButton =
+    ESCALATE_ROLES.includes(legacyUser?.role?.id ?? '') &&
+    currentEventState.status !== EventStatus.enum.REGISTERED
+
+  const APPROVAL_ROLES = [
+    'CID_OFFICER',
+    'LEGAL_OFFICER',
+    'SENIOR_REGISTRAR_OFFICER'
+  ]
+
+  const ESCALATION_ONLY_ROLES = ['CID_OFFICER', 'LEGAL_OFFICER']
+
+  const isApprovalOfficer = APPROVAL_ROLES.includes(legacyUser?.role?.id ?? '')
+
+  const isEscalationOnlyOfficer = ESCALATION_ONLY_ROLES.includes(
+    legacyUser?.role?.id ?? ''
+  )
+  const escalationAssignedToCurrentUser =
+    currentEventState.declaration?.['review.escalationRole'] ===
+    legacyUser?.role?.id
+
   const incomplete = validationErrorsInActionFormExist({
     formConfig,
     form,
@@ -165,7 +199,14 @@ export function Review() {
     if (confirmedRegistration) {
       registerMutation.mutate({
         eventId,
-        declaration: form,
+        declaration: isEscalatedRecord
+          ? {
+              ...form,
+              'review.escalated': false,
+              'review.escalationRole': '',
+              'review.escalationComment': ''
+            }
+          : form,
         transactionId: uuid(),
         annotation
       })
@@ -183,7 +224,13 @@ export function Review() {
       if (rejectAction === REJECT_ACTIONS.SEND_FOR_UPDATE) {
         events.actions.reject.mutate({
           eventId,
-          declaration: {},
+          declaration: isEscalatedRecord
+            ? {
+                'review.escalated': false,
+                'review.escalationRole': '',
+                'review.escalationComment': ''
+              }
+            : {},
           transactionId: uuid(),
           annotation: {},
           content: { reason: message }
@@ -194,14 +241,26 @@ export function Review() {
         if (isDuplicate) {
           events.customActions.archiveOnDuplicate.mutate({
             eventId,
-            declaration: {},
+            declaration: isEscalatedRecord
+              ? {
+                  'review.escalated': false,
+                  'review.escalationRole': '',
+                  'review.escalationComment': ''
+                }
+              : {},
             transactionId: uuid(),
             content: { reason: message }
           })
         } else {
           events.actions.archive.mutate({
             eventId,
-            declaration: {},
+            declaration: isEscalatedRecord
+              ? {
+                  'review.escalated': false,
+                  'review.escalationRole': '',
+                  'review.escalationComment': ''
+                }
+              : {},
             transactionId: uuid(),
             annotation: {},
             content: { reason: message }
@@ -211,6 +270,63 @@ export function Review() {
 
       closeActionView(slug)
     }
+  }
+
+  async function handleEscalation() {
+    const result = await openModal<EscalationState | null>((close) => (
+      <ReviewComponent.ActionModal.Escalate
+        close={close}
+        currentUserRole={
+          legacyUser?.role?.id as EscalationState['escalationRole']
+        }
+      />
+    ))
+
+    if (!result) return
+
+    events.actions.escalate.mutate({
+      eventId,
+      transactionId: uuid(),
+      declaration: {
+        'review.escalated': true,
+        'review.escalationRole': result.escalationRole,
+        'review.escalationComment': result.comment
+      },
+      annotation: {},
+      content: {
+        reason: result.comment
+      }
+    })
+
+    closeActionView(slug)
+  }
+
+  async function handleEscalationApproval() {
+    const assignedTo =
+      currentEventState.declaration?.['review.escalatedFromUserId']
+
+    if (!assignedTo || typeof assignedTo !== 'string') {
+      return
+    }
+
+    await events.actions.escalate.mutate({
+      eventId,
+      transactionId: uuid(),
+
+      declaration: {
+        'review.escalated': false,
+        'review.escalationRole': '',
+        'review.escalationComment': ''
+      },
+
+      annotation: {},
+
+      content: {
+        reason: 'Escalation approved'
+      }
+    })
+
+    closeActionView(slug)
   }
 
   return (
@@ -238,13 +354,31 @@ export function Review() {
         <ReviewComponent.Actions
           icon="Check"
           incomplete={incomplete}
-          messages={messages}
+          messages={{
+            ...messages,
+
+            onApproveEscalation: {
+              id: 'buttons.approve',
+              defaultMessage: 'Approve Escalation',
+              description: 'Approve escalated record'
+            }
+          }}
           primaryButtonType="positive"
-          onConfirm={handleRegistration}
+          onConfirm={isEscalationOnlyOfficer ? undefined : handleRegistration}
           onReject={
-            currentEventState.flags.includes(InherentFlags.REJECTED)
+            isEscalationOnlyOfficer
               ? undefined
-              : handleRejection
+              : currentEventState.flags.includes(InherentFlags.REJECTED)
+                ? undefined
+                : handleRejection
+          }
+          onEscalate={showEscalateButton ? handleEscalation : undefined}
+          onApproveEscalation={
+            isEscalatedRecord &&
+            isApprovalOfficer &&
+            escalationAssignedToCurrentUser
+              ? handleEscalationApproval
+              : undefined
           }
         />
         {modal}

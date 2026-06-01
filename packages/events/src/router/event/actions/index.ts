@@ -22,6 +22,7 @@ import {
   RegisterActionInput,
   RejectDeclarationActionInput,
   ArchiveActionInput,
+  EscalateActionInput,
   PrintCertificateActionInput,
   DeclareActionInput,
   ValidateActionInput,
@@ -111,6 +112,10 @@ const ACTION_PROCEDURE_CONFIG = {
   [ActionType.ARCHIVE]: {
     ...defaultConfig,
     inputSchema: ArchiveActionInput
+  },
+  [ActionType.ESCALATE]: {
+    ...defaultConfig,
+    inputSchema: EscalateActionInput
   },
   [ActionType.PRINT_CERTIFICATE]: {
     ...defaultConfig,

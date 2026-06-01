@@ -54,6 +54,20 @@ function isRejected(actions: Action[]): boolean {
   return actions.at(-1)?.type === ActionType.REJECT
 }
 
+function isEscalated(actions: Action[]): boolean {
+  return actions.reduce<boolean>((prev, action) => {
+    if (action.type === ActionType.ESCALATE && 'declaration' in action) {
+      const escalated = action.declaration?.['review.escalated']
+
+      if (typeof escalated === 'boolean') {
+        return escalated
+      }
+    }
+
+    return prev
+  }, false)
+}
+
 function isPotentialDuplicate(actions: Action[]): boolean {
   return actions.reduce<boolean>((prev, { type }) => {
     if (type === ActionType.DUPLICATE_DETECTED) {
@@ -112,6 +126,8 @@ export function getFlagsFromActions(actions: Action[]): Flag[] {
   if (isPotentialDuplicate(sortedActions)) {
     flags.push(InherentFlags.POTENTIAL_DUPLICATE)
   }
-
+  if (isEscalated(sortedActions)) {
+    flags.push(InherentFlags.ESCALATED)
+  }
   return flags
 }

@@ -179,6 +179,17 @@ setMutationDefaults(trpcOptionsProxy.event.actions.validate.request, {
   meta: { actionType: ActionType.VALIDATE }
 })
 
+setMutationDefaults(trpcOptionsProxy.event.actions.escalate.request, {
+  mutationFn: createEventActionMutationFn(
+    trpcOptionsProxy.event.actions.escalate.request
+  ),
+  retry: retryUnlessConflict,
+  retryDelay,
+  onSuccess: deleteLocalEvent,
+  onError: errorToastOnConflict,
+  meta: { actionType: ActionType.ESCALATE }
+})
+
 setMutationDefaults(trpcOptionsProxy.event.actions.reject.request, {
   mutationFn: createEventActionMutationFn(
     trpcOptionsProxy.event.actions.reject.request
