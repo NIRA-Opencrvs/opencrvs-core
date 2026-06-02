@@ -81,6 +81,10 @@ jobs:
           jq --arg version "$TOOLKIT_VERSION" '.version = $version' package.json > tmp.$$.json && mv tmp.$$.json package.json
         working-directory: packages/toolkit
 
+      - run: npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish to npm
         if: steps.check-version.outputs.version-exists == 'false'
         run: npm publish --access public
