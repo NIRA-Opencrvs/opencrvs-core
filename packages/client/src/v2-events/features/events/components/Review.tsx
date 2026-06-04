@@ -1002,25 +1002,50 @@ export interface EscalationState {
   comment: string
 }
 
+export const ESCALATION_OPTIONS_BY_ROLE = {
+  REGISTRATION_OFFICER: [
+    {
+      value: 'SENIOR_REGISTRAR_OFFICER' as const,
+      label: 'Senior Registration Officer'
+    }
+  ],
+  COMMISSIONER: [
+    {
+      value: 'SENIOR_REGISTRAR_OFFICER' as const,
+      label: 'Senior Registration Officer'
+    }
+  ],
+  SENIOR_REGISTRAR_OFFICER: [
+    { value: 'LEGAL_OFFICER' as const, label: 'Legal Officer' },
+    { value: 'CID_OFFICER' as const, label: 'CID Officer' }
+  ],
+  CID_OFFICER: [
+    { value: 'LEGAL_OFFICER' as const, label: 'Legal Officer' },
+    {
+      value: 'SENIOR_REGISTRAR_OFFICER' as const,
+      label: 'Senior Registration Officer'
+    }
+  ],
+  LEGAL_OFFICER: [
+    { value: 'CID_OFFICER' as const, label: 'CID Officer' },
+    {
+      value: 'SENIOR_REGISTRAR_OFFICER' as const,
+      label: 'Senior Registration Officer'
+    }
+  ]
+}
+
 function EscalateActionModal({
   close,
   currentUserRole
 }: {
   close: (result: EscalationState | null) => void
-  currentUserRole?: EscalationState['escalationRole']
+  currentUserRole?: keyof typeof ESCALATION_OPTIONS_BY_ROLE
 }) {
-  const allEscalationOptions = [
-    { value: 'CID_OFFICER' as const, label: 'CID Officer' },
-    {
-      value: 'SENIOR_REGISTRAR_OFFICER' as const,
-      label: 'Senior Registration Officer'
-    },
-    { value: 'LEGAL_OFFICER' as const, label: 'Legal Officer' }
-  ]
+  const escalationOptions = currentUserRole
+    ? (ESCALATION_OPTIONS_BY_ROLE[currentUserRole] ?? [])
+    : []
 
-  const escalationOptions = allEscalationOptions.filter(
-    (o) => o.value !== currentUserRole
-  )
   const [state, setState] = useState<EscalationState>({
     escalationRole: escalationOptions[0]?.value ?? 'CID_OFFICER',
     comment: ''

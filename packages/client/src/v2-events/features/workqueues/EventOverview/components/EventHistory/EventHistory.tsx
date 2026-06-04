@@ -352,10 +352,14 @@ export function EventHistory({
     eventConfiguration
   )
 
+  // Order modified with latest data first for country requirement
   const visibleHistoryWithClientSpecificActions =
-    historyWithClientSpecificActions.filter(
-      ({ type }) => type !== ActionType.CREATE
-    )
+    historyWithClientSpecificActions
+      .filter(({ type }) => type !== ActionType.CREATE)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
 
   const onHistoryRowClick = (
     action: EventHistoryActionDocument,
