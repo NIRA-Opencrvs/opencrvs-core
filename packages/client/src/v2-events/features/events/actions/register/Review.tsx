@@ -31,6 +31,7 @@ import { useEvents } from '@client/v2-events/features/events/useEvents/useEvents
 import {
   REJECT_ACTIONS,
   RejectionState,
+  ESCALATION_OPTIONS_BY_ROLE,
   EscalationState,
   Review as ReviewComponent
 } from '@client/v2-events/features/events/components/Review'
@@ -121,11 +122,7 @@ export function Review() {
     ESCALATE_ROLES.includes(legacyUser?.role?.id ?? '') &&
     currentEventState.status !== EventStatus.enum.REGISTERED
 
-  const APPROVAL_ROLES = [
-    'CID_OFFICER',
-    'LEGAL_OFFICER',
-    'SENIOR_REGISTRAR_OFFICER'
-  ]
+  const APPROVAL_ROLES = ['CID_OFFICER', 'LEGAL_OFFICER']
 
   const ESCALATION_ONLY_ROLES = ['CID_OFFICER', 'LEGAL_OFFICER']
 
@@ -277,7 +274,7 @@ export function Review() {
       <ReviewComponent.ActionModal.Escalate
         close={close}
         currentUserRole={
-          legacyUser?.role?.id as EscalationState['escalationRole']
+          legacyUser?.role?.id as keyof typeof ESCALATION_OPTIONS_BY_ROLE
         }
       />
     ))

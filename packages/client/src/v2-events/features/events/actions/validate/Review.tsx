@@ -32,6 +32,7 @@ import {
   REJECT_ACTIONS,
   RejectionState,
   EscalationState,
+  ESCALATION_OPTIONS_BY_ROLE,
   Review as ReviewComponent
 } from '@client/v2-events/features/events/components/Review'
 import { useModal } from '@client/v2-events/hooks/useModal'
@@ -90,12 +91,6 @@ export function Review() {
 
   const legacyUser = useSelector(getUserDetails)
 
-  console.log('USER ROLE DEBUG:', {
-    role: legacyUser?.role,
-    roleId: legacyUser?.role?.id,
-    fullUser: legacyUser
-  })
-
   const previousAnnotation = getActionAnnotation({
     event,
     actionType: ActionType.VALIDATE
@@ -134,11 +129,7 @@ export function Review() {
     ESCALATE_ROLES.includes(legacyUser?.role?.id ?? '') &&
     currentEventState.status !== EventStatus.enum.REGISTERED
 
-  const APPROVAL_ROLES = [
-    'CID_OFFICER',
-    'LEGAL_OFFICER',
-    'SENIOR_REGISTRAR_OFFICER'
-  ]
+  const APPROVAL_ROLES = ['CID_OFFICER', 'LEGAL_OFFICER']
 
   // This for Hide register & reject flow to this user only escalation feature
   const ESCALATION_ONLY_ROLES = ['CID_OFFICER', 'LEGAL_OFFICER']
@@ -289,7 +280,7 @@ export function Review() {
       <ReviewComponent.ActionModal.Escalate
         close={close}
         currentUserRole={
-          legacyUser?.role?.id as EscalationState['escalationRole']
+          legacyUser?.role?.id as keyof typeof ESCALATION_OPTIONS_BY_ROLE
         }
       />
     ))
