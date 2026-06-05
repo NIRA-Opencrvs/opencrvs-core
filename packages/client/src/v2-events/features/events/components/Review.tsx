@@ -1009,7 +1009,7 @@ export const ESCALATION_OPTIONS_BY_ROLE = {
       label: 'Senior Registration Officer'
     }
   ],
-  COMMISSIONER: [
+  COMMISSIONER_CIVIL_REGISTRATION: [
     {
       value: 'SENIOR_REGISTRAR_OFFICER' as const,
       label: 'Senior Registration Officer'
