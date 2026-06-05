@@ -2079,10 +2079,12 @@ export interface QueryToGetUserByEmailResolver<TParent = any, TResult = any> {
 }
 
 export interface QueryToSearchUsersArgs {
+  name?: string
   username?: string
   mobile?: string
   email?: string
   status?: string
+  role?: string
   primaryOfficeId?: string
   locationId?: string
   count?: number

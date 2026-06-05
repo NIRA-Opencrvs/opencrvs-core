@@ -31,9 +31,18 @@ import { roleQueries } from '@client/forms/user/query/queries'
 import { vi, Mock } from 'vitest'
 import { SCOPES } from '@opencrvs/commons/client'
 import { SearchUsersQuery, Status } from '@client/utils/gateway'
-import { NetworkStatus } from '@apollo/client'
+import {
+  ApolloClient,
+  ApolloLink,
+  InMemoryCache,
+  NetworkStatus,
+  Observable
+} from '@apollo/client'
 import { TEAM_USER_LIST } from '@client/navigation/routes'
 import { createMemoryRouter } from 'react-router-dom'
+import { Select } from '@opencrvs/components/lib/Select'
+import { act } from 'react-dom/test-utils'
+import { Button } from '@opencrvs/components/lib/Button'
 
 const searchUserResultsMock = (
   officeId: string,
@@ -102,6 +111,31 @@ const mockNationalSystemAdmin = (officeId: string) => ({
       description: ''
     }
   },
+  status: Status.Active,
+  underInvestigation: false
+})
+const mockPoliceInchargeRole = {
+  id: 'POLICE_INCHARGE',
+  label: {
+    id: 'userRoles.policeIncharge',
+    defaultMessage: 'Police Incharge',
+    description: ''
+  },
+  scopes: []
+}
+const mockPoliceIncharge = (officeId: string, firstNames = 'Officer') => ({
+  id: '5d08e102542c7a19fc55b796',
+  name: [
+    {
+      use: 'en',
+      firstNames,
+      familyName: 'Incharge'
+    }
+  ],
+  primaryOffice: {
+    id: officeId
+  },
+  role: mockPoliceInchargeRole,
   status: Status.Active,
   underInvestigation: false
 })
@@ -628,6 +662,190 @@ describe('User list tests', () => {
       testComponent.component.update()
       const app = testComponent.component
       expect(app.find('#no-record').hostNodes()).toHaveLength(1)
+    })
+
+    describe('user search', () => {
+      const selectedOfficeId = '0d8474da-0361-4d32-979e-af91f012340a'
+      type SearchVariables = {
+        primaryOfficeId: string
+        count: number
+        skip: number
+        name?: string
+        role?: string
+      }
+      const defaultSearchVariables: SearchVariables = {
+        primaryOfficeId: selectedOfficeId,
+        count: 10,
+        skip: 0
+      }
+      const renderUserList = async ({
+        getResults
+      }: {
+        getResults: (
+          variables: SearchVariables
+        ) => NonNullable<SearchUsersQuery['searchUsers']>['results']
+      }) => {
+        const searchVariables: SearchVariables[] = []
+        const apolloClient = new ApolloClient({
+          cache: new InMemoryCache({
+            addTypename: false
+          }),
+          link: new ApolloLink((operation) => {
+            return new Observable((observer) => {
+              const variables = operation.variables as SearchVariables
+              const results = getResults(variables)
+              searchVariables.push(variables)
+              observer.next({
+                data: {
+                  searchUsers: {
+                    totalItems: results.length,
+                    results
+                  }
+                }
+              })
+              observer.complete()
+            })
+          })
+        })
+        const testComponent = await createTestComponent(<UserList />, {
+          store,
+          path: TEAM_USER_LIST,
+          initialEntries: [
+            TEAM_USER_LIST +
+              '?' +
+              stringify({
+                locationId: selectedOfficeId
+              })
+          ],
+          apolloClient
+        })
+
+        await flushPromises()
+        testComponent.component.update()
+        await waitForElement(testComponent.component, '#user-name-search')
+
+        return {
+          component: testComponent.component,
+          searchVariables
+        }
+      }
+      const changeRoleSearch = async (
+        component: ReactWrapper,
+        value: string
+      ) => {
+        await act(async () => {
+          component
+            .find(Select)
+            .filterWhere((node) => node.prop('id') === 'user-role-search')
+            .props()
+            .onChange(value)
+        })
+        await flushPromises()
+        component.update()
+      }
+      const clickButton = async (component: ReactWrapper, id: string) => {
+        await act(async () => {
+          component
+            .find(Button)
+            .filterWhere((node) => node.prop('id') === id)
+            .props()
+            .onClick?.({} as React.MouseEvent<HTMLButtonElement>)
+        })
+        await flushPromises()
+        component.update()
+      }
+
+      it('searches by role only', async () => {
+        const { component, searchVariables } = await renderUserList({
+          getResults: (variables) =>
+            variables.role === 'POLICE_INCHARGE'
+              ? [mockPoliceIncharge(selectedOfficeId)]
+              : []
+        })
+
+        await changeRoleSearch(component, 'POLICE_INCHARGE')
+        await clickButton(component, 'user-search-btn')
+
+        await waitFor(() => {
+          return searchVariables.length === 2
+        })
+        expect(searchVariables).toContainEqual({
+          ...defaultSearchVariables,
+          role: 'POLICE_INCHARGE'
+        })
+      })
+
+      it('searches by name and role together when Search is clicked', async () => {
+        const { component, searchVariables } = await renderUserList({
+          getResults: (variables) =>
+            variables.name === 'Officer' && variables.role === 'POLICE_INCHARGE'
+              ? [mockPoliceIncharge(selectedOfficeId)]
+              : []
+        })
+
+        component
+          .find('#user-name-search')
+          .hostNodes()
+          .simulate('change', { target: { value: 'Officer' } })
+        await flushPromises()
+        component.update()
+        await changeRoleSearch(component, 'POLICE_INCHARGE')
+        component
+          .find('#user-name-search')
+          .hostNodes()
+          .simulate('keyDown', { key: 'Enter' })
+        await flushPromises()
+        component.update()
+        expect(searchVariables).toHaveLength(1)
+
+        await clickButton(component, 'user-search-btn')
+
+        await waitFor(() => {
+          return searchVariables.length === 2
+        })
+        expect(searchVariables).toContainEqual({
+          ...defaultSearchVariables,
+          name: 'Officer',
+          role: 'POLICE_INCHARGE'
+        })
+      })
+
+      it('clear button resets name and role filters and returns to default search state', async () => {
+        const { component, searchVariables } = await renderUserList({
+          getResults: (variables) =>
+            variables.name === 'Officer' && variables.role === 'POLICE_INCHARGE'
+              ? [mockPoliceIncharge(selectedOfficeId)]
+              : [mockRegistrationAgent(selectedOfficeId)]
+        })
+
+        component
+          .find('#user-name-search')
+          .hostNodes()
+          .simulate('change', { target: { value: 'Officer' } })
+        await flushPromises()
+        component.update()
+        await changeRoleSearch(component, 'POLICE_INCHARGE')
+        await clickButton(component, 'user-search-btn')
+        await waitFor(() => {
+          return searchVariables.length === 2
+        })
+
+        await clickButton(component, 'user-clear-btn')
+        await waitFor(() => {
+          return searchVariables.length === 3
+        })
+
+        expect(
+          component.find('#user-name-search').hostNodes().props().value
+        ).toBe('')
+        expect(
+          component
+            .find(Select)
+            .filterWhere((node) => node.prop('id') === 'user-role-search')
+            .props().value
+        ).toBe('')
+        expect(searchVariables[2]).toEqual(defaultSearchVariables)
+      })
     })
 
     describe('when there is a result from query', () => {

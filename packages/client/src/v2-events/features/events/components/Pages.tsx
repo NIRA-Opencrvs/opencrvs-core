@@ -61,8 +61,11 @@ export function Pages({
   validatorContext
 }: PagesProps) {
   const intl = useIntl()
+  const pageConditionalData = declaration
+    ? { ...declaration, ...formData }
+    : formData
   const visiblePages = formPages.filter((page) =>
-    isPageVisible(page, formData, validatorContext)
+    isPageVisible(page, pageConditionalData, validatorContext)
   )
 
   const pageIdx = visiblePages.findIndex((p) => p.id === pageId)
@@ -77,8 +80,11 @@ export function Pages({
   }, [pageId])
 
   function switchToNextPage(formValues: EventState = formData) {
+    const updatedConditionalData = declaration
+      ? { ...declaration, ...formValues }
+      : formValues
     const currentVisiblePages = formPages.filter((p) =>
-      isPageVisible(p, formValues, validatorContext)
+      isPageVisible(p, updatedConditionalData, validatorContext)
     )
     const currentPageIdx = currentVisiblePages.findIndex((p) => p.id === pageId)
     const nextPageIdx = currentPageIdx + 1

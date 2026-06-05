@@ -92,6 +92,17 @@ const dummyUserList = [
   }
 ]
 describe('searchUsers tests', () => {
+  const mockUserFind = (results: typeof dummyUserList) => {
+    const findResult = {
+      populate: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnValue(results),
+      count: jest.fn().mockReturnValue(results.length)
+    }
+    User.find = jest.fn().mockReturnValue(findResult)
+  }
+
   it('Successfully returns full user list', async () => {
     User.find = jest.fn().mockReturnValue(dummyUserList)
     User.find().populate = jest.fn().mockReturnValue(dummyUserList)
@@ -143,5 +154,74 @@ describe('searchUsers tests', () => {
     })
 
     expect(res.result.results).toEqual(filteredUserList)
+  })
+
+  it('filters users by role only', async () => {
+    mockUserFind([dummyUserList[0]])
+
+    const res = await server.server.inject({
+      method: 'POST',
+      url: '/searchUsers',
+      payload: {
+        count: 10,
+        skip: 0,
+        sortOrder: 'asc',
+        role: 'POLICE_INCHARGE'
+      },
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    expect(User.find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        role: 'POLICE_INCHARGE'
+      })
+    )
+    expect(res.result.results).toEqual([dummyUserList[0]])
+  })
+
+  it('filters users by name and role together', async () => {
+    mockUserFind([dummyUserList[0]])
+
+    const res = await server.server.inject({
+      method: 'POST',
+      url: '/searchUsers',
+      payload: {
+        count: 10,
+        skip: 0,
+        sortOrder: 'asc',
+        name: 'Officer',
+        role: 'POLICE_INCHARGE'
+      },
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    expect(User.find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        role: 'POLICE_INCHARGE',
+        $and: [
+          {
+            $or: [
+              {
+                'name.given': {
+                  $regex: 'Officer',
+                  $options: 'i'
+                }
+              },
+              {
+                'name.family': {
+                  $regex: 'Officer',
+                  $options: 'i'
+                }
+              }
+            ]
+          }
+        ]
+      })
+    )
+    expect(res.result.results).toEqual([dummyUserList[0]])
   })
 })

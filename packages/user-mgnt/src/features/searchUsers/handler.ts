@@ -17,9 +17,11 @@ import { resolveLocationChildren } from '@user-mgnt/utils/location'
 import { UUID } from '@opencrvs/commons'
 
 interface IVerifyPayload {
+  name?: string
   username?: string
   mobile?: string
   status?: string
+  role?: string
   primaryOfficeId?: string
   locationId?: UUID
   count: number
@@ -32,9 +34,11 @@ export default async function searchUsers(
   h: Hapi.ResponseToolkit
 ) {
   const {
+    name,
     username,
     mobile,
     status,
+    role,
     primaryOfficeId,
     locationId,
     count,
@@ -48,6 +52,25 @@ export default async function searchUsers(
   if (mobile) {
     criteria = { ...criteria, mobile }
   }
+  if (name) {
+    const nameParts = name.trim().split(/\s+/).filter(Boolean)
+    if (nameParts.length > 0) {
+      criteria = {
+        ...criteria,
+        $and: nameParts.map((namePart) => {
+          const escapedNamePart = namePart.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            '\\$&'
+          )
+          const nameRegex = { $regex: escapedNamePart, $options: 'i' }
+
+          return {
+            $or: [{ 'name.given': nameRegex }, { 'name.family': nameRegex }]
+          }
+        })
+      }
+    }
+  }
   if (primaryOfficeId) {
     criteria = { ...criteria, primaryOfficeId }
   }
@@ -58,6 +81,9 @@ export default async function searchUsers(
   if (status) {
     criteria = { ...criteria, status }
   }
+  if (role) {
+    criteria = { ...criteria, role }
+  }
   const userList: IUserModel[] = await User.find(criteria)
     .populate('role')
     .skip(skip)
@@ -65,7 +91,6 @@ export default async function searchUsers(
     .sort({
       creationDate: sortOrder
     })
-
   return {
     totalItems: await User.find(criteria).count(),
     results: userList
@@ -73,6 +98,7 @@ export default async function searchUsers(
 }
 
 export const searchSchema = Joi.object({
+  name: Joi.string().optional(),
   username: Joi.string().optional(),
   mobile: Joi.string().optional(),
   status: Joi.string().optional(),
@@ -80,5 +106,6 @@ export const searchSchema = Joi.object({
   locationId: Joi.string().optional(),
   count: Joi.number().min(0).required(),
   skip: Joi.number().min(0).required(),
-  sortOrder: Joi.string().valid('asc', 'desc').required()
+  sortOrder: Joi.string().valid('asc', 'desc').required(),
+  role: Joi.string().optional()
 })

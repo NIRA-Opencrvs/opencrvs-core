@@ -34,10 +34,12 @@ type Query {
   getUserByMobile(mobile: String!): User
   getUserByEmail(email: String!): User
   searchUsers(
+    name: String
     username: String
     mobile: String
     email: String
     status: String
+    role: String
     primaryOfficeId: String
     locationId: String
     count: Int

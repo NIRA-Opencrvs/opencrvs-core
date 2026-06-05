@@ -46,6 +46,11 @@ export const buttonMessages = defineMessages({
     description: 'Change action',
     id: 'buttons.change'
   },
+  clear: {
+    defaultMessage: 'Clear',
+    description: 'Label for clear/reset button',
+    id: 'buttons.clear'
+  },
   confirm: {
     defaultMessage: 'Confirm',
     description: 'Confirm button text',

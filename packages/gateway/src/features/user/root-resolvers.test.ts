@@ -204,6 +204,56 @@ describe('User root resolvers', () => {
       expect(response.totalItems).toBe(1)
       expect(response.results).toEqual([dummyUserList[2]])
     })
+
+    it('forwards role filter to user-management payload', async () => {
+      fetch.mockResponseOnce(
+        JSON.stringify({
+          totalItems: 0,
+          results: []
+        })
+      )
+
+      await resolvers.Query!.searchUsers(
+        {},
+        {
+          role: 'POLICE_INCHARGE'
+        },
+        { headers: authHeaderSysAdmin },
+        { fieldName: 'searchUsers' }
+      )
+
+      expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual(
+        expect.objectContaining({
+          role: 'POLICE_INCHARGE'
+        })
+      )
+    })
+
+    it('forwards name and role filters together to user-management payload', async () => {
+      fetch.mockResponseOnce(
+        JSON.stringify({
+          totalItems: 0,
+          results: []
+        })
+      )
+
+      await resolvers.Query!.searchUsers(
+        {},
+        {
+          name: 'Officer',
+          role: 'POLICE_INCHARGE'
+        },
+        { headers: authHeaderSysAdmin },
+        { fieldName: 'searchUsers' }
+      )
+
+      expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual(
+        expect.objectContaining({
+          name: 'Officer',
+          role: 'POLICE_INCHARGE'
+        })
+      )
+    })
   })
 
   describe('searchFieldAgents()', () => {
