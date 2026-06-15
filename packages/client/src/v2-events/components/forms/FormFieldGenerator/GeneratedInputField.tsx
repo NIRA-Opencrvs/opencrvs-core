@@ -11,7 +11,7 @@
 
 /* eslint-disable max-lines */
 
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { get, omit } from 'lodash'
 import styled, { keyframes } from 'styled-components'
@@ -132,6 +132,65 @@ export const FormItem = styled.div<{
   margin-bottom: ${({ ignoreBottomMargin }) =>
     ignoreBottomMargin ? '0px' : '22px'};
 `
+interface DebouncedTextAreaProps {
+  value?: string
+  onChange: (value: string) => void
+  delay?: number
+  maxLength?: number
+  disabled?: boolean
+  error?: boolean
+  id: string
+  name: string
+  placeholder?: string
+  touched?: boolean
+  onBlur: (e: React.FocusEvent<HTMLTextAreaElement>) => void
+}
+
+const DebouncedTextArea = ({
+  value,
+  onChange,
+  delay = 300,
+  ...props
+}: DebouncedTextAreaProps) => {
+  const [localValue, setLocalValue] = useState(value || '')
+  const timeoutRef = useRef<NodeJS.Timeout>()
+
+  useEffect(() => {
+    setLocalValue(value || '')
+  }, [value])
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    const newValue = e.target.value
+
+    setLocalValue(newValue)
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      onChange(newValue)
+    }, delay)
+  }
+
+  return (
+    <TextArea
+      {...props}
+      value={localValue}
+      onChange={handleChange}
+    />
+  )
+}
 
 interface GeneratedInputFieldProps<T extends FieldConfig> {
   /**
@@ -528,27 +587,27 @@ export const GeneratedInputField = <T extends FieldConfig>(
   }
 
   if (isTextAreaFieldType(field)) {
-    return (
-      <InputField
-        {...inputFieldProps}
-        postfix={
-          field.config.configuration?.postfix &&
-          intl.formatMessage(field.config.configuration.postfix)
-        }
-        prefix={
-          field.config.configuration?.prefix &&
-          intl.formatMessage(field.config.configuration.prefix)
-        }
-      >
-        <TextArea
-          {...inputProps}
-          maxLength={field.config.configuration?.maxLength}
-          value={field.value}
-          onChange={(e) => onFieldValueChange(name, e.target.value)}
-        />
-      </InputField>
-    )
-  }
+  return (
+    <InputField
+      {...inputFieldProps}
+      postfix={
+        field.config.configuration?.postfix &&
+        intl.formatMessage(field.config.configuration.postfix)
+      }
+      prefix={
+        field.config.configuration?.prefix &&
+        intl.formatMessage(field.config.configuration.prefix)
+      }
+    >
+      <DebouncedTextArea
+        {...inputProps}
+        maxLength={field.config.configuration?.maxLength}
+        value={(field.value as string) || ''}
+        onChange={(value) => onFieldValueChange(name, value)}
+      />
+    </InputField>
+  )
+}
 
   if (isFileFieldType(field)) {
     const uploadedFileNameLabel = field.config.configuration.fileName
