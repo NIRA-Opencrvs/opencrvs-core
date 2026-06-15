@@ -39,6 +39,12 @@ export function useReviewActionConfig({
 }) {
   const events = useEvents()
   const { isActionAllowed } = useUserAllowedActions(eventType)
+  const cleanDeclaration = {
+    ...declaration,
+    'review.escalated': false,
+    'review.escalationRole': '',
+    'review.escalationComment': ''
+  }
   const incomplete = validationErrorsInActionFormExist({
     formConfig,
     form: declaration,
@@ -59,7 +65,7 @@ export function useReviewActionConfig({
       onConfirm: (eventId: string) => {
         events.actions.notify.mutate({
           eventId,
-          declaration,
+          declaration: cleanDeclaration,
           annotation,
           transactionId: uuid()
         })
@@ -76,7 +82,7 @@ export function useReviewActionConfig({
       onConfirm: (eventId: string) =>
         events.customActions.registerOnDeclare.mutate({
           eventId,
-          declaration,
+          declaration: cleanDeclaration,
           transactionId: uuid(),
           annotation
         }),
@@ -94,7 +100,7 @@ export function useReviewActionConfig({
       onConfirm: (eventId: string) =>
         events.customActions.validateOnDeclare.mutate({
           eventId,
-          declaration,
+          declaration: cleanDeclaration,
           transactionId: uuid(),
           annotation
         }),
@@ -112,7 +118,7 @@ export function useReviewActionConfig({
       onConfirm: (eventId: string) =>
         events.actions.declare.mutate({
           eventId,
-          declaration,
+          declaration: cleanDeclaration,
           annotation,
           transactionId: uuid()
         }),

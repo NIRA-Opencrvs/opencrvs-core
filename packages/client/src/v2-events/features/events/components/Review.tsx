@@ -686,13 +686,15 @@ function ReviewActionComponent({
   messages,
   primaryButtonType,
   canSendIncomplete,
-  icon
+  icon,
+  showEscalationCheckbox
 }: {
   incomplete: boolean
   onConfirm?: () => void
   onReject?: () => void
   onEscalate?: () => void
   onApproveEscalation?: () => void
+  showEscalationCheckbox?: boolean
 
   messages: {
     title: MessageDescriptor
@@ -707,6 +709,7 @@ function ReviewActionComponent({
   icon: IconProps['name']
 }) {
   const intl = useIntl()
+  const [escalateChecked, setEscalateChecked] = useState(false)
 
   const background = incomplete ? 'error' : 'success'
 
@@ -717,6 +720,18 @@ function ReviewActionComponent({
           <Title>{intl.formatMessage(messages.title)}</Title>
 
           <Description>{intl.formatMessage(messages.description)}</Description>
+
+          {showEscalationCheckbox && (
+            <div style={{ marginBottom: '16px' }}>
+              <Checkbox
+                label="Do you want to escalate this application?"
+                name="escalateApplication"
+                selected={escalateChecked}
+                value=""
+                onChange={() => setEscalateChecked(!escalateChecked)}
+              />
+            </div>
+          )}
 
           <ActionContainer>
             {onConfirm && (
@@ -744,10 +759,11 @@ function ReviewActionComponent({
               </Button>
             )}
 
-            {onEscalate && (
+            {onEscalate && (!showEscalationCheckbox || escalateChecked) && (
               <EscalateButton
                 id="escalateDeclarationBtn"
                 size="large"
+                disabled={!!incomplete && !canSendIncomplete}
                 type="primary"
                 onClick={onEscalate}
               >

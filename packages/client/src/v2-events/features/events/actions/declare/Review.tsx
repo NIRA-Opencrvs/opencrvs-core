@@ -35,6 +35,7 @@ import { ROUTES } from '@client/v2-events/routes'
 import {
   REJECT_ACTIONS,
   RejectionState,
+  EscalationState,
   Review as ReviewComponent
 } from '@client/v2-events/features/events/components/Review'
 import { FormLayout } from '@client/v2-events/layouts'
@@ -71,9 +72,44 @@ export function Review() {
 
   const currentEventState = getCurrentEventState(event, config)
 
+  // Escalate button: only for these roles, only before REGISTERED state
+
+  const ESCALATE_ROLES = [
+    'REGISTRATION_OFFICER',
+    'COMMISSIONER_CIVIL_REGISTRATION'
+  ]
+
+  const isEscalatedRecord =
+    !!currentEventState.declaration?.['review.escalationRole']
+
+  const APPROVAL_ROLES = [
+    'CID_OFFICER',
+    'LEGAL_OFFICER',
+    'SENIOR_REGISTRAR_OFFICER'
+  ]
+
+  const ESCALATION_ONLY_ROLES = ['CID_OFFICER', 'LEGAL_OFFICER']
+
+  const isEscalationOnlyOfficer = ESCALATION_ONLY_ROLES.includes(
+    legacyUser?.role?.id ?? ''
+  )
+
   const creationAction = event.actions.find(
     (action) => action.type === ActionType.CREATE
   )
+
+  const createdByNiraOfficer =
+    creationAction?.createdByRole === 'REGISTRATION_OFFICER'
+
+  const showEscalateButton =
+    createdByNiraOfficer &&
+    ESCALATE_ROLES.includes(legacyUser?.role?.id ?? '') &&
+    currentEventState.status !== EventStatus.enum.REGISTERED
+
+  const showEscalationCheckbox =
+    legacyUser?.role?.id === 'REGISTRATION_OFFICER' &&
+    currentEventState.status !== EventStatus.enum.REGISTERED &&
+    !isEscalatedRecord
 
   const createdByHFA =
     creationAction?.createdByRole === 'HEALTH_FACILITY_ADMINISTRATOR'
@@ -169,14 +205,26 @@ export function Review() {
         if (isDuplicate) {
           events.customActions.archiveOnDuplicate.mutate({
             eventId,
-            declaration: {},
+            declaration: isEscalatedRecord
+              ? {
+                  'review.escalated': false,
+                  'review.escalationRole': '',
+                  'review.escalationComment': ''
+                }
+              : {},
             transactionId: uuid(),
             content: { reason: message }
           })
         } else {
           events.actions.reject.mutate({
             eventId,
-            declaration: {},
+            declaration: isEscalatedRecord
+              ? {
+                  'review.escalated': false,
+                  'review.escalationRole': '',
+                  'review.escalationComment': ''
+                }
+              : {},
             transactionId: uuid(),
             annotation: {},
             content: { reason: message }
@@ -187,7 +235,13 @@ export function Review() {
       if (rejectAction === REJECT_ACTIONS.ARCHIVE) {
         events.actions.archive.mutate({
           eventId,
-          declaration: {},
+          declaration: isEscalatedRecord
+            ? {
+                'review.escalated': false,
+                'review.escalationRole': '',
+                'review.escalationComment': ''
+              }
+            : {},
           transactionId: uuid(),
           annotation: {},
           content: { reason: message }
@@ -195,6 +249,34 @@ export function Review() {
       }
       closeActionView(slug)
     }
+  }
+  async function handleEscalation() {
+    const result = await openModal<EscalationState | null>((close) => (
+      <ReviewComponent.ActionModal.Escalate
+        close={close}
+        currentUserRole={
+          legacyUser?.role?.id as EscalationState['escalationRole']
+        }
+      />
+    ))
+
+    if (!result) return
+
+    events.actions.escalate.mutate({
+      eventId,
+      transactionId: uuid(),
+      declaration: {
+        'review.escalated': true,
+        'review.escalationRole': result.escalationRole,
+        'review.escalationComment': result.comment
+      },
+      annotation: {},
+      content: {
+        reason: result.comment
+      }
+    })
+
+    closeActionView(slug)
   }
 
   return (
@@ -224,13 +306,17 @@ export function Review() {
           incomplete={reviewActionConfiguration.incomplete}
           messages={reviewActionConfiguration.messages}
           primaryButtonType={reviewActionConfiguration.buttonType}
-          onConfirm={handleDeclaration}
+          onConfirm={isEscalationOnlyOfficer ? undefined : handleDeclaration}
           onReject={
-            currentEventState.status === EventStatus.enum.NOTIFIED &&
-            !currentEventState.flags.includes(InherentFlags.REJECTED)
-              ? handleRejection
-              : undefined
+            isEscalationOnlyOfficer
+              ? undefined
+              : currentEventState.status === EventStatus.enum.NOTIFIED &&
+                  !currentEventState.flags.includes(InherentFlags.REJECTED)
+                ? handleRejection
+                : undefined
           }
+          showEscalationCheckbox={showEscalationCheckbox}
+          onEscalate={showEscalateButton ? handleEscalation : undefined}
         />
       </ReviewComponent.Body>
       {modal}
