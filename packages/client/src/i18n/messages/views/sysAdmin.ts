@@ -53,6 +53,8 @@ interface ISysAdminMessages
   pending: MessageDescriptor
   disabled: MessageDescriptor
   deactivated: MessageDescriptor
+  searchUsersByName: MessageDescriptor
+  allRoles: MessageDescriptor
   totalUsers: MessageDescriptor
 }
 
@@ -210,6 +212,16 @@ const messagesToDefine: ISysAdminMessages = {
     defaultMessage: 'Send username reminder',
     description: 'The label for menu option to send username reminder',
     id: 'sysAdHome.sendUsernameReminderInvite'
+  },
+  searchUsersByName: {
+    defaultMessage: 'Search by name',
+    description: 'Placeholder text for searching users by name',
+    id: 'sysAdHome.user.searchUsersByName'
+  },
+  allRoles: {
+    defaultMessage: 'All roles',
+    description: 'Default "no filter" option for role dropdown in user list',
+    id: 'sysAdHome.user.allRoles'
   },
   sendUsernameReminderInviteSuccess: {
     defaultMessage: 'Username reminder sent to {name}',

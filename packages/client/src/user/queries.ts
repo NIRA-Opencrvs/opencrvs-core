@@ -12,8 +12,20 @@ import { gql } from '@apollo/client'
 import { client } from '@client/utils/apolloClient'
 
 export const SEARCH_USERS = gql`
-  query searchUsers($count: Int, $skip: Int, $primaryOfficeId: String) {
-    searchUsers(count: $count, skip: $skip, primaryOfficeId: $primaryOfficeId) {
+  query searchUsers(
+    $count: Int
+    $skip: Int
+    $primaryOfficeId: String
+    $name: String
+    $role: String
+  ) {
+    searchUsers(
+      count: $count
+      skip: $skip
+      primaryOfficeId: $primaryOfficeId
+      name: $name
+      role: $role
+    ) {
       totalItems
       results {
         id

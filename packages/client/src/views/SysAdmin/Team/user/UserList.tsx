@@ -30,6 +30,8 @@ import { LinkButton } from '@opencrvs/components/lib/buttons'
 import { Button } from '@opencrvs/components/lib/Button'
 import { Pill } from '@opencrvs/components/lib/Pill'
 import { Stack } from '@opencrvs/components/lib/Stack'
+import { TextInput } from '@opencrvs/components/lib/TextInput'
+import { Select } from '@opencrvs/components/lib/Select'
 import { getUserDetails } from '@client/profile/profileSelectors'
 import { SearchRed, NoWifi } from '@opencrvs/components/lib/icons'
 import { AvatarSmall } from '@client/components/Avatar'
@@ -61,7 +63,7 @@ import {
   LoadingIndicator
 } from '@client/views/OfficeHome/LoadingIndicator'
 import { LocationPicker } from '@client/components/LocationPicker'
-import { SearchUsersQuery } from '@client/utils/gateway'
+import { SearchUsersQuery, UserRole } from '@client/utils/gateway'
 import { UserDetails } from '@client/utils/userUtils'
 import { Link } from '@opencrvs/components'
 import { getLocalizedLocationName } from '@client/utils/locationUtils'
@@ -122,6 +124,11 @@ const LocationInfoValue = styled.div`
   ${({ theme }) => theme.fonts.reg18};
 `
 
+const UserSearchInput = styled(TextInput)`
+  max-width: 620px;
+  margin: 2.5px 0;
+`
+
 const Value = styled.span`
   color: ${({ theme }) => theme.colors.grey500};
   ${({ theme }) => theme.fonts.reg16}
@@ -169,6 +176,7 @@ type BaseProps = {
   offlineOffices: ILocation[]
   userDetails: UserDetails | null
   offlineCountryConfig: IOfflineData
+  userRoles: UserRole[]
 }
 
 type IProps = BaseProps &
@@ -225,8 +233,14 @@ function UserListComponent(props: IProps) {
   const { canReadUser, canEditUser, canAddOfficeUsers, canAccessOffice } =
     usePermissions()
 
-  const { intl, userDetails, offlineOffices, isOnline, offlineCountryConfig } =
-    props
+  const {
+    intl,
+    userDetails,
+    offlineOffices,
+    isOnline,
+    offlineCountryConfig,
+    userRoles
+  } = props
 
   const { locationId } = parse(location.search) as unknown as ISearchParams
   const [toggleUsernameReminder, setToggleUsernameReminder] =
@@ -245,6 +259,10 @@ function UserListComponent(props: IProps) {
 
   const [currentPageNumber, setCurrentPageNumber] =
     useState<number>(DEFAULT_PAGE_NUMBER)
+  const [nameSearchText, setNameSearchText] = useState('')
+  const [nameSearch, setNameSearch] = useState('')
+  const [roleSearchText, setRoleSearchText] = useState('')
+  const [roleSearch, setRoleSearch] = useState('')
   const recordCount = DEFAULT_FIELD_AGENT_LIST_SIZE * currentPageNumber
   const searchedLocation: ILocation | undefined = offlineOffices.find(
     ({ id }) => locationId === id
@@ -319,7 +337,12 @@ function UserListComponent(props: IProps) {
         const res = await userMutations.resendInvite(userId, [
           {
             query: SEARCH_USERS,
-            variables: { primaryOfficeId: locationId, count: recordCount }
+            variables: {
+              primaryOfficeId: locationId,
+              count: recordCount,
+              ...(nameSearch ? { name: nameSearch } : {}),
+              ...(roleSearch ? { role: roleSearch } : {})
+            }
           }
         ])
         if (res && res.data && res.data.resendInvite) {
@@ -329,7 +352,7 @@ function UserListComponent(props: IProps) {
         setShowResendInviteError(true)
       }
     },
-    [locationId, recordCount]
+    [locationId, nameSearch, roleSearch, recordCount]
   )
 
   const usernameReminder = useCallback(
@@ -338,7 +361,12 @@ function UserListComponent(props: IProps) {
         const res = await userMutations.usernameReminderSend(userId, [
           {
             query: SEARCH_USERS,
-            variables: { primaryOfficeId: locationId, count: recordCount }
+            variables: {
+              primaryOfficeId: locationId,
+              count: recordCount,
+              ...(nameSearch ? { name: nameSearch } : {}),
+              ...(roleSearch ? { role: roleSearch } : {})
+            }
           }
         ])
         if (res && res.data && res.data.usernameReminder) {
@@ -348,7 +376,7 @@ function UserListComponent(props: IProps) {
         setShowUsernameReminderError(true)
       }
     },
-    [locationId, recordCount]
+    [locationId, nameSearch, roleSearch, recordCount]
   )
 
   const resetPassword = useCallback(
@@ -357,7 +385,12 @@ function UserListComponent(props: IProps) {
         const res = await userMutations.sendResetPasswordInvite(userId, [
           {
             query: SEARCH_USERS,
-            variables: { primaryOfficeId: locationId, count: recordCount }
+            variables: {
+              primaryOfficeId: locationId,
+              count: recordCount,
+              ...(nameSearch ? { name: nameSearch } : {}),
+              ...(roleSearch ? { role: roleSearch } : {})
+            }
           }
         ])
         if (res && res.data && res.data.resetPasswordInvite) {
@@ -367,8 +400,30 @@ function UserListComponent(props: IProps) {
         setResetPasswordError(true)
       }
     },
-    [recordCount, locationId]
+    [recordCount, locationId, nameSearch, roleSearch]
   )
+
+  const roleOptions = [
+    { value: '', label: intl.formatMessage(messages.allRoles) },
+    ...userRoles.map((role) => ({
+      value: role.id,
+      label: intl.formatMessage(role.label)
+    }))
+  ]
+
+  const handleSearch = useCallback(() => {
+    setNameSearch(nameSearchText.trim())
+    setRoleSearch(roleSearchText)
+    setCurrentPageNumber(DEFAULT_PAGE_NUMBER)
+  }, [nameSearchText, roleSearchText])
+
+  const handleClear = useCallback(() => {
+    setNameSearchText('')
+    setRoleSearchText('')
+    setNameSearch('')
+    setRoleSearch('')
+    setCurrentPageNumber(DEFAULT_PAGE_NUMBER)
+  }, [])
 
   const getMenuItems = useCallback(
     function getMenuItems(user: User) {
@@ -671,7 +726,9 @@ function UserListComponent(props: IProps) {
                   query: SEARCH_USERS,
                   variables: {
                     primaryOfficeId: locationId,
-                    count: recordCount
+                    count: recordCount,
+                    ...(nameSearch ? { name: nameSearch } : {}),
+                    ...(roleSearch ? { role: roleSearch } : {})
                   }
                 }
               ]}
@@ -769,6 +826,8 @@ function UserListComponent(props: IProps) {
       generateUserContents,
       intl,
       recordCount,
+      nameSearch,
+      roleSearch,
       toggleActivation.modalVisible,
       toggleActivation.selectedUser,
       toggleUserActivationModal,
@@ -807,7 +866,9 @@ function UserListComponent(props: IProps) {
           variables={{
             primaryOfficeId: locationId,
             count: DEFAULT_FIELD_AGENT_LIST_SIZE,
-            skip: (currentPageNumber - 1) * DEFAULT_FIELD_AGENT_LIST_SIZE
+            skip: (currentPageNumber - 1) * DEFAULT_FIELD_AGENT_LIST_SIZE,
+            ...(nameSearch ? { name: nameSearch } : {}),
+            ...(roleSearch ? { role: roleSearch } : {})
           }}
           fetchPolicy={'cache-and-network'}
         >
@@ -844,6 +905,42 @@ function UserListComponent(props: IProps) {
                         getLocalizedLocationName(intl, searchedLocation)) ||
                         ''}
                     </Header>
+                    <Stack direction="row" alignItems="center" gap={8} wrap>
+                      <UserSearchInput
+                        id="user-name-search"
+                        type="text"
+                        value={nameSearchText}
+                        placeholder={intl.formatMessage(
+                          messages.searchUsersByName
+                        )}
+                        onChange={(event) =>
+                          setNameSearchText(event.target.value)
+                        }
+                      />
+                      <Select
+                        id="user-role-search"
+                        value={roleSearchText}
+                        onChange={(val: string) => setRoleSearchText(val)}
+                        options={roleOptions}
+                      />
+                      <Button
+                        id="user-search-btn"
+                        type="secondary"
+                        size="medium"
+                        onClick={handleSearch}
+                      >
+                        {intl.formatMessage(buttonMessages.search)}
+                      </Button>
+                      <Button
+                        id="user-clear-btn"
+                        type="tertiary"
+                        size="medium"
+                        onClick={handleClear}
+                        disabled={!nameSearch && !roleSearch}
+                      >
+                        {intl.formatMessage(buttonMessages.clear)}
+                      </Button>
+                    </Stack>
                     <LocationInfo>
                       {searchedLocation && (
                         <LocationInfoValue>
@@ -952,5 +1049,6 @@ function UserListComponent(props: IProps) {
 export const UserList = connect((state: IStoreState) => ({
   offlineOffices: Object.values(getOfflineData(state).offices),
   userDetails: getUserDetails(state),
-  offlineCountryConfig: getOfflineData(state)
+  offlineCountryConfig: getOfflineData(state),
+  userRoles: state.userForm.userRoles
 }))(withTheme(injectIntl(withOnlineStatus(UserListComponent))))

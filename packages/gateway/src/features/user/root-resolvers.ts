@@ -95,9 +95,11 @@ export const resolvers: GQLResolver = {
       async (
         _,
         {
+          name = null,
           username = null,
           mobile = null,
           status = null,
+          role = null,
           primaryOfficeId = null,
           locationId = null,
           count = 10,
@@ -124,6 +126,9 @@ export const resolvers: GQLResolver = {
           skip,
           sortOrder: sort
         }
+        if (name) {
+          payload = { ...payload, name }
+        }
         if (username) {
           payload = { ...payload, username }
         }
@@ -138,6 +143,9 @@ export const resolvers: GQLResolver = {
         }
         if (status) {
           payload = { ...payload, status }
+        }
+        if (role) {
+          payload = { ...payload, role }
         }
         const res = await fetch(`${USER_MANAGEMENT_URL}searchUsers`, {
           method: 'POST',

@@ -105,9 +105,11 @@ export interface IUserPayload
 }
 
 export interface IUserSearchPayload {
+  name?: string
   username?: string
   mobile?: string
   status?: string
+  role?: string
   primaryOfficeId?: string
   locationId?: string
   count: number
