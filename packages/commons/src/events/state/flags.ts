@@ -55,17 +55,19 @@ function isRejected(actions: Action[]): boolean {
 }
 
 function isEscalated(actions: Action[]): boolean {
-  return actions.reduce<boolean>((prev, action) => {
-    if (action.type === ActionType.ESCALATE && 'declaration' in action) {
+  for (let i = actions.length - 1; i >= 0; i--) {
+    const action = actions[i]
+
+    if ('declaration' in action) {
       const escalated = action.declaration?.['review.escalated']
 
       if (typeof escalated === 'boolean') {
         return escalated
       }
     }
+  }
 
-    return prev
-  }, false)
+  return false
 }
 
 function isPotentialDuplicate(actions: Action[]): boolean {

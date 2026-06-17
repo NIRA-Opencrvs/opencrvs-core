@@ -262,6 +262,18 @@ export function Review() {
 
     if (!result) return
 
+    // Step 1: Declare first (since record is still CREATED)
+    if (currentEventState.status === EventStatus.enum.CREATED) {
+      await events.actions.declare.mutateAsync({
+        eventId,
+        transactionId: uuid(),
+        declaration: form,
+        keepAssignment: true,
+        annotation: {}
+      })
+    }
+
+    // Step 2: Now possible to escalate
     events.actions.escalate.mutate({
       eventId,
       transactionId: uuid(),
