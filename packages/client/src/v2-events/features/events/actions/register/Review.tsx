@@ -112,7 +112,7 @@ export function Review() {
     'CID_OFFICER',
     'LEGAL_OFFICER',
     'COMMISSIONER_CIVIL_REGISTRATION',
-    'SENIOR_REGISTRAR_OFFICER'
+    'SENIOR_REGISTRATION_OFFICER'
   ]
 
   const isEscalatedRecord =

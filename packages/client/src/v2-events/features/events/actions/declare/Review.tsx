@@ -85,7 +85,7 @@ export function Review() {
   const APPROVAL_ROLES = [
     'CID_OFFICER',
     'LEGAL_OFFICER',
-    'SENIOR_REGISTRAR_OFFICER'
+    'SENIOR_REGISTRATION_OFFICER'
   ]
 
   const ESCALATION_ONLY_ROLES = ['CID_OFFICER', 'LEGAL_OFFICER']
@@ -99,7 +99,8 @@ export function Review() {
   )
 
   const createdByNiraOfficer =
-    creationAction?.createdByRole === 'REGISTRATION_OFFICER'
+    creationAction?.createdByRole === 'REGISTRATION_OFFICER' ||
+    creationAction?.createdByRole === 'COMMISSIONER_CIVIL_REGISTRATION'
 
   const showEscalateButton =
     createdByNiraOfficer &&
