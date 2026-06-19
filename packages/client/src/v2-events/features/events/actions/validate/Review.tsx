@@ -20,6 +20,7 @@ import { useSelector } from 'react-redux'
 import {
   getCurrentEventState,
   ActionType,
+  ActionStatus,
   EventStatus,
   getActionAnnotation,
   getDeclaration,
@@ -125,9 +126,18 @@ export function Review() {
     'COMMISSIONER_CIVIL_REGISTRATION',
     'SENIOR_REGISTRATION_OFFICER'
   ]
+
+  // Hide button for awaiting ID workqueue
+  const validateRejectedAction = event.actions.find(
+    (action) =>
+      action.type === ActionType.VALIDATE &&
+      action.status === ActionStatus.Rejected
+  )
+
   const showEscalateButton =
     ESCALATE_ROLES.includes(legacyUser?.role?.id ?? '') &&
-    currentEventState.status !== EventStatus.enum.REGISTERED
+    currentEventState.status !== EventStatus.enum.REGISTERED &&
+    !validateRejectedAction
 
   const APPROVAL_ROLES = ['CID_OFFICER', 'LEGAL_OFFICER']
 
