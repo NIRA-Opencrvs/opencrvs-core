@@ -268,7 +268,7 @@ export function Review() {
 
     // Step 1: Declare first (since record is still CREATED)
     if (currentEventState.status === EventStatus.enum.CREATED) {
-      await events.actions.declare.mutate({
+      await events.actions.declare.mutateAsync({
         eventId,
         transactionId: uuid(),
         declaration: form,
@@ -290,7 +290,7 @@ export function Review() {
         reason: result.comment
       }
     })
-    closeActionView(slug)
+    closeActionView(slug ?? 'in-progress')
   }
 
   return (
