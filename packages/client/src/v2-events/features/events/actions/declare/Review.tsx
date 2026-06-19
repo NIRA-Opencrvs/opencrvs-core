@@ -108,7 +108,10 @@ export function Review() {
     currentEventState.status !== EventStatus.enum.REGISTERED
 
   const showEscalationCheckbox =
-    legacyUser?.role?.id === 'REGISTRATION_OFFICER' &&
+    createdByNiraOfficer &&
+    ['REGISTRATION_OFFICER', 'COMMISSIONER_CIVIL_REGISTRATION'].includes(
+      legacyUser?.role?.id ?? ''
+    ) &&
     currentEventState.status !== EventStatus.enum.REGISTERED &&
     !isEscalatedRecord
 
@@ -265,7 +268,7 @@ export function Review() {
 
     // Step 1: Declare first (since record is still CREATED)
     if (currentEventState.status === EventStatus.enum.CREATED) {
-      await events.actions.declare.mutateAsync({
+      await events.actions.declare.mutate({
         eventId,
         transactionId: uuid(),
         declaration: form,
@@ -273,7 +276,6 @@ export function Review() {
         annotation: {}
       })
     }
-
     // Step 2: Now possible to escalate
     events.actions.escalate.mutate({
       eventId,
@@ -288,7 +290,6 @@ export function Review() {
         reason: result.comment
       }
     })
-
     closeActionView(slug)
   }
 
