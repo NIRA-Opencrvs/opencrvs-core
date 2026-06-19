@@ -1013,7 +1013,7 @@ export interface EscalationState {
   escalationRole:
     | 'CID_OFFICER'
     | 'COMMISSIONER_CIVIL_REGISTRATION'
-    | 'SENIOR_REGISTRAR_OFFICER'
+    | 'SENIOR_REGISTRATION_OFFICER'
     | 'LEGAL_OFFICER'
   comment: string
 }
@@ -1021,31 +1021,31 @@ export interface EscalationState {
 export const ESCALATION_OPTIONS_BY_ROLE = {
   REGISTRATION_OFFICER: [
     {
-      value: 'SENIOR_REGISTRAR_OFFICER' as const,
+      value: 'SENIOR_REGISTRATION_OFFICER' as const,
       label: 'Senior Registration Officer'
     }
   ],
   COMMISSIONER_CIVIL_REGISTRATION: [
     {
-      value: 'SENIOR_REGISTRAR_OFFICER' as const,
+      value: 'SENIOR_REGISTRATION_OFFICER' as const,
       label: 'Senior Registration Officer'
     }
   ],
-  SENIOR_REGISTRAR_OFFICER: [
+  SENIOR_REGISTRATION_OFFICER: [
     { value: 'LEGAL_OFFICER' as const, label: 'Legal Officer' },
     { value: 'CID_OFFICER' as const, label: 'CID Officer' }
   ],
   CID_OFFICER: [
     { value: 'LEGAL_OFFICER' as const, label: 'Legal Officer' },
     {
-      value: 'SENIOR_REGISTRAR_OFFICER' as const,
+      value: 'SENIOR_REGISTRATION_OFFICER' as const,
       label: 'Senior Registration Officer'
     }
   ],
   LEGAL_OFFICER: [
     { value: 'CID_OFFICER' as const, label: 'CID Officer' },
     {
-      value: 'SENIOR_REGISTRAR_OFFICER' as const,
+      value: 'SENIOR_REGISTRATION_OFFICER' as const,
       label: 'Senior Registration Officer'
     }
   ]
