@@ -329,8 +329,16 @@ export function Review() {
                 ? handleRejection
                 : undefined
           }
-          showEscalationCheckbox={showEscalationCheckbox}
-          onEscalate={showEscalateButton ? handleEscalation : undefined}
+          showEscalationCheckbox={
+            showEscalationCheckbox &&
+            !currentEventState.flags.includes(InherentFlags.REJECTED)
+          }
+          onEscalate={
+            showEscalateButton &&
+            !currentEventState.flags.includes(InherentFlags.REJECTED)
+              ? handleEscalation
+              : undefined
+          }
         />
       </ReviewComponent.Body>
       {modal}
