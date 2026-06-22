@@ -1035,20 +1035,8 @@ export const ESCALATION_OPTIONS_BY_ROLE = {
     { value: 'LEGAL_OFFICER' as const, label: 'Legal Officer' },
     { value: 'CID_OFFICER' as const, label: 'CID Officer' }
   ],
-  CID_OFFICER: [
-    { value: 'LEGAL_OFFICER' as const, label: 'Legal Officer' },
-    {
-      value: 'SENIOR_REGISTRATION_OFFICER' as const,
-      label: 'Senior Registration Officer'
-    }
-  ],
-  LEGAL_OFFICER: [
-    { value: 'CID_OFFICER' as const, label: 'CID Officer' },
-    {
-      value: 'SENIOR_REGISTRATION_OFFICER' as const,
-      label: 'Senior Registration Officer'
-    }
-  ]
+  CID_OFFICER: [{ value: 'LEGAL_OFFICER' as const, label: 'Legal Officer' }],
+  LEGAL_OFFICER: [{ value: 'CID_OFFICER' as const, label: 'CID Officer' }]
 }
 
 function EscalateActionModal({
