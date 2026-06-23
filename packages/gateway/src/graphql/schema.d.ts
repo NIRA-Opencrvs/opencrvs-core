@@ -869,6 +869,7 @@ export interface GQLUserData {
   alienId?: string
   refugeeId?: string
   facilityId?: string
+  policeStationName?: string
 }
 
 export interface GQLSearchFieldAgentResponse {
@@ -1199,6 +1200,7 @@ export interface GQLUserDataInput {
   alienId?: string
   refugeeId?: string
   facilityId?: string
+  policeStationName?: string
 }
 
 export interface GQLSystemSettingsInput {
@@ -7134,6 +7136,7 @@ export interface GQLUserDataTypeResolver<TParent = any> {
   alienId?: UserDataToAlienIdResolver<TParent>
   refugeeId?: UserDataToRefugeeIdResolver<TParent>
   facilityId?: UserDataToFacilityIdResolver<TParent>
+  policeStationName?: UserDataToPoliceStationNameResolver<TParent>
 }
 
 export interface UserDataToNationalityResolver<TParent = any, TResult = any> {
@@ -7191,6 +7194,18 @@ export interface UserDataToRefugeeIdResolver<TParent = any, TResult = any> {
 }
 
 export interface UserDataToFacilityIdResolver<TParent = any, TResult = any> {
+  (
+    parent: TParent,
+    args: {},
+    context: Context,
+    info: GraphQLResolveInfo
+  ): TResult
+}
+
+export interface UserDataToPoliceStationNameResolver<
+  TParent = any,
+  TResult = any
+> {
   (
     parent: TParent,
     args: {},

@@ -2085,6 +2085,7 @@ export type UserData = {
   idType?: Maybe<Scalars['String']>
   nationality?: Maybe<Scalars['String']>
   nid?: Maybe<Scalars['String']>
+  policeStationName?: Maybe<Scalars['String']>
   passport?: Maybe<Scalars['String']>
   refugeeId?: Maybe<Scalars['String']>
 }
@@ -2095,6 +2096,7 @@ export type UserDataInput = {
   idType?: InputMaybe<Scalars['String']>
   nationality?: InputMaybe<Scalars['String']>
   nid?: InputMaybe<Scalars['String']>
+  policeStationName?: InputMaybe<Scalars['String']>
   passport?: InputMaybe<Scalars['String']>
   refugeeId?: InputMaybe<Scalars['String']>
 }

@@ -169,5 +169,10 @@ export const messages = {
     defaultMessage: 'Refugee ID',
     description: 'Input label for refugee ID number',
     id: 'form.field.label.refugeeId'
-  }
+  },
+  policeStationName: {
+    defaultMessage: 'Police Station Name',
+    description: ',This is the label for the field',
+    id: 'form.field.label.policeStationName'
+  },
 }
