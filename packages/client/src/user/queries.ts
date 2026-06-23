@@ -153,6 +153,7 @@ export const GET_USER = gql`
         alienId
         refugeeId
         facilityId
+        policeStationName
       }
     }
   }

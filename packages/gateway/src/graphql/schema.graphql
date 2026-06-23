@@ -988,6 +988,7 @@ type UserData {
   alienId: String
   refugeeId: String
   facilityId: String
+  policeStationName: String
 }
 
 type SearchFieldAgentResponse {
@@ -1294,6 +1295,7 @@ input UserDataInput {
   alienId: String
   refugeeId: String
   facilityId: String
+  policeStationName: String
 }
 
 input SystemSettingsInput {
