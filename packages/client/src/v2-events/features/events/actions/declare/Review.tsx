@@ -102,12 +102,16 @@ export function Review() {
     creationAction?.createdByRole === 'REGISTRATION_OFFICER' ||
     creationAction?.createdByRole === 'COMMISSIONER_CIVIL_REGISTRATION'
 
+  const hideEscalationEvents = ['adoption', 'guardianship'].includes(event.type)
+
   const showEscalateButton =
+    !hideEscalationEvents &&
     createdByNiraOfficer &&
     ESCALATE_ROLES.includes(legacyUser?.role?.id ?? '') &&
     currentEventState.status !== EventStatus.enum.REGISTERED
 
   const showEscalationCheckbox =
+    !hideEscalationEvents &&
     createdByNiraOfficer &&
     ['REGISTRATION_OFFICER', 'COMMISSIONER_CIVIL_REGISTRATION'].includes(
       legacyUser?.role?.id ?? ''
