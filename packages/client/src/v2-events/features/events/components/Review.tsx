@@ -1012,7 +1012,7 @@ function RejectActionModal({
 export interface EscalationState {
   escalationRole:
     | 'CID_OFFICER'
-    | 'COMMISSIONER_CIVIL_REGISTRATION'
+    | 'COMMISSIONER_CIVIL_REGISTRATION_OFFICER'
     | 'SENIOR_REGISTRATION_OFFICER'
     | 'LEGAL_OFFICER'
   comment: string
@@ -1025,7 +1025,7 @@ export const ESCALATION_OPTIONS_BY_ROLE = {
       label: 'Senior Registration Officer'
     }
   ],
-  COMMISSIONER_CIVIL_REGISTRATION: [
+  COMMISSIONER_CIVIL_REGISTRATION_OFFICER: [
     {
       value: 'SENIOR_REGISTRATION_OFFICER' as const,
       label: 'Senior Registration Officer'

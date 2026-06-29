@@ -76,7 +76,7 @@ export function Review() {
 
   const ESCALATE_ROLES = [
     'REGISTRATION_OFFICER',
-    'COMMISSIONER_CIVIL_REGISTRATION'
+    'COMMISSIONER_CIVIL_REGISTRATION_OFFICER'
   ]
 
   const isEscalatedRecord =
@@ -100,7 +100,7 @@ export function Review() {
 
   const createdByNiraOfficer =
     creationAction?.createdByRole === 'REGISTRATION_OFFICER' ||
-    creationAction?.createdByRole === 'COMMISSIONER_CIVIL_REGISTRATION'
+    creationAction?.createdByRole === 'COMMISSIONER_CIVIL_REGISTRATION_OFFICER'
 
   const hideEscalationEvents = ['adoption', 'guardianship'].includes(event.type)
 
@@ -113,9 +113,10 @@ export function Review() {
   const showEscalationCheckbox =
     !hideEscalationEvents &&
     createdByNiraOfficer &&
-    ['REGISTRATION_OFFICER', 'COMMISSIONER_CIVIL_REGISTRATION'].includes(
-      legacyUser?.role?.id ?? ''
-    ) &&
+    [
+      'REGISTRATION_OFFICER',
+      'COMMISSIONER_CIVIL_REGISTRATION_OFFICER'
+    ].includes(legacyUser?.role?.id ?? '') &&
     currentEventState.status !== EventStatus.enum.REGISTERED &&
     !isEscalatedRecord
 
