@@ -129,8 +129,17 @@ export function UserSetupReview({ setupData, goToStep }: IProps) {
   const onCompleted = () => {
     goToStep(ProtectedAccoutStep.CONFIRMATION, setupData)
   }
-  const onError = () => {
+
+  const [errorMessage, setErrorMessage] = React.useState('')
+
+  const onError = (error: any) => {
     setSubmitError(true)
+
+    setErrorMessage(
+      error.graphQLErrors?.[0]?.message ||
+        error.message ||
+        'An error occurred. Please try again.'
+    )
   }
   return (
     <Mutation<SubmitActivateUserMutation, SubmitActivateUserMutationVariables>
@@ -142,7 +151,7 @@ export function UserSetupReview({ setupData, goToStep }: IProps) {
           setupData.securityQuestionAnswers as ISecurityQuestionAnswer[]
       }}
       onCompleted={() => onCompleted()}
-      onError={() => onError()}
+      onError={(error) => onError(error)}
     >
       {(submitActivateUser, { loading }) => {
         return (
@@ -178,11 +187,7 @@ export function UserSetupReview({ setupData, goToStep }: IProps) {
                 ]}
               >
                 <GlobalError id="GlobalError">
-                  {submitError && (
-                    <ErrorText>
-                      {intl.formatMessage(errorMessages.pleaseTryAgainError)}
-                    </ErrorText>
-                  )}
+                  {submitError && <ErrorText>{errorMessage}</ErrorText>}
                 </GlobalError>
                 <div id="UserSetupData">
                   {items.map((item: IDataProps, index: number) => (

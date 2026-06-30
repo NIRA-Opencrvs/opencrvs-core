@@ -69,6 +69,9 @@ export default async function resetPasswordInviteHandler(
     logger.error(err)
   }
 
+  user.previousPasswordHash = user.passwordHash
+  user.previousPasswordSalt = user.salt
+
   randomPassword = generateRandomPassword(hasDemoScope(request))
   const { hash, salt } = generateSaltedHash(randomPassword)
 

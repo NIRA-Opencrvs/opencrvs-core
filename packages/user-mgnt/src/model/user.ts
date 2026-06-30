@@ -140,6 +140,8 @@ export interface IUser {
   avatar?: IAvatar
   searches?: ISearch[]
   data?: Record<string, string>
+  previousPasswordHash: string
+  previousPasswordSalt: string
 }
 
 export interface IUserModel extends IUser, Document {}
@@ -306,6 +308,8 @@ const userSchema = new Schema({
   passwordHash: { type: String, required: true },
   oldPasswordHash: { type: String },
   salt: { type: String, required: true },
+  previousPasswordHash: { type: String },
+  previousPasswordSalt: { type: String },
   role: { type: String },
   practitionerId: { type: String, required: true },
   primaryOfficeId: { type: String, required: true },
