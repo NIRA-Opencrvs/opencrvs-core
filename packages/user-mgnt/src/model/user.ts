@@ -140,8 +140,8 @@ export interface IUser {
   avatar?: IAvatar
   searches?: ISearch[]
   data?: Record<string, string>
-  previousPasswordHash: string
-  previousPasswordSalt: string
+  previousPasswordHash?: string
+  previousPasswordSalt?: string
 }
 
 export interface IUserModel extends IUser, Document {}
