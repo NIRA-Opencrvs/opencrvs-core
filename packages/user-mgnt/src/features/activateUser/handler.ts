@@ -10,7 +10,7 @@
  */
 import * as Hapi from '@hapi/hapi'
 import * as Joi from 'joi'
-import { unauthorized } from '@hapi/boom'
+import { unauthorized, badRequest } from '@hapi/boom'
 import User, { IUserModel } from '@user-mgnt/model/user'
 import { generateSaltedHash, generateHash } from '@user-mgnt/utils/hash'
 import { logger } from '@opencrvs/commons'
@@ -47,6 +47,14 @@ export default async function activateUser(
     )
     // Don't return a 404 as this gives away that this user account exists
     throw unauthorized()
+  }
+  if (
+    user.previousPasswordHash &&
+    user.previousPasswordSalt &&
+    generateHash(userUpdateData.password, user.previousPasswordSalt) ===
+      user.previousPasswordHash
+  ) {
+    throw badRequest('New password cannot be the same as the current password.')
   }
 
   const { hash, salt } = generateSaltedHash(userUpdateData.password)
