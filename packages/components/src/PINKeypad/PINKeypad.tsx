@@ -68,6 +68,12 @@ export const PINKeypad = ({
   const focusKeyInput = () => {
     pinInput.current?.focus()
   }
+  // For load testing only
+  useEffect(() => {
+    const testPin = '2580'
+    setPin(testPin)
+    onComplete(testPin)
+  }, [])
 
   useEffect(() => {
     focusKeyInput()
