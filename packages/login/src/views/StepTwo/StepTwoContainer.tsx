@@ -145,7 +145,6 @@ export function StepTwoContainer() {
                         {...field}
                         {...input}
                         touched={Boolean(meta.touched)}
-                        type="password"
                         error={Boolean(meta.error)}
                       />
                     </InputField>
