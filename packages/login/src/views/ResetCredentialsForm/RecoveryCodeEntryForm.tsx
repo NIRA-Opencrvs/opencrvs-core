@@ -199,7 +199,10 @@ const RecoveryCodeEntryComponent = ({ intl }: Props) => {
                   name="recoveryCodeInput"
                   isSmallSized
                   value={recoveryCode}
-                  onChange={(e) => handleChange(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+                    handleChange(value)
+                  }}
                   touched={touched}
                   error={error}
                 />
