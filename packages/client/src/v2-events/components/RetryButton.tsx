@@ -10,7 +10,7 @@
  * Copyright (C) The OpenCRVS Authors located at https://github.com/opencrvs/opencrvs-core/blob/master/AUTHORS.
  */
 import { Button } from '@opencrvs/components/lib/Button'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { defineMessages, useIntl } from 'react-intl'
 import styled from 'styled-components'
 import { EventIndex } from '@opencrvs/commons/client'
@@ -42,6 +42,17 @@ export default function RetryButton({ event }: { event: EventIndex }) {
     (failedEvent) => failedEvent.id === event.id
   )
 
+  const [retryDisabled, setRetryDisabled] = useState(true)
+
+  // Disable for first minute after mounting
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setRetryDisabled(false)
+    }, 300 * 1000)
+
+    return () => clearTimeout(timer)
+  }, [])
+
   const mutations = queryClient.getMutationCache().findAll({
     status: 'pending',
     predicate: (mutation) =>
@@ -51,15 +62,29 @@ export default function RetryButton({ event }: { event: EventIndex }) {
       mutation.state.variables.eventId === event.id
   })
 
-  const handleRetry = () => {
-    mutations.forEach(async (m) => {
-      await m.execute(m.state.variables)
-    })
+  const handleRetry = async () => {
+    setRetryDisabled(true)
+
+    setTimeout(() => {
+      setRetryDisabled(false)
+    }, 300 * 1000)
+
+    await Promise.all(
+      mutations.map((m) => m.execute(m.state.variables))
+    )
   }
 
-  return hasActionFailed ? (
-    <RetryAction type="primary" onClick={handleRetry}>
+  if (!hasActionFailed) {
+    return null
+  }
+
+  return (
+    <RetryAction
+      type="primary"
+      onClick={handleRetry}
+      disabled={retryDisabled}
+    >
       {intl.formatMessage(messages.retryButtonLabel)}
     </RetryAction>
-  ) : null
+  )
 }
