@@ -27,6 +27,7 @@ interface IVerifyNumberPayload {
 interface IVerifyNumberResponse {
   nonce: string
   securityQuestionKey: string
+  securityQuestionKeys: string[]
 }
 
 export default async function verifyNumberHandler(
@@ -64,6 +65,9 @@ export default async function verifyNumberHandler(
   // Returns the securityQuestionKey with nonce
   const response: IVerifyNumberResponse = {
     securityQuestionKey: retrievalStepInfo.securityQuestionKey,
+    securityQuestionKeys: retrievalStepInfo.securityQuestionKeys || [
+      retrievalStepInfo.securityQuestionKey
+    ],
     nonce: payload.nonce
   }
   return response
@@ -76,5 +80,6 @@ export const requestSchema = Joi.object({
 
 export const responseSchema = Joi.object({
   nonce: Joi.string(),
-  securityQuestionKey: Joi.string()
+  securityQuestionKey: Joi.string(),
+  securityQuestionKeys: Joi.array().items(Joi.string())
 })

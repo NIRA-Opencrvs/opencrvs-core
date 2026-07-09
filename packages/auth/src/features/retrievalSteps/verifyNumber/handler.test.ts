@@ -38,7 +38,8 @@ describe('verifyNumber handler receives a request', () => {
         status: 'active',
         scope: ['demo'],
         mobile: '+8801711111111',
-        securityQuestionKey: 'dummyKey'
+        securityQuestionKey: 'dummyKey',
+        securityQuestionKeys: ['dummyKey', 'anotherKey', 'thirdKey']
       })
     )
     const stepOneRes: {
@@ -61,6 +62,11 @@ describe('verifyNumber handler receives a request', () => {
     expect(res.statusCode).toBe(200)
     expect(JSON.parse(res.payload).nonce).toBe(stepOneResNonce)
     expect(JSON.parse(res.payload).securityQuestionKey).toBe('dummyKey')
+    expect(JSON.parse(res.payload).securityQuestionKeys).toEqual([
+      'dummyKey',
+      'anotherKey',
+      'thirdKey'
+    ])
   })
   it('throws error for an invalid nonce', async () => {
     const res = await server.server.inject({
@@ -86,6 +92,7 @@ describe('verifyNumber handler receives a request', () => {
         mobile: '+8801711111111',
         status: 'NUMBER_VERIFIED' as retrievalService.RetrievalSteps,
         securityQuestionKey: 'dummyKey',
+        securityQuestionKeys: ['dummyKey', 'anotherKey', 'thirdKey'],
         scope: [],
         practitionerId: ''
       })

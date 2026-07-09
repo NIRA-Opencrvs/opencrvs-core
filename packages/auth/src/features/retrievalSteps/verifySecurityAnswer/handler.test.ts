@@ -62,7 +62,8 @@ describe('security question answer checking', () => {
         url: '/verifySecurityAnswer',
         payload: {
           answer: 'something',
-          nonce: 'TEST_NONCE'
+          nonce: 'TEST_NONCE',
+          questionKey: 'TEST_SECURITY_QUESTION_KEY'
         }
       })
     })
@@ -75,6 +76,11 @@ describe('security question answer checking', () => {
       expect((await getRetrievalStepInformation('TEST_NONCE')).status).toBe(
         RetrievalSteps.SECURITY_Q_VERIFIED
       )
+    })
+    it('verifies the submitted question key', () => {
+      expect(JSON.parse(fetch.mock.calls[0][1]?.body as string)).toMatchObject({
+        questionKey: 'TEST_SECURITY_QUESTION_KEY'
+      })
     })
     describe('when nonce status was invalid (user skipping required steps)', () => {
       beforeEach(() =>

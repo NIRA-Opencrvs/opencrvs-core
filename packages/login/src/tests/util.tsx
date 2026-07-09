@@ -27,10 +27,7 @@ type InitialEntry =
   | string
   | {
       pathname: string
-      state: Record<
-        string,
-        string | boolean | number | Record<string, string | boolean | number>
-      >
+      state: Record<string, unknown>
     }
 
 export async function createTestApp({

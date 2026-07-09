@@ -54,7 +54,8 @@ describe('verifyUser handler receives a request', () => {
           status: 'active',
           scope: ['demo'],
           mobile: '+8801711111111',
-          securityQuestionKey: 'dummyKey'
+          securityQuestionKey: 'dummyKey',
+          securityQuestionKeys: ['dummyKey', 'anotherKey', 'thirdKey']
         })
       )
       const res = await server.server.inject({
@@ -64,6 +65,12 @@ describe('verifyUser handler receives a request', () => {
       })
 
       expect(JSON.parse(res.payload).nonce).toBe('12345')
+      expect(JSON.parse(res.payload).securityQuestionKey).toBe('dummyKey')
+      expect(JSON.parse(res.payload).securityQuestionKeys).toEqual([
+        'dummyKey',
+        'anotherKey',
+        'thirdKey'
+      ])
     })
     it('generates a mobile verification code and sends it to notification gateway', async () => {
       server = await createProductionEnvironmentServer()
@@ -81,7 +88,8 @@ describe('verifyUser handler receives a request', () => {
           status: 'active',
           scope: ['admin'],
           mobile: '+8801711111111',
-          securityQuestionKey: 'dummyKey'
+          securityQuestionKey: 'dummyKey',
+          securityQuestionKeys: ['dummyKey', 'anotherKey', 'thirdKey']
         })
       )
       const spy = jest.spyOn(reloadedCodeService, 'sendVerificationCode')

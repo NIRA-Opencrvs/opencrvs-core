@@ -75,6 +75,18 @@ const messagesToDefine = {
       'This is one of the security questions you choose when setting up your account',
     description: 'Form body subheader used for security question step'
   },
+  securityQuestionIncorrectAnswer: {
+    id: 'resetCredentials.securityQuestion.form.error.incorrectAnswer',
+    defaultMessage: 'Incorrect answer. Please try again.',
+    description:
+      'Error message shown when a security question answer is incorrect'
+  },
+  securityQuestionAnswerRequired: {
+    id: 'resetCredentials.securityQuestion.form.error.answerRequired',
+    defaultMessage: 'Please enter your answer.',
+    description:
+      'Error message shown when a security question answer is required'
+  },
 
   // Password confirmation form messages
   passwordUpdateFormBodyHeader: {
@@ -192,6 +204,11 @@ const messagesToDefine = {
     id: 'buttons.continue',
     defaultMessage: 'Continue',
     description: 'Label used for continue button'
+  },
+  nextQuestionButtonLabel: {
+    id: 'buttons.nextQuestion',
+    defaultMessage: 'Next Question',
+    description: 'Label used for the button that skips to next question'
   },
   confirmButtonLabel: {
     id: 'buttons.confirm',

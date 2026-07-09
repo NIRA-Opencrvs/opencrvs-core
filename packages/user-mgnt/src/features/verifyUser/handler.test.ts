@@ -90,7 +90,11 @@ test('verifyUserHandler should find user regardless of email case', async () => 
     status: 'active',
     mobile: '+8801711111111',
     id: '68f8d6b6f3ca974d8c2d4f37',
-    securityQuestionAnswers: [{ key: 'q1', answer: 'a1' }],
+    securityQuestionAnswers: [
+      { questionKey: 'q1', answer: 'a1' },
+      { questionKey: 'q2', answer: 'a2' },
+      { questionKey: 'q3', answer: 'a3' }
+    ],
     role: 'FIELD_AGENT',
     practitionerId: 'p123'
   }
@@ -106,4 +110,6 @@ test('verifyUserHandler should find user regardless of email case', async () => 
   expect(res.statusCode).toBe(200)
   expect(res.result.email).toBe('shez@gmail.com')
   expect(res.result.username).toBe('f.shez')
+  expect(res.result.securityQuestionKey).toBe('q1')
+  expect(res.result.securityQuestionKeys).toEqual(['q1', 'q2', 'q3'])
 })

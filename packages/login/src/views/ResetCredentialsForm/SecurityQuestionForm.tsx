@@ -84,24 +84,44 @@ const SecurityQuestionComponent = ({ intl }: Props) => {
   const [answer, setAnswer] = useState<string>('')
   const [touched, setTouched] = useState<boolean>(false)
   const [error, setError] = useState<boolean>(false)
+  const [incorrectAnswer, setIncorrectAnswer] = useState<boolean>(false)
 
   const location = useLocation()
   const navigate = useNavigate()
 
-  const [questionKey, setQuestionKey] = useState<QUESTION_KEYS>(
-    location.state.securityQuestionKey
+  const questionKeys: QUESTION_KEYS[] = (
+    location.state.securityQuestionKeys || [location.state.securityQuestionKey]
+  ).filter(Boolean)
+  const initialQuestionIndex = Math.max(
+    questionKeys.indexOf(location.state.securityQuestionKey),
+    0
   )
+  const [questionIndex, setQuestionIndex] =
+    useState<number>(initialQuestionIndex)
+  const questionKey = questionKeys[questionIndex]
 
   const handleChange = (value: string) => {
     setAnswer(value)
     setTouched(true)
     setError(value === '')
+    setIncorrectAnswer(false)
+  }
+
+  const handleNextQuestion = () => {
+    setQuestionIndex(
+      (currentIndex) => (currentIndex + 1) % questionKeys.length
+    )
+    setAnswer('')
+    setTouched(false)
+    setError(false)
+    setIncorrectAnswer(false)
   }
 
   const handleContinue = async (event: React.FormEvent) => {
     event.preventDefault()
     if (!answer) {
       setTouched(true)
+      setIncorrectAnswer(false)
       return setError(true)
     }
 
@@ -110,10 +130,17 @@ const SecurityQuestionComponent = ({ intl }: Props) => {
     let result: IVerifySecurityAnswerResponse
 
     try {
-      result = await authApi.verifySecurityAnswer(location.state.nonce, answer)
+      result = await authApi.verifySecurityAnswer(
+        location.state.nonce,
+        answer,
+        questionKey
+      )
 
       if (!result.matched) {
-        return setQuestionKey(result.securityQuestionKey)
+        setTouched(true)
+        setError(true)
+        setIncorrectAnswer(true)
+        return
       }
       if (location.state.forgottenItem === FORGOTTEN_ITEMS.USERNAME) {
         await authApi.sendUserName(location.state.nonce)
@@ -192,7 +219,16 @@ const SecurityQuestionComponent = ({ intl }: Props) => {
             )}
             bottomActionButtons={[
               <Button
-                key="1"
+                key="next-question"
+                id="next-question"
+                onClick={handleNextQuestion}
+                type="secondary"
+                size="large"
+              >
+                {intl.formatMessage(sharedMessages.nextQuestionButtonLabel)}
+              </Button>,
+              <Button
+                key="continue"
                 id="continue"
                 onClick={handleContinue}
                 type="primary"
@@ -208,7 +244,15 @@ const SecurityQuestionComponent = ({ intl }: Props) => {
                 key="securityAnswerFieldContainer"
                 label={intl.formatMessage(sharedMessages.answerFieldLabel)}
                 touched={touched}
-                error={error ? intl.formatMessage(sharedMessages.error) : ''}
+                error={
+                  error
+                    ? intl.formatMessage(
+                        incorrectAnswer
+                          ? sharedMessages.securityQuestionIncorrectAnswer
+                          : sharedMessages.securityQuestionAnswerRequired
+                      )
+                    : ''
+                }
                 hideAsterisk={true}
               >
                 <TextInput

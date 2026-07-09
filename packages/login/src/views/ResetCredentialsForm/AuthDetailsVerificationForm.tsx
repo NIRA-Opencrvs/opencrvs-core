@@ -95,20 +95,22 @@ const AuthDetailsVerificationComponent = ({ intl }: WrappedComponentProps) => {
     }
 
     try {
-      const { nonce, securityQuestionKey } = await authApi.verifyUser({
-        mobile:
-          notificationMethod === 'sms'
-            ? convertToMSISDN(phone, window.config.COUNTRY)
-            : undefined,
-        email: notificationMethod === 'email' ? email : undefined,
-        retrieveFlow: forgottenItem
-      })
+      const { nonce, securityQuestionKey, securityQuestionKeys } =
+        await authApi.verifyUser({
+          mobile:
+            notificationMethod === 'sms'
+              ? convertToMSISDN(phone, window.config.COUNTRY)
+              : undefined,
+          email: notificationMethod === 'email' ? email : undefined,
+          retrieveFlow: forgottenItem
+        })
 
       if (securityQuestionKey) {
         return navigate(routes.SECURITY_QUESTION, {
           state: {
             nonce,
             securityQuestionKey,
+            securityQuestionKeys,
             forgottenItem
           }
         })
