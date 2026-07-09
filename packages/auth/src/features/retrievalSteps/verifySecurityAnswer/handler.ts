@@ -23,6 +23,7 @@ import {
 interface IPayload {
   answer: string
   nonce: string
+  questionKey?: string
 }
 
 interface IResponse {
@@ -53,7 +54,7 @@ export default async function verifySecurityQuestionHandler(
   try {
     verificationResult = await verifySecurityAnswer(
       retrievalStepInformation.userId,
-      retrievalStepInformation.securityQuestionKey,
+      payload.questionKey || retrievalStepInformation.securityQuestionKey,
       payload.answer
     )
   } catch (err) {
@@ -68,8 +69,7 @@ export default async function verifySecurityQuestionHandler(
       : RetrievalSteps.NUMBER_VERIFIED,
     {
       ...retrievalStepInformation,
-      // in case of miss-match, updating the new key otherwise same key
-      securityQuestionKey: verificationResult.questionKey
+      securityQuestionKey: payload.questionKey || verificationResult.questionKey
     }
   )
 
@@ -85,7 +85,8 @@ export default async function verifySecurityQuestionHandler(
 
 export const verifySecurityQuestionSchema = Joi.object({
   answer: Joi.string().required(),
-  nonce: Joi.string().required()
+  nonce: Joi.string().required(),
+  questionKey: Joi.string().optional()
 })
 
 export const verifySecurityQuestionResSchema = Joi.object({

@@ -156,6 +156,7 @@ const verifyCode = (data: ICodeVerifyData): Promise<IAuthenticateResponse> => {
 interface IUserVerifyResponse {
   nonce: string
   securityQuestionKey?: string
+  securityQuestionKeys?: QUESTION_KEYS[]
 }
 
 interface IUserVerificationDetails {
@@ -177,6 +178,7 @@ const verifyUser = (
 interface IVerifyNumberResponse {
   nonce: string
   securityQuestionKey: string
+  securityQuestionKeys: QUESTION_KEYS[]
 }
 
 const verifyNumber = (
@@ -200,12 +202,13 @@ export type IVerifySecurityAnswerResponse = { nonce: string } & (
 
 const verifySecurityAnswer = (
   nonce: string,
-  answer: string
+  answer: string,
+  questionKey: QUESTION_KEYS
 ): Promise<IVerifySecurityAnswerResponse> => {
   return request({
     url: new URL('verifySecurityAnswer', window.config.AUTH_API_URL).toString(),
     method: 'POST',
-    data: { nonce, answer }
+    data: { nonce, answer, questionKey }
   })
 }
 

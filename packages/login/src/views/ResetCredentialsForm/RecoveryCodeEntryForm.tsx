@@ -61,14 +61,13 @@ const RecoveryCodeEntryComponent = ({ intl }: Props) => {
       return
     }
     try {
-      const { nonce, securityQuestionKey } = await authApi.verifyNumber(
-        location.state.nonce,
-        recoveryCode
-      )
+      const { nonce, securityQuestionKey, securityQuestionKeys } =
+        await authApi.verifyNumber(location.state.nonce, recoveryCode)
       navigate(routes.SECURITY_QUESTION, {
         state: {
           nonce,
           securityQuestionKey,
+          securityQuestionKeys,
           forgottenItem: location.state.forgottenItem
         }
       })

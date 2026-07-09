@@ -45,6 +45,9 @@ export async function verifyUser(mobile?: string, email?: string) {
     mobile: body.mobile,
     email: body.email,
     securityQuestionKey: body.securityQuestionKey,
+    securityQuestionKeys: body.securityQuestionKeys || [
+      body.securityQuestionKey
+    ],
     practitionerId: body.practitionerId
   }
 }
@@ -56,6 +59,7 @@ export interface IRetrievalStepInformation {
   mobile?: string
   email?: string
   securityQuestionKey: string
+  securityQuestionKeys?: string[]
   scope: string[]
   status: RetrievalSteps
   practitionerId: string

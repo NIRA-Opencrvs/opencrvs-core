@@ -32,6 +32,7 @@ interface IVerifyUserPayload {
 interface IVerifyUserResponse {
   nonce: string
   securityQuestionKey?: string
+  securityQuestionKeys?: string[]
 }
 
 export default async function verifyUserHandler(
@@ -75,6 +76,7 @@ export default async function verifyUserHandler(
   }
   if (isUserNameRetrievalFlow) {
     response.securityQuestionKey = result.securityQuestionKey
+    response.securityQuestionKeys = result.securityQuestionKeys
   }
   return response
 }
@@ -89,5 +91,6 @@ export const requestSchema = Joi.object({
 
 export const responseSchema = Joi.object({
   nonce: Joi.string().required(),
-  securityQuestionKey: Joi.string().optional()
+  securityQuestionKey: Joi.string().optional(),
+  securityQuestionKeys: Joi.array().items(Joi.string()).optional()
 })
