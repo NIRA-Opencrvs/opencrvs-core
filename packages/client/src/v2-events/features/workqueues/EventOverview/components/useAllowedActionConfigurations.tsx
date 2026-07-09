@@ -547,6 +547,24 @@ export function useAllowedActionConfigurations(
 
   const openDraftAction = openDraft ? [openDraft.action.type] : []
 
+  // Start filter print based on location
+
+  const CROSS_DISTRICT_ALLOWED_ACTIONS: ActionMenuActionType[] = [
+    ActionType.ASSIGN,
+    ActionType.PRINT_CERTIFICATE
+  ]
+
+  const { getUser } = useUsers()
+  const currentUser = getUser.useQuery(authentication.sub)
+  const currentUserOfficeId = currentUser.data?.primaryOfficeId
+  const isCrossDistrict = Boolean(
+    event.createdAtLocation &&
+      currentUserOfficeId &&
+      event.createdAtLocation !== currentUserOfficeId
+  )
+
+  // end filter print based on location
+
   const allowedWorkqueueConfigs: ActionMenuItem[] = [
     ...availableAssignmentActions,
     ...availableEventActions,
@@ -558,6 +576,10 @@ export function useAllowedActionConfigurations(
       (action): action is ActionMenuActionType =>
         ClientSpecificAction.REVIEW_CORRECTION_REQUEST === action ||
         workqueueActions.safeParse(action).success
+    )
+    .filter(
+      (action) =>
+        !isCrossDistrict || CROSS_DISTRICT_ALLOWED_ACTIONS.includes(action)
     )
     .filter(
       (action) =>
