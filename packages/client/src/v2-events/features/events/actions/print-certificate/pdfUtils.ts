@@ -597,6 +597,7 @@ export function compileSvg({
 
   const data = {
     $declaration,
+    $resolvedDeclaration: resolvedDeclaration,
     $metadata,
     $review: review,
     $references: {

@@ -167,9 +167,7 @@ const DebouncedTextArea = ({
     }
   }, [])
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value
 
     setLocalValue(newValue)
@@ -183,13 +181,7 @@ const DebouncedTextArea = ({
     }, delay)
   }
 
-  return (
-    <TextArea
-      {...props}
-      value={localValue}
-      onChange={handleChange}
-    />
-  )
+  return <TextArea {...props} value={localValue} onChange={handleChange} />
 }
 
 interface GeneratedInputFieldProps<T extends FieldConfig> {
@@ -587,27 +579,27 @@ export const GeneratedInputField = <T extends FieldConfig>(
   }
 
   if (isTextAreaFieldType(field)) {
-  return (
-    <InputField
-      {...inputFieldProps}
-      postfix={
-        field.config.configuration?.postfix &&
-        intl.formatMessage(field.config.configuration.postfix)
-      }
-      prefix={
-        field.config.configuration?.prefix &&
-        intl.formatMessage(field.config.configuration.prefix)
-      }
-    >
-      <DebouncedTextArea
-        {...inputProps}
-        maxLength={field.config.configuration?.maxLength}
-        value={(field.value as string) || ''}
-        onChange={(value) => onFieldValueChange(name, value)}
-      />
-    </InputField>
-  )
-}
+    return (
+      <InputField
+        {...inputFieldProps}
+        postfix={
+          field.config.configuration?.postfix &&
+          intl.formatMessage(field.config.configuration.postfix)
+        }
+        prefix={
+          field.config.configuration?.prefix &&
+          intl.formatMessage(field.config.configuration.prefix)
+        }
+      >
+        <DebouncedTextArea
+          {...inputProps}
+          maxLength={field.config.configuration?.maxLength}
+          value={(field.value as string) || ''}
+          onChange={(value) => onFieldValueChange(name, value)}
+        />
+      </InputField>
+    )
+  }
 
   if (isFileFieldType(field)) {
     const uploadedFileNameLabel = field.config.configuration.fileName
@@ -665,11 +657,38 @@ export const GeneratedInputField = <T extends FieldConfig>(
     )
   }
   if (isSelectFieldType(field)) {
-    const resolvedOptions = resolveOptions(
+    let resolvedOptions = resolveOptions(
       field.config.options,
       ocrvsFullForm,
       validatorContext
     )
+
+    if (
+      makeFormikFieldIdOpenCRVSCompatible(field.config.id) ===
+      'collector.childToPrint'
+    ) {
+      resolvedOptions = resolvedOptions.map((option) => {
+        const child = String(option.value)
+
+        const name = validatorContext.baseFormState?.[`${child}.name`] as {
+          firstname?: string
+          middlename?: string
+          surname?: string
+        }
+
+        if (!name) {
+          return option
+        }
+
+        return {
+          ...option,
+          label: [name.surname, name.firstname, name.middlename]
+            .filter(Boolean)
+            .join(' ')
+            .toUpperCase()
+        }
+      })
+    }
 
     return (
       <InputField {...inputFieldProps}>
