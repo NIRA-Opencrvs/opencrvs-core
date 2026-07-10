@@ -126,6 +126,7 @@ type State = {
   passwordMismatched: boolean
   passwordMatched: boolean
   errorOccured: boolean
+  sameAsCurrentPassword: boolean
 }
 
 interface IProps {
@@ -148,7 +149,8 @@ class PasswordChangeModalComp extends React.Component<IFullProps, State> {
       hasCases: false,
       passwordMismatched: false,
       passwordMatched: false,
-      errorOccured: false
+      errorOccured: false,
+      sameAsCurrentPassword: false
     }
   }
   validateLength = (value: string) => {
@@ -168,7 +170,10 @@ class PasswordChangeModalComp extends React.Component<IFullProps, State> {
   }
   setCurrentPassword = (event: React.ChangeEvent<HTMLInputElement>) => {
     const currentPassword = event.target.value
-    this.setState(() => ({ currentPassword }))
+    this.setState(() => ({
+      currentPassword,
+      sameAsCurrentPassword: this.state.newPassword === currentPassword
+    }))
   }
   checkPasswordStrength = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value
@@ -176,7 +181,8 @@ class PasswordChangeModalComp extends React.Component<IFullProps, State> {
       newPassword: value,
       confirmPassword: EMPTY_STRING,
       passwordMatched: false,
-      passwordMismatched: false
+      passwordMismatched: false,
+      sameAsCurrentPassword: value === this.state.currentPassword
     }))
     this.validateLength(value)
     this.validateNumber(value)
@@ -197,7 +203,8 @@ class PasswordChangeModalComp extends React.Component<IFullProps, State> {
       this.state.currentPassword &&
       this.state.hasCases &&
       this.state.hasNumber &&
-      this.state.validLength
+      this.state.validLength &&
+      !this.state.sameAsCurrentPassword
     ) {
       mutation()
     }
@@ -220,7 +227,8 @@ class PasswordChangeModalComp extends React.Component<IFullProps, State> {
       hasCases: false,
       passwordMismatched: false,
       passwordMatched: false,
-      errorOccured: false
+      errorOccured: false,
+      sameAsCurrentPassword: false
     })
     this.props.passwordChanged()
   }
@@ -255,7 +263,8 @@ class PasswordChangeModalComp extends React.Component<IFullProps, State> {
                     !this.state.hasCases ||
                     !this.state.hasNumber ||
                     !this.state.validLength ||
-                    !this.state.passwordMatched
+                    !this.state.passwordMatched ||
+                    this.state.sameAsCurrentPassword
                   }
                 >
                   {intl.formatMessage(messages.confirmButtonLabel)}
@@ -362,6 +371,11 @@ class PasswordChangeModalComp extends React.Component<IFullProps, State> {
                     </span>
                   </div>
                 </ValidationRulesSection>
+                {this.state.sameAsCurrentPassword && (
+                  <PasswordMismatch id="sameAsCurrentPassword">
+                    {intl.formatMessage(messages.sameAsCurrentPassword)}
+                  </PasswordMismatch>
+                )}
               </Field>
               <Field>
                 <InputField
