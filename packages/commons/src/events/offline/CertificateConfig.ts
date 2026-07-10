@@ -28,6 +28,13 @@ export const CertificateConfig = z.object({
   isV2Template: z.boolean().optional(),
   label: TranslationConfig,
   isDefault: z.boolean(),
+  /**
+   * Whether the `record.registered.print-certified-copies` scope is required to
+   * receive this template. Defaults to `true` when omitted (backward compatible).
+   * Set to `false` for templates that must be available without the print
+   * permission, e.g. Notification Records printed from the declaration review page.
+   */
+  requiresPrintPermission: z.boolean().optional(),
   fee: z.object({
     onTime: z.number(),
     late: z.number(),

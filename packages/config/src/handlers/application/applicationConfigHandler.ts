@@ -67,11 +67,7 @@ async function getCertificatesConfig(
     scope,
     'record.registered.print-certified-copies'
   )
-  if (!printCertifiedCopiesScope) {
-    return []
-  }
 
-  const templateIds = printCertifiedCopiesScope.options.templates ?? []
   const url = new URL(`/certificates`, env.COUNTRY_CONFIG_URL).toString()
 
   const res = await fetch(url, {
@@ -87,17 +83,29 @@ async function getCertificatesConfig(
 
   const certificateConfigs = await res.json()
 
+  // Templates that don't require the print permission (e.g. Notification Records)
+  // are always available. `requiresPrintPermission` defaults to `true` when omitted.
+  const availableWithoutPrintPermission = (config: {
+    requiresPrintPermission?: boolean
+  }) => config.requiresPrintPermission === false
+
+  // Users without the print-certified-copies scope only receive templates that
+  // don't require it.
+  if (!printCertifiedCopiesScope) {
+    return certificateConfigs.filter(availableWithoutPrintPermission)
+  }
+
+  const templateIds = printCertifiedCopiesScope.options.templates ?? []
+
   // If there are no templateIds specified in the scope, all the certificates configuration will be fetched
   if (!templateIds.length) {
     return certificateConfigs
   }
 
   // If there are templateIds specified in the scope, only the certificates configuration matching those templateIds will be fetched
-  if (templateIds.length > 0) {
-    return certificateConfigs.filter((config: { id: string }) =>
-      templateIds.includes(config.id)
-    )
-  }
+  return certificateConfigs.filter((config: { id: string }) =>
+    templateIds.includes(config.id)
+  )
 }
 
 async function getConfigFromCountry(authToken?: string) {
