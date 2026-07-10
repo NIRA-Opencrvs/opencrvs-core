@@ -16,6 +16,7 @@ import { generateHash } from '@user-mgnt/utils/hash'
 import { logger } from '@opencrvs/commons'
 import { statuses } from '@user-mgnt/utils/userUtils'
 import { postUserActionToMetrics } from '@user-mgnt/features/changePhone/handler'
+import { v4 as uuid } from 'uuid'
 
 interface IChangePasswordPayload {
   userId: string
@@ -64,6 +65,12 @@ export default async function changePasswordHandler(
     throw badRequest('New password cannot be the same as the current password.')
   }
 
+  // Save current password as previous before updating to new password
+  user.previousPasswordHash = user.passwordHash
+  user.previousPasswordSalt = user.salt
+
+
+  user.salt = uuid()
   user.passwordHash = generateHash(userUpdateData.password, user.salt)
   const remoteAddress =
     request.headers['x-real-ip'] || request.info.remoteAddress
