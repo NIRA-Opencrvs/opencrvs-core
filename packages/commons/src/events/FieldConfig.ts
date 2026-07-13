@@ -35,6 +35,7 @@ import {
   NumberWithUnitFieldValue,
   QrReaderFieldValue
 } from './CompositeFieldValue'
+import { Icd11FieldValue } from './Icd11'
 import { extendZodWithOpenApi } from 'zod-openapi'
 import { UUID } from '../uuid'
 import {
@@ -858,6 +859,38 @@ const SearchField = HttpField.extend({
 
 export type SearchField = z.infer<typeof SearchField>
 
+const Icd11Field = BaseField.extend({
+  type: z.literal(FieldType.ICD11),
+  defaultValue: Icd11FieldValue.optional(),
+  configuration: z
+    .object({
+      url: z
+        .string()
+        .describe(
+          'URL of the ICD-11 search endpoint. Should point at a countryconfig-hosted proxy route rather than the WHO API directly, since the WHO access token must stay server-side.'
+        ),
+      apiVersion: z
+        .string()
+        .default('v2')
+        .describe('Value sent as the WHO ICD-11 API `api-version` header'),
+      chapterFilter: z
+        .string()
+        .optional()
+        .describe(
+          'Semicolon-separated list of ICD-11 chapters to restrict the search to, forwarded as-is to the WHO API `chapterFilter` parameter'
+        ),
+      timeout: z
+        .number()
+        .default(15000)
+        .describe('Request timeout in milliseconds')
+    })
+    .describe('ICD-11 search field configuration')
+}).describe(
+  'Debounced, searchable ICD-11 diagnosis code field backed by the WHO ICD-11 search API'
+)
+
+export type Icd11Field = z.infer<typeof Icd11Field>
+
 const LinkButtonField = BaseField.extend({
   type: z.literal(FieldType.LINK_BUTTON),
   configuration: z.object({
@@ -978,6 +1011,7 @@ export type FieldConfig =
   | z.infer<typeof QrReaderField>
   | z.infer<typeof IdReaderField>
   | z.infer<typeof LoaderField>
+  | z.infer<typeof Icd11Field>
 
 /** @knipignore */
 /**
@@ -1025,6 +1059,7 @@ export type FieldConfigInput =
   | z.input<typeof QrReaderField>
   | z.input<typeof IdReaderField>
   | z.input<typeof LoaderField>
+  | z.input<typeof Icd11Field>
 /*
  *  Using explicit type for the FieldConfig schema intentionally as it's
  *  referenced quite extensively througout various other schemas. Leaving the
@@ -1077,7 +1112,8 @@ export const FieldConfig: z.ZodType<
     IdReaderField,
     QueryParamReaderField,
     LoaderField,
-    SearchField
+    SearchField,
+    Icd11Field
   ])
   .openapi({
     description: 'Form field configuration',

@@ -273,6 +273,11 @@ function mapFieldTypeToMockValue(
       return Object.create(null)
     case FieldType.ID_READER:
       return Object.create(null)
+    case FieldType.ICD11:
+      return {
+        code: 'BC80.20',
+        label: 'Sick sinus syndrome'
+      }
   }
 }
 

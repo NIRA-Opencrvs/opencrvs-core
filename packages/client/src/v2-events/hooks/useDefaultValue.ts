@@ -281,6 +281,7 @@ export function mapFieldToDefaultValue(
     case FieldType.SIGNATURE:
     case FieldType.FILE:
     case FieldType.FILE_WITH_OPTIONS:
+    case FieldType.ICD11:
       const defaultValue = field.defaultValue
 
       if (isSerializedUserField(defaultValue)) {

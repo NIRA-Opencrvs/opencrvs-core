@@ -53,7 +53,8 @@ import {
   IdReaderField,
   LoaderField,
   AgeField,
-  FieldGroup
+  FieldGroup,
+  Icd11Field
 } from './FieldConfig'
 import { FieldType } from './FieldType'
 import {
@@ -74,6 +75,7 @@ import {
   AgeValue,
   FieldUpdateValue
 } from './FieldValue'
+import { Icd11FieldValue } from './Icd11'
 import { FullDocumentPath } from '../documents'
 import {
   AddressFieldValue,
@@ -214,6 +216,9 @@ export function mapFieldTypeToZod(field: FieldConfig, actionType?: ActionType) {
     case FieldType.ID_READER:
       schema = IdReaderFieldValue
       break
+    case FieldType.ICD11:
+      schema = Icd11FieldValue
+      break
   }
 
   return field.required ? schema : schema.nullish()
@@ -269,6 +274,7 @@ export function mapFieldTypeToEmptyValue(field: FieldConfig) {
     case FieldType.QR_READER:
     case FieldType.ID_READER:
     case FieldType.LOADER:
+    case FieldType.ICD11:
       return null
     case FieldType.ADDRESS:
       return {
@@ -592,6 +598,13 @@ export const isLoaderFieldType = (field: {
   value: FieldValue
 }): field is { value: undefined; config: LoaderField } => {
   return field.config.type === FieldType.LOADER
+}
+
+export const isIcd11FieldType = (field: {
+  config: FieldConfig
+  value: FieldValue
+}): field is { value: Icd11FieldValue | undefined; config: Icd11Field } => {
+  return field.config.type === FieldType.ICD11
 }
 
 export type NonInteractiveFieldType =

@@ -23,6 +23,7 @@ import {
   isAddressFieldType,
   isAdministrativeAreaFieldType,
   isFacilityFieldType,
+  isIcd11FieldType,
   isBulletListFieldType,
   isCheckboxFieldType,
   isCountryFieldType,
@@ -98,6 +99,7 @@ import {
   Button,
   AlphaPrintButton,
   Http,
+  Icd11,
   LinkButton,
   VerificationStatus
 } from '@client/v2-events/features/events/registered-fields'
@@ -837,6 +839,18 @@ export const GeneratedInputField = <T extends FieldConfig>(
       </InputField>
     )
   }
+  if (isIcd11FieldType(field)) {
+    return (
+      <InputField {...inputFieldProps} htmlFor={name}>
+        <Icd11.Input
+          {...inputProps}
+          configuration={field.config.configuration}
+          value={field.value}
+        />
+      </InputField>
+    )
+  }
+
   if (isDividerFieldType(field)) {
     return <Divider.Input />
   }
