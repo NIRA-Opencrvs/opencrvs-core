@@ -111,6 +111,21 @@ function DropdownIndicator<T>(
   )
 }
 
+/**
+ * Search-styled indicator (magnifying glass) used when the select is backed by
+ * a remote search rather than a fixed option list, so it reads as a search box
+ * (matching the location/facility search fields) instead of a plain select.
+ */
+function SearchIndicator<T>(
+  props: DropdownIndicatorProps<Option<T>, false, GroupBase<Option<T>>>
+) {
+  return (
+    <components.DropdownIndicator {...props}>
+      <Icon color="grey600" name="MagnifyingGlass" size="small" />
+    </components.DropdownIndicator>
+  )
+}
+
 /** Props used for conditional styling with styled-components */
 interface StyledProps {
   error?: boolean
@@ -239,9 +254,29 @@ export interface SearchableSelectProps<T = string>
   extends React.ComponentProps<typeof BaseAsyncSelect<T>> {
   id: string
   ['data-testid']?: string
-  options: Option<T>[]
+  /**
+   * Full, locally-available option set to filter client-side. Mutually
+   * exclusive with `loadOptions` -- omit this when the options can only be
+   * resolved by calling a remote API per search term (see `loadOptions`).
+   */
+  options?: Option<T>[]
+  /**
+   * Overrides the default local-filtering behaviour with a caller-provided
+   * async lookup, e.g. a debounced call to a remote search API. When
+   * provided, `options` is ignored and nothing is shown until the user
+   * types, since the full option set is never available locally.
+   */
+  loadOptions?: (searchTerm: string) => Promise<Option<T>[]>
   value: Option<T> | null
   disabled?: boolean
+  /**
+   * `'select'` (default) shows a caret and reads as a dropdown. `'search'`
+   * shows a magnifying-glass indicator and a clear button so the control reads
+   * as a search box, matching the location/facility search fields. Use with a
+   * remote `loadOptions`.
+   */
+  variant?: 'select' | 'search'
+  placeholder?: string
   onChange: (val: SingleValue<Option<T>>) => void
 }
 
@@ -253,6 +288,7 @@ export interface SearchableSelectProps<T = string>
  */
 export function SearchableSelect<T = string>({
   options,
+  loadOptions: loadOptionsProp,
   onBlur,
   onChange,
   value,
@@ -260,15 +296,23 @@ export function SearchableSelect<T = string>({
   error,
   touched,
   disabled,
+  variant = 'select',
+  placeholder,
   ['data-testid']: dataTestId
 }: SearchableSelectProps<T>) {
   // React-select provides their own filteringOptions method, but it doesn't work with large option sets and virtualization.
-  const loadOptions = async (searchTerm: string) => {
-    const term = searchTerm.toLowerCase()
-    const matches = options.filter((o) => o.label.toLowerCase().includes(term))
+  const loadOptions =
+    loadOptionsProp ??
+    (async (searchTerm: string) => {
+      const term = searchTerm.toLowerCase()
+      const matches = (options ?? []).filter((o) =>
+        o.label.toLowerCase().includes(term)
+      )
 
-    return Promise.resolve(matches.slice(0, VISIBLE_OPTIONS_COUNT))
-  }
+      return Promise.resolve(matches.slice(0, VISIBLE_OPTIONS_COUNT))
+    })
+
+  const isSearchVariant = variant === 'search'
 
   return (
     <StyledAsyncSelect
@@ -277,16 +321,24 @@ export function SearchableSelect<T = string>({
       classNamePrefix="react-select"
       components={{
         MenuList,
-        DropdownIndicator,
+        DropdownIndicator: isSearchVariant
+          ? SearchIndicator
+          : DropdownIndicator,
         IndicatorSeparator: () => null
       }}
-      defaultOptions={options.slice(0, VISIBLE_OPTIONS_COUNT)}
+      defaultOptions={
+        loadOptionsProp
+          ? false
+          : (options ?? []).slice(0, VISIBLE_OPTIONS_COUNT)
+      }
       error={error}
       id={`searchable-select-${id}`}
       innerProps={{ 'data-testid': dataTestId }}
       inputId={id}
+      isClearable={isSearchVariant}
       isDisabled={disabled}
       loadOptions={loadOptions}
+      placeholder={placeholder}
       touched={touched}
       value={value}
       onBlur={onBlur}

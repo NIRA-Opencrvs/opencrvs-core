@@ -30,6 +30,7 @@ import {
   isFileFieldWithOptionType,
   isNumberFieldType,
   isNumberWithUnitFieldType,
+  isIcd11FieldType,
   isOfficeFieldType,
   isPageHeaderFieldType,
   isParagraphFieldType,
@@ -59,6 +60,7 @@ import {
   Checkbox,
   DateField,
   Divider,
+  Icd11,
   LocationSearch,
   PageHeader,
   RadioGroup,
@@ -167,6 +169,10 @@ export function ValueOutput({
 
   if (isNumberWithUnitFieldType(field)) {
     return <NumberWithUnit.Output {...field} />
+  }
+
+  if (isIcd11FieldType(field)) {
+    return <Icd11.Output value={field.value} />
   }
 
   if (isFileFieldType(field) || isSignatureFieldType(field)) {

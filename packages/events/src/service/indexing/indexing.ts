@@ -109,6 +109,14 @@ function mapFieldTypeToElasticsearch(
     case FieldType.PAGE_HEADER:
     case FieldType.TIME:
       return { type: 'text' }
+    case FieldType.ICD11:
+      return {
+        type: 'object',
+        properties: {
+          code: { type: 'keyword' },
+          label: { type: 'text' }
+        }
+      }
     case FieldType.NUMBER_WITH_UNIT:
       return {
         type: 'object',

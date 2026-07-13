@@ -25,6 +25,7 @@ import {
   QrReaderFieldValue,
   IdReaderFieldValue
 } from './CompositeFieldValue'
+import { Icd11FieldValue, Icd11FieldUpdateValue } from './Icd11'
 import { PlainDate, plainDateToLocalDate } from './PlainDate'
 export { PlainDate, plainDateToLocalDate }
 /**
@@ -118,7 +119,9 @@ const LeafFieldValues = z.union([
   QrReaderFieldValue,
   IdReaderFieldValue,
   NumberWithUnitFieldValue,
-  NumberWithUnitFieldUpdateValue
+  NumberWithUnitFieldUpdateValue,
+  Icd11FieldValue,
+  Icd11FieldUpdateValue
 ])
 type LeafFieldValues = z.infer<typeof LeafFieldValues>
 
@@ -229,6 +232,7 @@ export type FieldUpdateValue =
   | z.infer<typeof NameFieldUpdateValue>
   | z.infer<typeof HttpFieldUpdateValue>
   | z.infer<typeof QueryParamReaderFieldUpdateValue>
+  | z.infer<typeof Icd11FieldUpdateValue>
 
 // All schemas are tagged using .describe() so we can identify them later
 // inside safeUnion(). The tag name should match PRIORITY_ORDER.
@@ -249,7 +253,8 @@ export const FieldUpdateValue: z.ZodType<FieldUpdateValue> = safeUnion([
   FieldGroupValue.describe('GroupFieldValue'),
   NameFieldUpdateValue.describe('NameFieldUpdateValue'),
   HttpFieldUpdateValue.describe('HttpFieldUpdateValue'),
-  QueryParamReaderFieldUpdateValue.describe('QueryParamReaderFieldUpdateValue')
+  QueryParamReaderFieldUpdateValue.describe('QueryParamReaderFieldUpdateValue'),
+  Icd11FieldUpdateValue.describe('Icd11FieldUpdateValue')
 ])
 
 /**
@@ -265,6 +270,7 @@ export type FieldValueSchema =
   | typeof DataFieldValue
   | typeof FieldGroupValue
   | typeof NameFieldValue
+  | typeof Icd11FieldValue
   | z.ZodString
   | z.ZodBoolean
 /**
@@ -293,5 +299,7 @@ export type FieldUpdateValueSchema =
   | typeof ButtonFieldValue
   | typeof QrReaderFieldValue
   | typeof IdReaderFieldValue
+  | typeof Icd11FieldValue
+  | typeof Icd11FieldUpdateValue
   | z.ZodString
   | z.ZodBoolean

@@ -20,6 +20,7 @@ import { Checkbox } from './Checkbox'
 import { DateField } from './DateField'
 import { Divider } from './Divider'
 import { Http } from './Http'
+import { Icd11 } from './Icd11'
 import { LocationSearch } from './LocationSearch'
 import { Name } from './Name'
 import { Number } from './Number'
@@ -49,6 +50,7 @@ export * from './Checkbox'
 export * from './DateField'
 export * from './Divider'
 export * from './Http'
+export * from './Icd11'
 export * from './LocationSearch'
 export * from './Name'
 export * from './Number'
@@ -117,6 +119,8 @@ export function getRegisteredFieldByFieldConfig<T extends FieldConfig>(
       return Search
     case FieldType.HTTP:
       return Http
+    case FieldType.ICD11:
+      return Icd11
     case FieldType.LINK_BUTTON:
       return LinkButton
     case FieldType.VERIFICATION_STATUS:

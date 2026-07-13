@@ -153,6 +153,27 @@ export interface Option<T = string> {
   label: string
 }
 
+/**
+ * Wraps an async function so that repeated calls within `delayMs` cancel any
+ * pending invocation and only the last call actually runs. Used for
+ * search-as-you-type fields that hit a remote API on every keystroke (e.g.
+ * the ICD-11 search field) to avoid firing a request per character typed.
+ */
+export function debouncePromise<Args extends unknown[], T>(
+  fn: (...args: Args) => Promise<T>,
+  delayMs: number
+): (...args: Args) => Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout>
+
+  return async (...args: Args) =>
+    new Promise((resolve, reject) => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => {
+        fn(...args).then(resolve, reject)
+      }, delayMs)
+    })
+}
+
 export enum CoreWorkqueues {
   OUTBOX = 'outbox',
   DRAFT = 'draft'
