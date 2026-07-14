@@ -19,14 +19,14 @@ export const statusOptions = [
       id: 'advancedSearch.form.recordStatusAny'
     }
   },
-  {
-    value: EventStatus.enum.NOTIFIED,
-    label: {
-      defaultMessage: 'Notified',
-      description: 'Option for form field: status of record',
-      id: 'advancedSearch.form.recordStatusNotified'
-    }
-  },
+  // {
+  //   value: EventStatus.enum.NOTIFIED,
+  //   label: {
+  //     defaultMessage: 'Notified',
+  //     description: 'Option for form field: status of record',
+  //     id: 'advancedSearch.form.recordStatusNotified'
+  //   }
+  // },
   {
     value: EventStatus.enum.DECLARED,
     label: {
