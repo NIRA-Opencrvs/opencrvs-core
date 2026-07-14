@@ -553,6 +553,9 @@ export function useAllowedActionConfigurations(
     ActionType.ASSIGN,
     ActionType.PRINT_CERTIFICATE
   ]
+  const isCIDOrLegalOfficer =
+    authentication.role === 'CID_OFFICER' ||
+    authentication.role === 'LEGAL_OFFICER'
 
   const { getUser } = useUsers()
   const currentUser = getUser.useQuery(authentication.sub)
@@ -579,7 +582,9 @@ export function useAllowedActionConfigurations(
     )
     .filter(
       (action) =>
-        !isCrossDistrict || CROSS_DISTRICT_ALLOWED_ACTIONS.includes(action)
+        isCIDOrLegalOfficer ||
+        !isCrossDistrict ||
+        CROSS_DISTRICT_ALLOWED_ACTIONS.includes(action)
     )
     .filter(
       (action) =>
