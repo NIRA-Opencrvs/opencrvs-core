@@ -27,6 +27,7 @@ import { useEvents } from '@client/v2-events/features/events/useEvents/useEvents
 import { useUsers } from '@client/v2-events/hooks/useUsers'
 import { useLocations } from '@client/v2-events/hooks/useLocations'
 import { useAppConfig } from '@client/v2-events/hooks/useAppConfig'
+import { isTemporaryId } from '@client/v2-events/utils'
 import { useEventFormData } from '../useEventFormData'
 
 interface PrintButtonProps {
@@ -62,7 +63,13 @@ export const AlphaPrintButton = {
     const intl = useIntl()
     const location = useLocation()
     const parts = location.pathname.split('/')
-    const eventId = UUID.parse(parts[3])
+    // Offline/unsynced declarations keep a temporary ("tmp-") id in the URL
+    // until the create mutation succeeds. Tolerate it the same way the route
+    // param parser does (see v2-events/routes/utils.ts) instead of throwing.
+    const rawEventId = parts[3]
+    const eventId = isTemporaryId(rawEventId)
+      ? (rawEventId as UUID)
+      : UUID.parse(rawEventId)
     const { getEvent } = useEvents()
     const { certificateTemplates, language } = useAppConfig()
     const { getUser } = useUsers()
