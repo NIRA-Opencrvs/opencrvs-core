@@ -163,16 +163,28 @@ function applyVisibilityTransitions(
   const newVisibleKeys = Object.keys(currentCleaned).filter(
     (key) => !(key in prevCleaned)
   )
+  const isUgandaAdoption =
+    prevCleaned['courtOrder.numberOfChildren'] !== undefined
 
   // When a field transitions from visible to hidden, cache its value and clear it
   newHiddenKeys.forEach((key) => {
     const fieldValue = get(prevCleaned, key)
+
     if (!isNil(fieldValue)) {
       cacheHiddenFieldValue(key, fieldValue)
+
+      // Uganda Adoption only
+      if (
+        isUgandaAdoption &&
+        (key.endsWith('.communityAddress') ||
+          key.endsWith('.birthRegistrationNumber'))
+      ) {
+        return
+      }
+
       set(fieldValues, makeFormFieldIdFormikCompatible(key), null)
     }
   })
-
   // When a field transitions from hidden to visible, restore its cached value
   newVisibleKeys.forEach((key) => {
     const cachedValue = popHiddenFieldValue(key)
