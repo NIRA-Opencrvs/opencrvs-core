@@ -41,7 +41,10 @@ import {
   deleteFile,
   fileExists
 } from '@events/service/files'
-import { indexEvent } from '@events/service/indexing/indexing'
+import {
+  indexEvent,
+  deleteEventIndex
+} from '@events/service/indexing/indexing'
 import * as draftsRepo from '@events/storage/postgres/events/drafts'
 import * as eventsRepo from '@events/storage/postgres/events/events'
 
@@ -147,6 +150,8 @@ export async function deleteEvent(
   await deleteEventAttachments(token, event)
   await draftsRepo.deleteDraftsByEventId(id)
   await eventsRepo.deleteEventById(id)
+  // Drafts are indexed for search, so remove the deleted event from the index.
+  await deleteEventIndex(id, event.type)
 
   return { id }
 }
@@ -168,7 +173,8 @@ function generateTrackingId(): string {
 export async function createEvent({
   eventInput,
   user,
-  transactionId
+  transactionId,
+  config
 }: {
   eventInput: z.infer<typeof EventInput>
   user: TrpcUserContext
@@ -191,6 +197,10 @@ export async function createEvent({
     createdBySignature: user.signature,
     createdAtLocation: user.primaryOfficeId
   })
+
+  // Index the freshly created event so it is immediately searchable
+  // (e.g. by tracking ID) even while it is still an undeclared draft.
+  await indexEvent(event, config)
 
   return event
 }
@@ -373,17 +383,13 @@ export async function addAction(
   return updatedEvent
 }
 
-function isEventIndexable(event: EventDocument) {
-  return getStatusFromActions(event.actions) !== EventStatus.enum.CREATED
-}
-
 export async function ensureEventIndexed(
   event: EventDocument,
   configuration: EventConfig
 ) {
-  if (isEventIndexable(event)) {
-    await indexEvent(event, configuration)
-  }
+  // Every event is indexed, including undeclared drafts (status 'CREATED'),
+  // so they can be found in search by tracking ID, name, etc.
+  await indexEvent(event, configuration)
 }
 
 /**
@@ -391,7 +397,7 @@ export async function ensureEventIndexed(
  *  - Adds the given action to the event
  *  - Updates the event state accordingly
  *  - Record an event in the database
- *  - Indexes the event in Elasticsearch if it is no longer a draft
+ *  - Indexes the event in Elasticsearch
  *
  * Returns the updated event document.
  */
@@ -419,7 +425,6 @@ export async function processAction(
     configuration
   })
 
-  // Only send the event to Elasticsearch if it is not a draft
   await ensureEventIndexed(updatedEvent, configuration)
   return updatedEvent
 }

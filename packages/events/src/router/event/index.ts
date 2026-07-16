@@ -50,7 +50,10 @@ import {
 } from '@events/service/events/events'
 import * as draftsRepo from '@events/storage/postgres/events/drafts'
 import { bulkImportEvents } from '@events/service/events/import'
-import { findRecordsByQuery } from '@events/service/indexing/indexing'
+import {
+  findRecordsByQuery,
+  indexEventWithDraft
+} from '@events/service/indexing/indexing'
 import { reindex } from '@events/service/reindex'
 import {
   getReindexingStatusHistory,
@@ -202,6 +205,15 @@ export const eventRouter = router({
         })
 
         const event = await getEventById(eventId)
+
+        const config = await getEventConfigurationById({
+          token: ctx.token,
+          eventType: event.type
+        })
+
+        // Re-index the (still undeclared) event with the draft's declaration
+        // applied, so it can be found in search by name and other fields.
+        await indexEventWithDraft(event, currentDraft, config)
 
         const actionFromDraft = ActionDocument.safeParse({
           ...currentDraft.action,

@@ -15,6 +15,8 @@ import {
   ActionCreationMetadata,
   RegistrationCreationMetadata,
   AddressFieldValue,
+  applyDraftToEventIndex,
+  Draft,
   EventConfig,
   EventDocument,
   EventIndex,
@@ -49,6 +51,7 @@ import {
 } from './utils'
 import {
   buildElasticQueryFromSearchPayload,
+  excludeDraftsFromQuery,
   withJurisdictionFilters
 } from './query'
 
@@ -421,6 +424,53 @@ export async function indexEvent(event: EventDocument, config: EventConfig) {
   })
 }
 
+/**
+ * Indexes an event that still has an active (uncommitted) draft.
+ *
+ * The draft's declaration is merged onto the current event state *without*
+ * changing the event status (it stays 'CREATED'). This makes undeclared
+ * drafts searchable by tracking ID, name and any other declaration field.
+ */
+export async function indexEventWithDraft(
+  event: EventDocument,
+  draft: Draft,
+  config: EventConfig
+) {
+  const esClient = getOrCreateClient()
+  const indexName = getEventIndexName(event.type)
+  const eventIndexWithDraft = applyDraftToEventIndex(
+    getCurrentEventState(event, config),
+    draft,
+    config
+  )
+
+  return esClient.index<EventIndex>({
+    index: indexName,
+    id: event.id,
+    document: encodeEventIndex(eventIndexWithDraft, config),
+    refresh: 'wait_for'
+  })
+}
+
+/**
+ * Removes an event from the search index. Used when an undeclared draft event
+ * is deleted, so it no longer shows up in search results.
+ */
+export async function deleteEventIndex(eventId: string, eventType: string) {
+  const esClient = getOrCreateClient()
+  const indexName = getEventIndexName(eventType)
+
+  return esClient.delete(
+    {
+      index: indexName,
+      id: eventId,
+      refresh: 'wait_for'
+    },
+    // The document may never have been indexed (e.g. legacy drafts); ignore 404.
+    { ignore: [404] }
+  )
+}
+
 export async function getIndexedEvents(
   userId: string,
   eventConfigs: EventConfig[]
@@ -501,8 +551,13 @@ export async function findRecordsByQuery(
 
   const { query, limit, offset } = search
 
+  const builtQuery = await buildElasticQueryFromSearchPayload(
+    query,
+    eventConfigs
+  )
+
   const esQuery = withJurisdictionFilters(
-    await buildElasticQueryFromSearchPayload(query, eventConfigs),
+    search.excludeDrafts ? excludeDraftsFromQuery(builtQuery) : builtQuery,
     options,
     userOfficeId
   )
@@ -563,7 +618,10 @@ export async function getEventCount(
   const esClient = getOrCreateClient()
 
   const esQueries = queries.map(async (query) =>
-    buildElasticQueryFromSearchPayload(query.query, eventConfigs)
+    // Workqueue counts never include undeclared drafts (they live in "My Draft").
+    excludeDraftsFromQuery(
+      await buildElasticQueryFromSearchPayload(query.query, eventConfigs)
+    )
   )
 
   const filteredQueries = (await Promise.all(esQueries)).map((query) =>

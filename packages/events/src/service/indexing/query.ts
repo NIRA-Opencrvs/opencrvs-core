@@ -11,6 +11,7 @@
 import { estypes } from '@elastic/elasticsearch'
 import {
   EventConfig,
+  EventStatus,
   FieldType,
   getAllUniqueFields,
   FieldConfig,
@@ -333,6 +334,23 @@ export async function buildElasticQueryFromSearchPayload(
       return {
         bool: { must_not: { match_all: {} }, should: undefined }
       }
+  }
+}
+
+/**
+ * Wraps a query so that undeclared drafts (events in status CREATED) are
+ * excluded from the results. Drafts have a dedicated "My Draft" view, so they
+ * should not appear in workqueues (e.g. "Assigned to you") or their counts.
+ */
+export function excludeDraftsFromQuery(
+  query: estypes.QueryDslQueryContainer
+): estypes.QueryDslQueryContainer {
+  return {
+    bool: {
+      must: [query],
+      must_not: [{ term: { status: EventStatus.enum.CREATED } }],
+      should: undefined
+    }
   }
 }
 

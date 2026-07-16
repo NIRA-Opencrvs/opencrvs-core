@@ -1971,3 +1971,47 @@ test('Returns events using nested AND/OR query combinations', async () => {
   expect(matchingFirstnames).toContain('Bob')
   expect(matchingEmails).toContain('bob@example.com')
 })
+
+test('Undeclared drafts are excluded when excludeDrafts is set, but still found by tracking ID', async () => {
+  const { user, generator } = await setupTestCase()
+  const client = createTestClient(user, [
+    'search[event=tennis-club-membership,access=all]',
+    ...TEST_USER_DEFAULT_SCOPES
+  ])
+
+  // A freshly created but undeclared event is a draft (status CREATED).
+  const draftEvent = await client.event.create(generator.event.create())
+
+  const matchAllTennisClub = {
+    type: 'and' as const,
+    clauses: [{ eventType: TENNIS_CLUB_MEMBERSHIP }]
+  }
+
+  // By default (e.g. explicit search) drafts are included ...
+  const { results: withDrafts } = await client.event.search({
+    query: matchAllTennisClub
+  })
+  expect(withDrafts.map((event) => event.id)).toContain(draftEvent.id)
+
+  // ... but workqueue-style searches (excludeDrafts) hide them.
+  const { results: withoutDrafts } = await client.event.search({
+    query: matchAllTennisClub,
+    excludeDrafts: true
+  })
+  expect(withoutDrafts.map((event) => event.id)).not.toContain(draftEvent.id)
+
+  // Explicit searches (which do not set excludeDrafts, e.g. the global search
+  // bar) can look a draft up by its tracking ID.
+  const { results: byTrackingId } = await client.event.search({
+    query: {
+      type: 'and',
+      clauses: [
+        {
+          eventType: TENNIS_CLUB_MEMBERSHIP,
+          trackingId: { type: 'exact', term: draftEvent.trackingId }
+        }
+      ]
+    }
+  })
+  expect(byTrackingId.map((event) => event.id)).toContain(draftEvent.id)
+})
