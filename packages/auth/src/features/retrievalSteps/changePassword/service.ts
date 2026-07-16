@@ -11,7 +11,7 @@
 import fetch from 'node-fetch'
 import { env } from '@auth/environment'
 import { resolve } from 'url'
-
+import { badRequest, unauthorized, internal } from '@hapi/boom'
 export async function changePassword(
   userId: string,
   password: string,
@@ -29,8 +29,18 @@ export async function changePassword(
       'x-real-user-agent': userAgent
     }
   })
-
-  if (res.status !== 200) {
-    throw Error(res.statusText)
+  if (res.status === 200) {
+    return
   }
+
+  const body = await res.json().catch(() => undefined)
+  const message = body?.message || res.statusText
+
+  if (res.status === 400) {
+    throw badRequest(message)
+  }
+  if (res.status === 401) {
+    throw unauthorized(message)
+  }
+  throw internal(message)
 }

@@ -20,6 +20,7 @@ import { AppBar } from '@opencrvs/components/lib/AppBar'
 import { Button } from '@opencrvs/components/lib/Button'
 import { Icon } from '@opencrvs/components/lib/Icon'
 import * as React from 'react'
+import { AxiosError } from 'axios'
 import { injectIntl, WrappedComponentProps as IntlShapeProps } from 'react-intl'
 import styled from 'styled-components'
 import { messages } from '@login/i18n/messages/views/resetCredentialsForm'
@@ -66,6 +67,8 @@ type State = {
   passwordMismatched: boolean
   passwordMatched: boolean
   continuePressed: boolean
+  submitError: 'REUSED' | 'GENERIC' | null
+  submitting: boolean
 }
 
 type IFullProps = RouteComponentProps & IntlShapeProps
@@ -81,7 +84,9 @@ class UpdatePasswordComponent extends React.Component<IFullProps, State> {
       hasCases: false,
       passwordMismatched: false,
       passwordMatched: false,
-      continuePressed: false
+      continuePressed: false,
+      submitError: null,
+      submitting: false
     }
   }
   validateLength = (value: string) => {
@@ -106,7 +111,8 @@ class UpdatePasswordComponent extends React.Component<IFullProps, State> {
       confirmPassword: '',
       passwordMatched: false,
       passwordMismatched: false,
-      continuePressed: false
+      continuePressed: false,
+      submitError: null
     }))
     this.validateLength(value)
     this.validateNumber(value)
@@ -126,6 +132,7 @@ class UpdatePasswordComponent extends React.Component<IFullProps, State> {
     event.preventDefault()
     this.setState(() => ({
       continuePressed: true,
+      submitError: null,
       passwordMismatched:
         this.state.newPassword.length > 0 &&
         this.state.newPassword !== this.state.confirmPassword
@@ -137,14 +144,27 @@ class UpdatePasswordComponent extends React.Component<IFullProps, State> {
       this.state.hasNumber &&
       this.state.validLength
     ) {
-      // { nonce: string }
-      await authApi.changePassword(
-        this.props.router.location.state.nonce,
-        this.state.newPassword
-      )
-      this.props.router.navigate(routes.SUCCESS, {
-        state: { forgottenItem: FORGOTTEN_ITEMS.PASSWORD }
-      })
+      this.setState(() => ({ submitting: true }))
+      try {
+        // { nonce: string }
+        await authApi.changePassword(
+          this.props.router.location.state.nonce,
+          this.state.newPassword
+        )
+        this.props.router.navigate(routes.SUCCESS, {
+          state: { forgottenItem: FORGOTTEN_ITEMS.PASSWORD }
+        })
+      } catch (error) {
+        const status = (error as AxiosError).response?.status
+        this.setState(() => ({
+          submitting: false,
+          // The backend returns 400 when the new password matches the
+          // current or a previously used password (reuse-prevention check).
+          // Any other failure gets a generic message rather than silently
+          // doing nothing.
+          submitError: status === 400 ? 'REUSED' : 'GENERIC'
+        }))
+      }
     }
   }
   render = () => {
@@ -217,6 +237,8 @@ class UpdatePasswordComponent extends React.Component<IFullProps, State> {
                   onClick={this.whatNext}
                   type="primary"
                   size="large"
+                  loading={this.state.submitting}
+                  disabled={this.state.submitting}
                 >
                   {intl.formatMessage(messages.confirmButtonLabel)}
                 </Button>
@@ -235,6 +257,16 @@ class UpdatePasswordComponent extends React.Component<IFullProps, State> {
                       {intl.formatMessage(messages.passwordRequiredMsg)}
                     </WarningMessage>
                   )}
+                {this.state.submitError === 'REUSED' && (
+                  <WarningMessage>
+                    {intl.formatMessage(messages.passwordReusedMsg)}
+                  </WarningMessage>
+                )}
+                {this.state.submitError === 'GENERIC' && (
+                  <WarningMessage>
+                    {intl.formatMessage(messages.passwordUpdateGenericErrorMsg)}
+                  </WarningMessage>
+                )}
               </GlobalError>
               <PasswordContents>
                 <InputField

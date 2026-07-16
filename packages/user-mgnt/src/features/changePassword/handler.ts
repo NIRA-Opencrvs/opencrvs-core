@@ -16,7 +16,6 @@ import { generateHash } from '@user-mgnt/utils/hash'
 import { logger } from '@opencrvs/commons'
 import { statuses } from '@user-mgnt/utils/userUtils'
 import { postUserActionToMetrics } from '@user-mgnt/features/changePhone/handler'
-import { v4 as uuid } from 'uuid'
 
 interface IChangePasswordPayload {
   userId: string
@@ -56,22 +55,30 @@ export default async function changePasswordHandler(
       throw unauthorized()
     }
   }
-  if (
-    user.previousPasswordHash &&
-    user.previousPasswordSalt &&
-    generateHash(userUpdateData.password, user.previousPasswordSalt) ===
-      user.previousPasswordHash
-  ) {
-    throw badRequest('New password cannot be the same as the current password.')
+
+  if (generateHash(userUpdateData.password, user.salt) === user.passwordHash) {
+    logger.info('Current password matched')
+    throw badRequest(
+      'New password cannot be the same as your current password.'
+    )
   }
 
-  // Save current password as previous before updating to new password
+  const previousPasswordMatched =
+    !!user.previousPasswordHash &&
+    !!user.previousPasswordSalt &&
+    generateHash(userUpdateData.password, user.previousPasswordSalt) ===
+      user.previousPasswordHash
+
+  if (previousPasswordMatched) {
+    throw badRequest('New password cannot be one of your previous passwords.')
+  }
+  // Save current password as previous
   user.previousPasswordHash = user.passwordHash
   user.previousPasswordSalt = user.salt
 
-
-  user.salt = uuid()
+  // Keep the existing salt to avoid breaking security question verification
   user.passwordHash = generateHash(userUpdateData.password, user.salt)
+
   const remoteAddress =
     request.headers['x-real-ip'] || request.info.remoteAddress
   const userAgent =
