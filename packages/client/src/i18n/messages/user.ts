@@ -89,7 +89,6 @@ interface IUserMessages
   confirmButtonLabel: MessageDescriptor
   requiredfield: MessageDescriptor
   incorrectPassword: MessageDescriptor
-  sameAsCurrentPassword: MessageDescriptor
   incorrectVerifyCode: MessageDescriptor
   passwordUpdated: MessageDescriptor
   phoneNumberUpdated: MessageDescriptor
@@ -469,11 +468,6 @@ const messagesToDefine: IUserMessages = {
     id: 'system.user.settings.incorrectPassword',
     defaultMessage: 'Current password incorrect. Please try again.',
     description: 'Response message for incorrect password for password change'
-  },
-  sameAsCurrentPassword: {
-    id: 'system.user.settings.sameAsCurrentPassword',
-    defaultMessage: 'New password cannot be the same as the current password.',
-    description: 'Error message when new password matches current password'
   },
   incorrectVerifyCode: {
     id: 'system.user.settings.incorrectVerifyCode',

@@ -200,6 +200,18 @@ const messagesToDefine = {
     defaultMessage: 'New password is not valid',
     description: 'New password required'
   },
+  passwordReusedMsg: {
+    id: 'error.password.reused',
+    defaultMessage:
+      'New password cannot be the same as one of your previous passwords',
+    description: 'Shown when the submitted password fails reuse validation'
+  },
+  passwordUpdateGenericErrorMsg: {
+    id: 'error.password.updateFailed',
+    defaultMessage: 'Something went wrong. Please try again.',
+    description: 'Shown when the password update request fails unexpectedly'
+  },
+
   continueButtonLabel: {
     id: 'buttons.continue',
     defaultMessage: 'Continue',
