@@ -277,7 +277,13 @@ export const SearchQuery = z
           })
         )
       )
+      .optional(),
+    excludeDrafts: z
+      .boolean()
       .optional()
+      .describe(
+        'When true, undeclared drafts (events in status CREATED) are excluded from the results. Used by workqueues so that drafts only appear in the dedicated "My Draft" view, while explicit searches (e.g. by tracking ID) can still find them.'
+      )
   })
   .openapi({
     ref: 'SearchQuery'
