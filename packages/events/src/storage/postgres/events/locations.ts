@@ -42,12 +42,10 @@ export async function addLocations(locations: NewLocations[]) {
           parentId: (eb) => eb.ref('excluded.parentId'),
           locationType: (eb) => eb.ref('excluded.locationType'),
           updatedAt: () => sql`now()`,
-          validUntil: () =>
-            sql`CASE
-             WHEN excluded.valid_until IS NOT NULL
-             THEN excluded.valid_until
-             ELSE locations.valid_until
-           END`,
+          // Always take the incoming value so a location can be reactivated
+          // (validUntil reset to NULL). setLocations is an authoritative
+          // full-record upsert, so NULL means "active", never "unknown".
+          validUntil: (eb) => eb.ref('excluded.validUntil'),
           deletedAt: null
         })
       )

@@ -44,7 +44,9 @@ function useAdministrativeAreas(
   searchableResource: ('locations' | 'facilities' | 'offices')[]
 ) {
   const { getLocations } = useLocations()
-  const [allLocations] = getLocations.useSuspenseQuery({})
+  // Only active locations should be selectable. Inactive ones (validUntil in
+  // the past) are filtered server-side via the backend's `isActive` flag.
+  const [allLocations] = getLocations.useSuspenseQuery({ isActive: true })
 
   return React.useMemo(() => {
     const resourceLocations = allLocations.filter(
