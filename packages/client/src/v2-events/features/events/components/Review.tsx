@@ -48,6 +48,10 @@ import { withSuspense } from '@client/v2-events/components/withSuspense'
 import { Output } from './Output'
 import { DocumentViewer } from './DocumentViewer'
 
+import { useTypedSearchParams } from 'react-router-typesafe-routes/dom'
+import { ROUTES } from '@client/v2-events/routes'
+import { useAuthentication } from '@client/utils/userUtils'
+
 const ValidationError = styled.span`
   color: ${({ theme }) => theme.colors.negative};
   display: inline-block;
@@ -520,6 +524,31 @@ function ReviewComponent({
   const hasReviewFieldsToUpdate =
     annotation && onAnnotationChange && reviewFields && reviewFields.length > 0
 
+  const NOTIFICATION_QUEUE_SLUGS = [
+    'in-review-all-birth-self',
+    'in-review-all-birth',
+    'in-review-all-death-self',
+    'in-review-all-death'
+  ] as const
+
+  const maybeAuth = useAuthentication()
+  const authentication = maybeAuth ?? null
+
+  const [{ workqueue: slug } = { workqueue: undefined }] = useTypedSearchParams(
+    ROUTES.V2.EVENTS.VALIDATE.REVIEW
+  )
+
+  const isCIDOrLegalOfficer =
+    authentication?.role === 'CID_OFFICER' ||
+    authentication?.role === 'LEGAL_OFFICER'
+
+  const isNotificationQueue = NOTIFICATION_QUEUE_SLUGS.includes(
+    slug as (typeof NOTIFICATION_QUEUE_SLUGS)[number]
+  )
+
+  const effectiveReadonlyMode =
+    readonlyMode || (isCIDOrLegalOfficer && isNotificationQueue)
+
   return (
     <Row>
       <LeftColumn>
@@ -532,7 +561,7 @@ function ReviewComponent({
             isCorrection={isCorrection}
             isReviewCorrection={isReviewCorrection}
             previousForm={previousForm}
-            readonlyMode={readonlyMode}
+            readonlyMode={effectiveReadonlyMode}
             showPreviouslyMissingValuesAsChanged={
               showPreviouslyMissingValuesAsChanged
             }
@@ -548,7 +577,7 @@ function ReviewComponent({
                   formTouched={touched}
                   formValues={annotation}
                   id={'review'}
-                  readonlyMode={readonlyMode}
+                  readonlyMode={effectiveReadonlyMode}
                   validatorContext={{
                     ...validatorContext,
                     baseFormState: form
@@ -565,7 +594,9 @@ function ReviewComponent({
       {pageIdsWithFile.length > 0 && (
         <RightColumn>
           <DocumentViewer
-            disabled={readonlyMode || isCorrection || isReviewCorrection}
+            disabled={
+              effectiveReadonlyMode || isCorrection || isReviewCorrection
+            }
             form={form}
             formConfig={formConfig}
             onEdit={() =>

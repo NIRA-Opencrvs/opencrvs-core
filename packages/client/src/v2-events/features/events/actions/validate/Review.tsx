@@ -127,17 +127,37 @@ export function Review() {
     'SENIOR_REGISTRATION_OFFICER'
   ]
 
-  // Hide button for awaiting ID workqueue
-  const validateRejectedAction = event.actions.find(
-    (action) =>
-      action.type === ActionType.VALIDATE &&
-      action.status === ActionStatus.Rejected
+  // Notification queues where CID/Legal officer should be readonly and
+  // should not see the Escalate button at all.
+  const NOTIFICATION_QUEUE_SLUGS = [
+    'in-review-all-birth-self',
+    'in-review-all-birth',
+    'in-review-all-death-self',
+    'in-review-all-death'
+  ]
+
+  const isNotificationQueue = NOTIFICATION_QUEUE_SLUGS.includes(slug ?? '')
+
+  const isCIDOrLegalOfficerUser = ['CID_OFFICER', 'LEGAL_OFFICER'].includes(
+    legacyUser?.role?.id ?? ''
   )
+
+  // Hide button for awaiting ID workqueue
+  // Hide button only if the record's current state is a rejection
+  const sortedActions = [...event.actions].sort((a, b) =>
+    a.createdAt.localeCompare(b.createdAt)
+  )
+  const lastAction = sortedActions.at(-1)
+
+  const isCurrentlyAwaitingId =
+    lastAction?.type === ActionType.VALIDATE &&
+    lastAction.status === ActionStatus.Rejected
 
   const showEscalateButton =
     ESCALATE_ROLES.includes(legacyUser?.role?.id ?? '') &&
     currentEventState.status !== EventStatus.enum.REGISTERED &&
-    !validateRejectedAction
+    !isCurrentlyAwaitingId &&
+    !(isCIDOrLegalOfficerUser && isNotificationQueue)
 
   const APPROVAL_ROLES = ['CID_OFFICER', 'LEGAL_OFFICER']
 
