@@ -142,21 +142,13 @@ export function Review() {
     legacyUser?.role?.id ?? ''
   )
 
-  // Hide button for awaiting ID workqueue
-  // Hide button only if the record's current state is a rejection
-  const sortedActions = [...event.actions].sort((a, b) =>
-    a.createdAt.localeCompare(b.createdAt)
-  )
-  const lastAction = sortedActions.at(-1)
-
-  const isCurrentlyAwaitingId =
-    lastAction?.type === ActionType.VALIDATE &&
-    lastAction.status === ActionStatus.Rejected
+  // Hide Escalate button when opened from Awaiting ID Update queue
+  const isAwaitingIdQueue = slug === 'awaiting-id-update'
 
   const showEscalateButton =
     ESCALATE_ROLES.includes(legacyUser?.role?.id ?? '') &&
     currentEventState.status !== EventStatus.enum.REGISTERED &&
-    !isCurrentlyAwaitingId &&
+    !isAwaitingIdQueue &&
     !(isCIDOrLegalOfficerUser && isNotificationQueue)
 
   const APPROVAL_ROLES = ['CID_OFFICER', 'LEGAL_OFFICER']
