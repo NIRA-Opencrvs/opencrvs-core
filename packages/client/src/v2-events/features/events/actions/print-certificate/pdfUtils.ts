@@ -238,7 +238,8 @@ export function compileSvg({
   review,
   language,
   config,
-  adminLevels
+  adminLevels,
+  qrCode
 }: {
   templateString: string
   $metadata: EventMetadata & {
@@ -257,6 +258,13 @@ export function compileSvg({
   language: LanguageConfig
   config: EventConfig
   adminLevels: AdminStructureItem[]
+  /**
+   * Data URL of the QR code image (data:image/png;base64,...), pointing to
+   * the public verify page for this record. Precomputed by the caller since
+   * generating it is asynchronous and compileSvg must remain synchronous
+   * (it is called from a render body for the certificate preview).
+   */
+  qrCode?: string
 }): string {
   const intl = createIntl(
     {
@@ -603,7 +611,8 @@ export function compileSvg({
     $references: {
       locations,
       users
-    }
+    },
+    qrCode: qrCode ?? ''
   }
 
   const output = template(data)
