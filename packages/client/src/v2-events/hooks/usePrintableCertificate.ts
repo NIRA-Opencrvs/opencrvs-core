@@ -9,8 +9,10 @@
  * Copyright (C) The OpenCRVS Authors located at https://github.com/opencrvs/opencrvs-core/blob/master/AUTHORS.
  */
 
+import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { cloneDeep } from 'lodash'
+import QRCode from 'qrcode'
 import {
   ActionDocument,
   ActionType,
@@ -37,6 +39,44 @@ import { fetchImageAsBase64 } from '@client/utils/imageUtils'
 import { getOfflineData } from '@client/offline/selectors'
 import { useEventConfiguration } from '../features/events/useEventConfiguration'
 import { hasStringFilename } from '../utils'
+
+/**
+ * Builds the compact JSON payload embedded directly in the certificate's QR
+ * code. The QR is fully self-contained (no server lookup needed).
+ */
+function buildQrPayload(
+  eventType: string,
+  metadata: {
+    trackingId?: string
+    legalStatuses?: {
+      REGISTERED?: { registrationNumber?: string } | null
+    }
+  },
+  declaration: EventState
+) {
+  const isDeathEvent = eventType === 'death'
+  const namePrefix = isDeathEvent ? 'deceased' : 'child'
+
+  const name = declaration[`${namePrefix}.name`] as
+    | { firstname?: string; middlename?: string; surname?: string }
+    | undefined
+
+  const dob = declaration[`${namePrefix}.dob`] as string | undefined
+
+  const registrationNumberLabel = isDeathEvent ? 'DRN' : 'BRN'
+  const dateLabel = isDeathEvent ? 'Date of Death' : 'Date of Birth'
+
+  return [
+    `Tracking Number: ${metadata.trackingId ?? ''}`,
+    `${registrationNumberLabel}: ${
+      metadata.legalStatuses?.REGISTERED?.registrationNumber ?? ''
+    }`,
+    `Surname: ${name?.surname ?? ''}`,
+    `First Name: ${name?.firstname ?? ''}`,
+    `Other Names: ${name?.middlename ?? ''}`,
+    `${dateLabel}: ${dob ?? ''}`
+  ].join('\n')
+}
 
 async function replaceMinioUrlWithBase64(
   declaration: EventState,
@@ -100,6 +140,37 @@ export const usePrintableCertificate = ({
     copiesPrintedForTemplate
   }
 
+  const [previewQrCode, setPreviewQrCode] = useState<string>()
+
+  useEffect(() => {
+    let cancelled = false
+
+    if (!metadata.legalStatuses?.REGISTERED) {
+      setPreviewQrCode(undefined)
+      return
+    }
+
+    QRCode.toDataURL(buildQrPayload(event.type, metadata, declaration), {
+      width: 200,
+      margin: 1
+    })
+      .then((dataUrl) => {
+        if (!cancelled) {
+          setPreviewQrCode(dataUrl)
+        }
+      })
+      .catch(() => {
+        // Non-fatal: certificate preview still renders without a QR code.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [
+    event.type,
+    event.id,
+    metadata.legalStatuses?.REGISTERED?.registrationNumber
+  ])
+
   if (!language || !certificateConfig?.svg) {
     return { svgCode: null }
   }
@@ -118,7 +189,8 @@ export const usePrintableCertificate = ({
     users,
     language,
     config,
-    adminLevels
+    adminLevels,
+    qrCode: previewQrCode
   })
 
   const svgCode = addFontsToSvg(svgWithoutFonts, certificateFonts)
@@ -138,8 +210,17 @@ export const usePrintableCertificate = ({
       config
     )
 
+    const qrCode = await QRCode.toDataURL(
+      buildQrPayload(updatedEvent.type, updatedMetadata, updatedDeclaration),
+      {
+        width: 200,
+        margin: 1
+      }
+    )
+
     const compiledSvg = compileSvg({
       templateString: certificateConfig.svg,
+      qrCode,
       $metadata: {
         ...updatedMetadata,
         // Temporarily add `modifiedAt` to the last action's data to display
