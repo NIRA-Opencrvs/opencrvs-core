@@ -361,9 +361,33 @@ const ParagraphConfiguration = z
         hint: z
           .boolean()
           .optional()
-          .describe('When true, paragraph is styled as a hint with grey color')
+          .describe('When true, paragraph is styled as a hint with grey color'),
+        error: z
+          .boolean()
+          .optional()
+          .describe(
+            'When true, paragraph is styled as an error using the negative ' +
+              '(red) colour. Takes precedence over `hint`.'
+          )
       })
+      .optional(),
+    displayOnReview: z
+      .boolean()
       .optional()
+      .describe(
+        'When true, this paragraph is also rendered on the review page. ' +
+          'Defaults to hidden, preserving the existing behaviour where ' +
+          'paragraphs appear only on the form.'
+      ),
+    displayAsList: z
+      .boolean()
+      .optional()
+      .describe(
+        'When true, the (scalar string) value is treated as a comma-separated ' +
+          'list of tokens; each token is localized independently through the ' +
+          'label and rendered as a bullet list. Lets a single scalar field ' +
+          'display multiple localized messages. Defaults to a single paragraph.'
+      )
   })
   .default({})
 

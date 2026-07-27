@@ -353,12 +353,19 @@ function FormReview({
             })
 
           // Only display fields that have a non-undefined/null value or have an validation error
-          const displayedFields = fields.filter(
-            ({ type }) =>
-              !FieldTypesToHideInReview.some(
-                (typeToHide) => type === typeToHide
-              )
-          )
+          const displayedFields = fields.filter((field) => {
+            const isHiddenByType = FieldTypesToHideInReview.some(
+              (typeToHide) => field.type === typeToHide
+            )
+            if (!isHiddenByType) {
+              return true
+            }
+            // A PARAGRAPH may opt in to being rendered on the review page.
+            return (
+              field.type === FieldType.PARAGRAPH &&
+              field.configuration?.displayOnReview === true
+            )
+          })
 
           if (displayedFields.length === 0) {
             return <React.Fragment key={`Section_${page.id}`}></React.Fragment>
@@ -415,6 +422,7 @@ function FormReview({
                   {displayedFields.map(
                     ({
                       id,
+                      type,
                       label,
                       errorDisplay,
                       valueDisplay,
@@ -448,7 +456,16 @@ function FormReview({
                             )
                           }
                           id={id}
-                          label={intl.formatMessage(label)}
+                          // A PARAGRAPH's content is its value (rendered on the
+                          // right); it has no row header. Its label holds the
+                          // ICU content message, so formatting it here as a
+                          // header would throw (no `value` arg) and surface the
+                          // raw ICU string. Render no label for paragraphs.
+                          label={
+                            type === FieldType.PARAGRAPH
+                              ? ''
+                              : intl.formatMessage(label)
+                          }
                           value={errorDisplay || valueDisplay}
                         />
                       )

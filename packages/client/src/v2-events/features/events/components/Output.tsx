@@ -160,7 +160,7 @@ export function ValueOutput({
   }
 
   if (isParagraphFieldType(field)) {
-    return Paragraph.Output
+    return <Paragraph.Output field={field.config} value={field.value} />
   }
 
   if (isNumberFieldType(field)) {

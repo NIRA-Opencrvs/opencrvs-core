@@ -11,11 +11,13 @@
 import React from 'react'
 import styled from 'styled-components'
 import { Text } from '../Text'
+import { IColor } from '../colors'
 
 export interface BulletListProps {
   id?: string
   items: string[]
   font: 'reg12' | 'reg14' | 'reg16' | 'reg18' | 'h4' | 'h3' | 'h2' | 'h1'
+  color?: IColor
 }
 
 const List = styled.ul`
@@ -27,10 +29,15 @@ const ListItem = styled.li`
   padding-left: 8px;
 `
 
-export function BulletList({ id, font, items }: BulletListProps) {
+export function BulletList({
+  id,
+  font,
+  items,
+  color = 'grey600'
+}: BulletListProps) {
   return (
     <List id={id}>
-      <Text variant={font} element="p" color="grey600">
+      <Text variant={font} element="p" color={color}>
         {items.map((items) => (
           <ListItem key={items}>{items}</ListItem>
         ))}
