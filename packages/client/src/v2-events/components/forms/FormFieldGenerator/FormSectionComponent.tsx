@@ -137,7 +137,7 @@ function getParentsOfListenerFields(fields: FieldConfig[]) {
  * Fields that became hidden are set to null (and their value cached).
  * Fields that became visible have their cached value restored.
  */
-function applyVisibilityTransitions(
+export function applyVisibilityTransitions(
   eventConfig: EventConfig,
   prevForm: EventState,
   currentForm: EventState,
@@ -172,18 +172,26 @@ function applyVisibilityTransitions(
 
     if (!isNil(fieldValue)) {
       cacheHiddenFieldValue(key, fieldValue)
-
-      // Uganda Adoption only
-      if (
-        isUgandaAdoption &&
-        (key.endsWith('.communityAddress') ||
-          key.endsWith('.birthRegistrationNumber'))
-      ) {
-        return
-      }
-
-      set(fieldValues, makeFormFieldIdFormikCompatible(key), null)
     }
+
+    // Uganda Adoption only
+    if (
+      isUgandaAdoption &&
+      (key.endsWith('.communityAddress') ||
+        key.endsWith('.birthRegistrationNumber'))
+    ) {
+      return
+    }
+
+    /*
+     * The null is written even when the local value is already nil (e.g. the
+     * field was emptied by revoking a verification earlier). Action payloads are
+     * merged onto the persisted declaration server side, and `deepMerge` treats
+     * `undefined` as "keep the previous value" - only an explicit null clears a
+     * stale persisted value. Without it the server would keep e.g. a previously
+     * declared `father.dob` while the field is hidden, and reject the action.
+     */
+    set(fieldValues, makeFormFieldIdFormikCompatible(key), null)
   })
   // When a field transitions from hidden to visible, restore its cached value
   newVisibleKeys.forEach((key) => {
