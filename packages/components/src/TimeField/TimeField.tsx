@@ -147,7 +147,8 @@ function TimeInput12(props: ITimeFieldProps) {
   function change(event: React.ChangeEvent<HTMLInputElement>) {
     const val = event.target.value
     if (event.target.id.includes('hh')) {
-      if (val === '00' || Number(val) < 0 || Number(val) > 12) return
+      if (val.length > 2 || val === '00' || Number(val) < 0 || Number(val) > 12)
+        return
       if (val.length === 2 && mm?.current !== null) {
         mm.current.focus()
       }
@@ -293,7 +294,7 @@ function TimeInput24(props: ITimeFieldProps) {
   function change(event: React.ChangeEvent<HTMLInputElement>) {
     const val = event.target.value
     if (event.target.id.includes('hh')) {
-      if (Number(val) < 0 || Number(val) > 23) return
+      if (val.length > 2 || Number(val) < 0 || Number(val) > 23) return
       if (val.length === 2 && mm?.current !== null) {
         mm.current.focus()
       }
