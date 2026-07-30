@@ -50,6 +50,12 @@ import { useUsers } from '@client/v2-events/hooks/useUsers'
 import { useLocations } from '@client/v2-events/hooks/useLocations'
 import { useArchiveModal } from '@client/v2-events/hooks/useArchiveModal'
 
+/**
+ * TEMPORARY (parent re-verification campaign).
+ * Delete this constant and its single usage once the campaign is finished.
+ */
+const TEMPORARY_PARENT_REVERIFICATION_WORKQUEUE = 'parent-reverification'
+
 const STATUSES_THAT_CAN_BE_ASSIGNED: EventStatus[] = [
   EventStatus.enum.NOTIFIED,
   EventStatus.enum.DECLARED,
@@ -447,8 +453,13 @@ function useViewableActionConfigurations(
 
           clearEphemeralFormState()
 
-          // If no pages are configured, skip directly to review page
-          if (correctionPages.length === 0) {
+          // If no pages are configured, skip directly to review page.
+          // Remove this clause (and the workqueue itself) once the backlog is
+          // cleared.
+          if (
+            correctionPages.length === 0 ||
+            workqueue === TEMPORARY_PARENT_REVERIFICATION_WORKQUEUE
+          ) {
             navigate(
               ROUTES.V2.EVENTS.REQUEST_CORRECTION.REVIEW.buildPath(
                 { eventId },
