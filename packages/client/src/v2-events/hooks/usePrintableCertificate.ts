@@ -52,30 +52,70 @@ function buildQrPayload(
       REGISTERED?: { registrationNumber?: string } | null
     }
   },
-  declaration: EventState
+  declaration: EventState,
+  childToPrint?: string
 ) {
   const isDeathEvent = eventType === 'death'
-  const namePrefix = isDeathEvent ? 'deceased' : 'child'
+  const isAdoptionEvent = eventType === 'adoption'
 
-  const name = declaration[`${namePrefix}.name`] as
+  // Same dual-shape lookup used in resolveChildField / adoptionCertificateRegistrationNumber:
+  // 'collector.childToPrint' may show up nested (declaration.collector.childToPrint)
+  // or flat (annotation['collector.childToPrint']), depending on where in the
+  // pipeline this is read from. Check both, fall back to child1.
+  const selectedChild = isAdoptionEvent
+    ? (childToPrint ??
+      (declaration as any)?.collector?.childToPrint ??
+      'child1')
+    : undefined
+  const namePrefix = isAdoptionEvent
+    ? selectedChild
+    : isDeathEvent
+      ? 'deceased'
+      : 'child'
+
+  let name = declaration[`${namePrefix}.name`] as
     | { firstname?: string; middlename?: string; surname?: string }
     | undefined
+  let dob = declaration[`${namePrefix}.dob`] as string | undefined
 
-  const dob = declaration[`${namePrefix}.dob`] as string | undefined
+  // Legacy fallback for pre-multi-child adoption declarations that only
+  // ever wrote to the unprefixed 'child.*' keys.
+  if (isAdoptionEvent && (!name || !dob)) {
+    name = name ?? (declaration['child.name'] as typeof name)
+    dob = dob ?? (declaration['child.dob'] as string | undefined)
+  }
 
+  // "Date of Birth" label always, including on death certs
+  const dateLabel = 'Date of Birth'
   const registrationNumberLabel = isDeathEvent ? 'DRN' : 'BRN'
-  const dateLabel = isDeathEvent ? 'Date of Death' : 'Date of Birth'
 
-  return [
+  // Adoption's reg number is the selected child's own BRN from the linked
+  // birth record — not metadata.legalStatuses, which isn't populated the
+  // same way for adoption events.
+  const registrationNumberValue = isAdoptionEvent
+    ? ((declaration[`${namePrefix}.birthRegistrationNumber`] as
+        | string
+        | undefined) ??
+      (declaration['child.birthRegistrationNumber'] as string | undefined) ??
+      '')
+    : (metadata.legalStatuses?.REGISTERED?.registrationNumber ?? '')
+
+  const lines = [
     `Tracking Number: ${metadata.trackingId ?? ''}`,
-    `${registrationNumberLabel}: ${
-      metadata.legalStatuses?.REGISTERED?.registrationNumber ?? ''
-    }`,
+    `${registrationNumberLabel}: ${registrationNumberValue}`,
     `Surname: ${name?.surname ?? ''}`,
-    `First Name: ${name?.firstname ?? ''}`,
-    `Other Names: ${name?.middlename ?? ''}`,
-    `${dateLabel}: ${dob ?? ''}`
-  ].join('\n')
+    `First Name: ${name?.firstname ?? ''}`
+  ]
+
+  // Only show Other Names if it actually has a value — applies to
+  // birth, death, and adoption certs alike
+  if (name?.middlename) {
+    lines.push(`Other Names: ${name.middlename}`)
+  }
+
+  lines.push(`${dateLabel}: ${dob ?? ''}`)
+
+  return lines.join('\n')
 }
 
 async function replaceMinioUrlWithBase64(
@@ -108,7 +148,9 @@ export const usePrintableCertificate = ({
   locations,
   users,
   certificateConfig,
-  language
+  language,
+  annotation // in-progress print-form answers (e.g. collector.childToPrint),
+  // supplied by the review page before the PRINT_CERTIFICATE action is submitted.
 }: {
   event: EventDocument
   config: EventConfig
@@ -116,6 +158,7 @@ export const usePrintableCertificate = ({
   users: UserOrSystem[]
   certificateConfig?: CertificateTemplateConfig
   language?: LanguageConfig
+  annotation?: EventState
 }) => {
   const { eventConfiguration } = useEventConfiguration(event.type)
   const { config: appConfig } = useSelector(getOfflineData)
@@ -150,10 +193,18 @@ export const usePrintableCertificate = ({
       return
     }
 
-    QRCode.toDataURL(buildQrPayload(event.type, metadata, declaration), {
-      width: 200,
-      margin: 1
-    })
+    QRCode.toDataURL(
+      buildQrPayload(
+        event.type,
+        metadata,
+        declaration,
+        annotation?.['collector.childToPrint'] as string | undefined
+      ),
+      {
+        width: 200,
+        margin: 1
+      }
+    )
       .then((dataUrl) => {
         if (!cancelled) {
           setPreviewQrCode(dataUrl)
@@ -168,7 +219,8 @@ export const usePrintableCertificate = ({
   }, [
     event.type,
     event.id,
-    metadata.legalStatuses?.REGISTERED?.registrationNumber
+    metadata.legalStatuses?.REGISTERED?.registrationNumber,
+    annotation?.['collector.childToPrint'] // re-run when child selection changes
   ])
 
   if (!language || !certificateConfig?.svg) {
@@ -205,17 +257,27 @@ export const usePrintableCertificate = ({
   const preparePdfCertificate = async (updatedEvent: EventDocument) => {
     const { declaration: updatedDeclaration, ...updatedMetadata } =
       getCurrentEventState(updatedEvent, eventConfiguration)
+
+    const lastPrintAction = updatedEvent.actions
+      .filter((a) => a.type === ActionType.PRINT_CERTIFICATE)
+      .at(-1) as PrintCertificateAction | undefined
+
+    // Resolve MinIO file URLs to base64 before rendering the final PDF
     const declarationWithResolvedImages = await replaceMinioUrlWithBase64(
       updatedDeclaration,
       config
     )
 
     const qrCode = await QRCode.toDataURL(
-      buildQrPayload(updatedEvent.type, updatedMetadata, updatedDeclaration),
-      {
-        width: 200,
-        margin: 1
-      }
+      buildQrPayload(
+        updatedEvent.type,
+        updatedMetadata,
+        declarationWithResolvedImages,
+        lastPrintAction?.annotation?.['collector.childToPrint'] as
+          | string
+          | undefined
+      ),
+      { width: 200, margin: 1 }
     )
 
     const compiledSvg = compileSvg({
