@@ -218,7 +218,8 @@ export function Review() {
     locations,
     users,
     certificateConfig,
-    language
+    language,
+    annotation
   })
   /**
    * If there are validation errors in the form, redirect to the
