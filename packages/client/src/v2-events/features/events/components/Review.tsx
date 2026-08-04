@@ -740,7 +740,7 @@ function ReviewActionComponent({
   incomplete: boolean
   onConfirm?: () => void
   onReject?: () => void
-  onEscalate?: () => void
+  onEscalate?: () => void | Promise<void>
   onApproveEscalation?: () => void
   showEscalationCheckbox?: boolean
 
@@ -758,6 +758,7 @@ function ReviewActionComponent({
 }) {
   const intl = useIntl()
   const [escalateChecked, setEscalateChecked] = useState(false)
+  const [escalationPending, setEscalationPending] = useState(false)
 
   const background = incomplete ? 'error' : 'success'
 
@@ -775,6 +776,7 @@ function ReviewActionComponent({
                 label="Do you want to escalate this application?"
                 name="escalateApplication"
                 selected={escalateChecked}
+                disabled={escalationPending}
                 value=""
                 onChange={() => setEscalateChecked(!escalateChecked)}
               />
@@ -784,7 +786,9 @@ function ReviewActionComponent({
           <ActionContainer>
             {onConfirm && (
               <Button
-                disabled={!!incomplete && !canSendIncomplete}
+                disabled={
+                  escalationPending || (!!incomplete && !canSendIncomplete)
+                }
                 id="validateDeclarationBtn"
                 size="large"
                 type={primaryButtonType ?? 'positive'}
@@ -800,6 +804,7 @@ function ReviewActionComponent({
                 id="review-reject"
                 size="large"
                 type="negative"
+                disabled={escalationPending}
                 onClick={onReject}
               >
                 <Icon name="X" />
@@ -811,9 +816,18 @@ function ReviewActionComponent({
               <EscalateButton
                 id="escalateDeclarationBtn"
                 size="large"
-                disabled={!!incomplete && !canSendIncomplete}
+                aria-busy={escalationPending}
+                disabled={
+                  escalationPending || (!!incomplete && !canSendIncomplete)
+                }
                 type="primary"
-                onClick={onEscalate}
+                onClick={() => {
+                  if (escalationPending) return
+                  setEscalationPending(true)
+                  void Promise.resolve(onEscalate()).finally(() =>
+                    setEscalationPending(false)
+                  )
+                }}
               >
                 <Icon name="WarningCircle" color="white" />
                 Escalate Record
@@ -825,6 +839,7 @@ function ReviewActionComponent({
                 id="approveEscalationBtn"
                 size="large"
                 type="positive"
+                disabled={escalationPending}
                 onClick={onApproveEscalation}
               >
                 <Icon name="Check" color="white" />

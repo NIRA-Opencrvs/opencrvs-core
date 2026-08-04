@@ -271,31 +271,35 @@ export function Review() {
 
     if (!result) return
 
-    // Step 1: Declare first (since record is still CREATED)
-    if (currentEventState.status === EventStatus.enum.CREATED) {
-      await events.actions.declare.mutateAsync({
-        eventId,
-        transactionId: uuid(),
-        declaration: form,
-        keepAssignment: true,
-        annotation: {}
-      })
-    }
-    // Step 2: Now possible to escalate
-    events.actions.escalate.mutate({
-      eventId,
-      transactionId: uuid(),
-      declaration: {
-        'review.escalated': true,
-        'review.escalationRole': result.escalationRole,
-        'review.escalationComment': result.comment
-      },
-      annotation: {},
-      content: {
-        reason: result.comment
+    closeActionView(slug)
+
+    void (async () => {
+      if (currentEventState.status === EventStatus.enum.CREATED) {
+        await events.actions.declare.mutateAsync({
+          eventId,
+          keepEventInCache: true,
+          transactionId: uuid(),
+          declaration: form,
+          keepAssignment: true,
+          annotation: {}
+        })
       }
-    })
-    closeActionView(slug ?? 'in-progress')
+
+      events.actions.escalate.mutate({
+        eventId,
+        fullEvent: event,
+        transactionId: uuid(),
+        declaration: {
+          'review.escalated': true,
+          'review.escalationRole': result.escalationRole,
+          'review.escalationComment': result.comment
+        },
+        annotation: {},
+        content: {
+          reason: result.comment
+        }
+      })
+    })().catch(() => undefined)
   }
 
   return (
