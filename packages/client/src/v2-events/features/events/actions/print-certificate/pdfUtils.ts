@@ -85,6 +85,21 @@ function findUserById(userId: string, users: UserOrSystem[]) {
   }
 }
 
+function getSignatureUrl(
+  signature: string | null | undefined,
+  userId: string,
+  users: UserOrSystem[]
+) {
+  const signaturePath =
+    signature || users.find((user) => user.id === userId)?.signature
+
+  if (!signaturePath) {
+    return undefined
+  }
+
+  return new URL(signaturePath, window.config.MINIO_BASE_URL).href
+}
+
 export const stringifyEventMetadata = ({
   metadata,
   intl,
@@ -176,8 +191,11 @@ export const stringifyEventMetadata = ({
               { intl, locations }
             ),
             createdByRole: metadata.legalStatuses.DECLARED.createdByRole,
-            createdBySignature:
-              metadata.legalStatuses.DECLARED.createdBySignature
+            createdBySignature: getSignatureUrl(
+              metadata.legalStatuses.DECLARED.createdBySignature,
+              metadata.legalStatuses.DECLARED.createdBy,
+              users
+            )
           }
         : null,
       [EventStatus.enum.REGISTERED]: metadata.legalStatuses.REGISTERED
@@ -201,13 +219,11 @@ export const stringifyEventMetadata = ({
             createdByRole: metadata.legalStatuses.REGISTERED.createdByRole,
             registrationNumber:
               metadata.legalStatuses.REGISTERED.registrationNumber,
-            createdBySignature: metadata.legalStatuses.REGISTERED
-              .createdBySignature
-              ? new URL(
-                  metadata.legalStatuses.REGISTERED.createdBySignature,
-                  window.config.MINIO_BASE_URL
-                ).href
-              : undefined
+            createdBySignature: getSignatureUrl(
+              metadata.legalStatuses.REGISTERED.createdBySignature,
+              metadata.legalStatuses.REGISTERED.createdBy,
+              users
+            )
           }
         : null
     },

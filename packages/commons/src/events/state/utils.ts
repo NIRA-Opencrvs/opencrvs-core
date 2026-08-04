@@ -97,6 +97,15 @@ const updateActions = ActionTypes.extract([
   ActionType.ESCALATE
 ])
 
+type ActionUpdateMetadata = Pick<
+  Action,
+  | 'createdAt'
+  | 'createdBy'
+  | 'createdByUserType'
+  | 'createdAtLocation'
+  | 'createdByRole'
+>
+
 /**
  * Given action type and actions, returns the action creation metadata for the event.
  * Since we do not consistently store the request action, we need to check if it exists.
@@ -116,21 +125,30 @@ export function getActionUpdateMetadata(actions: Action[]) {
     'createdByUserType',
     'createdAtLocation',
     'createdByRole'
-  ]
+  ] as const
 
   return actions
     .filter(({ type }) => updateActions.safeParse(type).success)
     .filter(({ status }) => status === ActionStatus.Accepted)
     .reduce(
-      (_, action) => {
+      (metadata: ActionUpdateMetadata, action): ActionUpdateMetadata => {
+        // Escalation updates the event timeline, but it does not transfer
+        // ownership of the application.
+        if (action.type === ActionType.ESCALATE) {
+          return {
+            ...metadata,
+            createdAt: action.createdAt
+          }
+        }
+
         if (action.originalActionId) {
           const originalAction =
             actions.find(({ id }) => id === action.originalActionId) ?? action
-          return pick(originalAction, metadataFields)
+          return pick(originalAction, metadataFields) as ActionUpdateMetadata
         }
-        return pick(action, metadataFields)
+        return pick(action, metadataFields) as ActionUpdateMetadata
       },
-      pick(createAction, metadataFields)
+      pick(createAction, metadataFields) as ActionUpdateMetadata
     )
 }
 

@@ -136,7 +136,12 @@ setMutationDefaults(trpcOptionsProxy.event.actions.declare.request, {
   ),
   retry: retryUnlessConflict,
   retryDelay,
-  onSuccess: deleteLocalEvent,
+  onSuccess: (updatedEvent, variables) => {
+    const { keepEventInCache } = variables as typeof variables & {
+      keepEventInCache?: boolean
+    }
+    return keepEventInCache ? undefined : deleteLocalEvent(updatedEvent)
+  },
   onError: errorToastOnConflict,
   onMutate: updateEventOptimistically(
     ActionType.DECLARE,
@@ -424,7 +429,10 @@ export function useEventAction<P extends DecorateMutationProcedure<any>>(
     ...mutationOptions
   })
 
-  type ActionMutationInput = inferInput<P> & { fullEvent?: EventDocument }
+  type ActionMutationInput = inferInput<P> & {
+    fullEvent?: EventDocument
+    keepEventInCache?: boolean
+  }
 
   function getMutationPayload(params: ActionMutationInput) {
     const { eventId } = params
@@ -435,7 +443,9 @@ export function useEventAction<P extends DecorateMutationProcedure<any>>(
        * In other cases, the user might not have the full event downloaded, but only the index. This can happen when:
        * - The user is on event overview page and is assigning / unassigning
        */
-      findLocalEventDocument(eventId) || findLocalEventIndex(eventId)
+      findLocalEventDocument(eventId) ||
+      findLocalEventIndex(eventId) ||
+      params.fullEvent
 
     const eventConfiguration = eventConfigurations.find(
       (event) => event.id === localEvent?.type
