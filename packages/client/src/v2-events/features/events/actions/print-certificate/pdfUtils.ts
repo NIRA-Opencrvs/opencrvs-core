@@ -42,6 +42,7 @@ import { getUsersFullName } from '@client/v2-events/utils'
 import { getFormDataStringifier } from '@client/v2-events/hooks/useFormDataStringifier'
 import { LocationSearch } from '@client/v2-events/features/events/registered-fields'
 import { AdminStructureItem } from '@client/utils/referenceApi'
+import { getToken } from '@client/utils/authUtils'
 
 interface FontFamilyTypes {
   normal: string
@@ -673,15 +674,37 @@ export async function downloadAndEmbedImages(svgString: string): Promise<string>
         imageElement.getAttribute('xlink:href')
 
       if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
-        const response = await fetch(href)
-        const blob = await response.blob()
+        const imageUrl = new URL(href)
+        let response: Response
+
+        // User signatures may be represented by an unsigned MinIO path in
+        // the V2 users cache. Resolve a fresh signed URL before downloading,
+        // avoiding a predictable 403 request in the browser console.
+        if (!imageUrl.searchParams.has('X-Amz-Signature')) {
+          const presignedResponse = await fetch(
+            `/api/presigned-url${imageUrl.pathname}`,
+            {
+              headers: { Authorization: `Bearer ${getToken()}` }
+            }
+          )
+
+          if (!presignedResponse.ok) {
+            throw new Error(
+              `Failed to get certificate image URL (${presignedResponse.status})`
+            )
+          }
+
+          const { presignedURL } = await presignedResponse.json()
+          response = await fetch(presignedURL)
+        } else {
+          response = await fetch(href)
+        }
 
         if (!response.ok) {
-          console.error('Failed to fetch image:', href)
-          console.error(
-            'Ensure the URL is correct and image is requested before cache is cleaned.'
-          )
+          throw new Error(`Failed to fetch certificate image (${response.status})`)
         }
+
+        const blob = await response.blob()
 
         const base64 = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader()
