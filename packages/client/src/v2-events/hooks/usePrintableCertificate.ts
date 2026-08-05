@@ -32,6 +32,7 @@ import {
 import {
   addFontsToSvg,
   compileSvg,
+  downloadAndEmbedImages,
   printAndDownloadPdf,
   svgToPdfTemplate
 } from '@client/v2-events/features/events/actions/print-certificate/pdfUtils'
@@ -184,6 +185,7 @@ export const usePrintableCertificate = ({
   }
 
   const [previewQrCode, setPreviewQrCode] = useState<string>()
+  const [previewSvgCode, setPreviewSvgCode] = useState<string>()
 
   useEffect(() => {
     let cancelled = false
@@ -246,6 +248,18 @@ export const usePrintableCertificate = ({
   })
 
   const svgCode = addFontsToSvg(svgWithoutFonts, certificateFonts)
+
+  useEffect(() => {
+    let cancelled = false
+
+    void downloadAndEmbedImages(svgCode).then((embeddedSvg) => {
+      if (!cancelled) setPreviewSvgCode(embeddedSvg)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [svgCode])
 
   /**
    * NOTE: We have separated the preparing and printing of the PDF certificate. Without the separation, user is already unassigned from the event and cache is cleared. We end up losing the images in the PDF unless we run actions in correct order.
@@ -310,7 +324,7 @@ export const usePrintableCertificate = ({
   }
 
   return {
-    svgCode,
+    svgCode: previewSvgCode ?? svgCode,
     preparePdfCertificate
   }
 }
