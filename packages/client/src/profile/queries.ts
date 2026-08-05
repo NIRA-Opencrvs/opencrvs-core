@@ -90,7 +90,11 @@ async function fetchUserDetails(userId: string) {
     client &&
     client.query({
       query: FETCH_USER,
-      variables: { userId }
+      variables: { userId },
+      // The response contains a freshly presigned signature URL. Do not serve
+      // the URL from Apollo's persisted cache: after a signature update the
+      // certificate preview could otherwise continue rendering the old image.
+      fetchPolicy: 'network-only'
     })
   )
 }
