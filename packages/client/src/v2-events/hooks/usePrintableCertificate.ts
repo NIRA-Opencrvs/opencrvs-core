@@ -185,7 +185,7 @@ export const usePrintableCertificate = ({
   }
 
   const [previewQrCode, setPreviewQrCode] = useState<string>()
-  const [previewSvgCode, setPreviewSvgCode] = useState<string>()
+  const [embeddedPreviewSvg, setEmbeddedPreviewSvg] = useState<string>()
 
   useEffect(() => {
     let cancelled = false
@@ -225,41 +225,52 @@ export const usePrintableCertificate = ({
     annotation?.['collector.childToPrint'] // re-run when child selection changes
   ])
 
-  if (!language || !certificateConfig?.svg) {
-    return { svgCode: null }
-  }
-
   const adminLevels = appConfig.ADMIN_STRUCTURE
 
-  const certificateFonts = certificateConfig.fonts ?? {}
+  const certificateFonts = certificateConfig?.fonts ?? {}
 
-  const svgWithoutFonts = compileSvg({
-    templateString: certificateConfig.svg,
-    $metadata: modifiedMetadata,
-    $declaration: declaration,
-    $actions: getAcceptedActions(event),
-    review: true,
-    locations,
-    users,
-    language,
-    config,
-    adminLevels,
-    qrCode: previewQrCode
-  })
+  const svgCode =
+    language && certificateConfig?.svg
+      ? addFontsToSvg(
+          compileSvg({
+            templateString: certificateConfig.svg,
+            $metadata: modifiedMetadata,
+            $declaration: declaration,
+            $actions: getAcceptedActions(event),
+            review: true,
+            locations,
+            users,
+            language,
+            config,
+            adminLevels,
+            qrCode: previewQrCode
+          }),
+          certificateFonts
+        )
+      : null
 
-  const svgCode = addFontsToSvg(svgWithoutFonts, certificateFonts)
-
+  // Always call this hook, even when the certificate config is not ready yet.
+  // This prevents React hook-order errors while the preview is loading.
   useEffect(() => {
     let cancelled = false
 
+    if (!svgCode) {
+      setEmbeddedPreviewSvg(undefined)
+      return
+    }
+
     void downloadAndEmbedImages(svgCode).then((embeddedSvg) => {
-      if (!cancelled) setPreviewSvgCode(embeddedSvg)
+      if (!cancelled) setEmbeddedPreviewSvg(embeddedSvg)
     })
 
     return () => {
       cancelled = true
     }
   }, [svgCode])
+
+  if (!svgCode || !language || !certificateConfig?.svg) {
+    return { svgCode: null }
+  }
 
   /**
    * NOTE: We have separated the preparing and printing of the PDF certificate. Without the separation, user is already unassigned from the event and cache is cleared. We end up losing the images in the PDF unless we run actions in correct order.
@@ -324,7 +335,9 @@ export const usePrintableCertificate = ({
   }
 
   return {
-    svgCode: previewSvgCode ?? svgCode,
+    // Do not render the raw MinIO URLs while the fresh preview is being
+    // fetched. This prevents a broken/stale image after a hard reload.
+    svgCode: embeddedPreviewSvg ?? null,
     preparePdfCertificate
   }
 }
