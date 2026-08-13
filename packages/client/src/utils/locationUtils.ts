@@ -171,6 +171,38 @@ export function generateSearchableLocations(
   return generated
 }
 
+/*
+ * CRVS offices are seeded under a sub-county (LOCATION_LEVEL_3), but an office
+ * serves its whole district. Uganda's district is the top level admin
+ * structure, which is seeded with the jurisdiction type STATE, so the
+ * jurisdiction of an office is widened from its own parent up to that district.
+ * Falls back to the office's direct parent when no admin structure is
+ * available in `locations` to resolve the hierarchy with.
+ */
+function getOfficeJurisdictionId(
+  office: ILocation | undefined,
+  locations: { [key: string]: ILocation }
+): UUID | undefined {
+  const officeLocationId = office?.partOf.split('/').at(1)
+
+  if (!officeLocationId) {
+    return undefined
+  }
+
+  const adminStructures = Object.fromEntries(
+    Object.entries(locations).filter(
+      (locationTuple): locationTuple is [string, AdminStructure] =>
+        locationTuple[1].type === 'ADMIN_STRUCTURE'
+    )
+  )
+  const { state: district } = getLocationHierarchy(
+    officeLocationId,
+    adminStructures
+  )
+
+  return (district ?? officeLocationId) as UUID
+}
+
 export function generateLocations(
   locations: { [key: string]: ILocation },
   intl: IntlShape,
@@ -187,7 +219,7 @@ export function generateLocations(
     locationArray,
     locations,
     intl,
-    office?.partOf.split('/').at(1) as UUID | undefined
+    getOfficeJurisdictionId(office, locations)
   )
 }
 
