@@ -13,6 +13,7 @@ import React, { useCallback } from 'react'
 import { defineMessages, useIntl } from 'react-intl'
 import { useTypedParams } from 'react-router-typesafe-routes/dom'
 import {
+  EventDocument,
   getCurrentEventState,
   isUndeclaredDraft
 } from '@opencrvs/commons/client'
@@ -39,12 +40,16 @@ export function FormHeader({
   label,
   onSaveAndExit,
   route,
-  appbarIcon
+  appbarIcon,
+  readonlyMode = false,
+  event: eventProp
 }: {
   label: string
   onSaveAndExit?: () => void
   route: AllowedRouteWithEventId
   appbarIcon?: React.ReactNode
+  readonlyMode?: boolean
+  event?: EventDocument
 }) {
   const intl = useIntl()
   const { modal, exit, closeActionView, deleteDeclaration } =
@@ -56,7 +61,10 @@ export function FormHeader({
   if (!eventId) {
     throw new Error('Event id is required')
   }
-  const event = events.getEvent.getFromCache(eventId)
+  const event = eventProp ??
+    (readonlyMode
+      ? events.getEvent.viewEvent(eventId)
+      : events.getEvent.getFromCache(eventId))
   const { eventConfiguration: configuration } = useEventConfiguration(
     event.type
   )

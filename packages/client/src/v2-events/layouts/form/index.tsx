@@ -12,6 +12,7 @@
 import React from 'react'
 import { useTypedParams } from 'react-router-typesafe-routes/dom'
 import { useIntl } from 'react-intl'
+import { EventDocument } from '@opencrvs/commons/client'
 import { Frame, Spinner } from '@opencrvs/components'
 import { DeclarationIcon } from '@opencrvs/components/lib/icons'
 import { useEventConfiguration } from '@client/v2-events/features/events/useEventConfiguration'
@@ -27,17 +28,24 @@ export function FormLayout({
   route,
   children,
   onSaveAndExit,
-  appbarIcon = <DeclarationIcon />
+  appbarIcon = <DeclarationIcon />,
+  readonlyMode = false,
+  event: eventProp
 }: {
   route: AllowedRouteWithEventId
   children: React.ReactNode
   onSaveAndExit?: () => void | Promise<void>
   appbarIcon?: React.ReactNode
+  readonlyMode?: boolean
+  event?: EventDocument
 }) {
   const intl = useIntl()
   const { eventId } = useTypedParams(route)
   const events = useEvents()
-  const event = events.getEvent.getFromCache(eventId)
+  const event = eventProp ??
+    (readonlyMode
+      ? events.getEvent.viewEvent(eventId)
+      : events.getEvent.getFromCache(eventId))
   const { eventConfiguration: configuration } = useEventConfiguration(
     event.type
   )
@@ -49,6 +57,8 @@ export function FormLayout({
           appbarIcon={appbarIcon}
           label={intl.formatMessage(configuration.label)}
           route={route}
+          readonlyMode={readonlyMode}
+          event={event}
           onSaveAndExit={onSaveAndExit}
         />
       }
