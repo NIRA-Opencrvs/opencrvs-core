@@ -37,6 +37,7 @@ function ReadonlyView() {
   const { eventId } = useTypedParams(ROUTES.V2.EVENTS.DECLARE.REVIEW)
   const events = useEvents()
   const event = events.getEvent.viewEvent(eventId)
+
   const validatorContext = useValidatorContext(event)
 
   const maybeAuth = useAuthentication()
@@ -81,7 +82,11 @@ function ReadonlyView() {
   }, [event, assignmentStatus])
 
   return (
-    <FormLayout route={ROUTES.V2.EVENTS.DECLARE}>
+    <FormLayout
+      route={ROUTES.V2.EVENTS.DECLARE}
+      readonlyMode
+      event={event}
+    >
       <ReviewComponent.Body
         readonlyMode
         form={eventStateWithDraft.declaration}
