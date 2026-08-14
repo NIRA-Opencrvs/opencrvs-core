@@ -43,7 +43,8 @@ import {
 import { usePermissions } from '@client/hooks/useAuthorization'
 import {
   EventHistoryDialog,
-  eventHistoryStatusMessage
+  eventHistoryStatusMessage,
+  adoptionScheduleIssuedMessage
 } from './EventHistoryDialog/EventHistoryDialog'
 import { UserAvatar } from './UserAvatar'
 
@@ -428,6 +429,10 @@ export function EventHistory({
 
               if (historyAction === 'ESCALATE') {
                 return 'Escalated'
+              }
+
+              if (historyAction === ActionType.ISSUE_ADOPTION_SCHEDULE) {
+                return intl.formatMessage(adoptionScheduleIssuedMessage)
               }
 
               return intl.formatMessage(eventHistoryStatusMessage, {

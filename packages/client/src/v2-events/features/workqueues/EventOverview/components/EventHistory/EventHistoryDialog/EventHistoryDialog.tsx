@@ -34,6 +34,11 @@ export const eventHistoryStatusMessage = {
     '{status, select, Requested {Waiting for external validation} other {{action, select, CREATE {Draft} NOTIFY {Sent incomplete} VALIDATE {Validated} ESCALATE {Escalated} DRAFT {Draft} DECLARE {Sent for review} REGISTER {Registered} ISSUE_ADOPTION_SCHEDULE {Adoption schedule issued} PRINT_CERTIFICATE {Certified} REJECT {Rejected} ARCHIVE {Archived} DUPLICATE_DETECTED {Flagged as potential duplicate} MARK_AS_DUPLICATE {Marked as a duplicate} CORRECTED {Record corrected} REQUEST_CORRECTION {Correction requested} APPROVE_CORRECTION {Correction approved} REJECT_CORRECTION {Correction rejected} READ {Viewed} ASSIGN {Assigned} UNASSIGN {Unassigned} UPDATE {Updated} other {Unknown}}}}'
 }
 
+export const adoptionScheduleIssuedMessage = {
+  id: 'events.history.action.adoptionScheduleIssued',
+  defaultMessage: 'Adoption schedule issued'
+}
+
 const messages = defineMessages({
   'event.history.modal.timeFormat': {
     defaultMessage: 'MMMM dd, yyyy · hh.mm a',
@@ -133,10 +138,12 @@ export function EventHistoryDialog({
   const title =
     historyAction === 'ESCALATE'
       ? 'Escalated'
-      : intl.formatMessage(eventHistoryStatusMessage, {
-          action: historyAction,
-          status: action.status
-        })
+      : historyAction === ActionType.ISSUE_ADOPTION_SCHEDULE
+        ? intl.formatMessage(adoptionScheduleIssuedMessage)
+        : intl.formatMessage(eventHistoryStatusMessage, {
+            action: historyAction,
+            status: action.status
+          })
 
   const comments = prepareComments(action)
   const reason = prepareReason(action)
