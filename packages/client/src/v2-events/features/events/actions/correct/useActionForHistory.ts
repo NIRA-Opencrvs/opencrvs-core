@@ -192,6 +192,13 @@ export function useActionForHistory() {
       }
     }
 
+    // Older country-config builds used the procedure name for this action in
+    // the audit payload. Normalise it to the core ActionType so the history
+    // label is resolved consistently after an adoption schedule is issued.
+    if ((action.type as string) === 'issueAdoptionSchedule') {
+      return ActionType.ISSUE_ADOPTION_SCHEDULE
+    }
+
     return action.type
   }
 
