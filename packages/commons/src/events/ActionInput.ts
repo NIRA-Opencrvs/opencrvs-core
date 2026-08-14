@@ -67,9 +67,7 @@ export const EscalateActionInput = BaseActionInput.merge(
     content: ReasonContent
   })
 )
-export type EscalateActionInput = z.infer<
-  typeof EscalateActionInput
->
+export type EscalateActionInput = z.infer<typeof EscalateActionInput>
 
 export const NotifyActionInput = BaseActionInput.merge(
   z.object({
@@ -99,6 +97,14 @@ export const PrintCertificateActionInput = BaseActionInput.merge(
       .literal(ActionType.PRINT_CERTIFICATE)
       .default(ActionType.PRINT_CERTIFICATE),
     content: PrintContent.optional()
+  })
+)
+
+export const IssueAdoptionScheduleActionInput = BaseActionInput.merge(
+  z.object({
+    type: z
+      .literal(ActionType.ISSUE_ADOPTION_SCHEDULE)
+      .default(ActionType.ISSUE_ADOPTION_SCHEDULE)
   })
 )
 
@@ -260,6 +266,9 @@ export const ActionInput = z
     AssignActionInput.openapi({ ref: 'AssignActionInput' }),
     UnassignActionInput.openapi({ ref: 'UnassignActionInput' }),
     PrintCertificateActionInput.openapi({ ref: 'PrintCertificateActionInput' }),
+    IssueAdoptionScheduleActionInput.openapi({
+      ref: 'IssueAdoptionScheduleActionInput'
+    }),
     RequestCorrectionActionInput.openapi({
       ref: 'RequestCorrectionActionInput'
     }),

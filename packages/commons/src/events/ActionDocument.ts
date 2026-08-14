@@ -225,6 +225,14 @@ const PrintCertificateAction = ActionBase.merge(
 
 export type PrintCertificateAction = z.infer<typeof PrintCertificateAction>
 
+const IssueAdoptionScheduleAction = ActionBase.merge(
+  z.object({ type: z.literal(ActionType.ISSUE_ADOPTION_SCHEDULE) })
+)
+
+export type IssueAdoptionScheduleAction = z.infer<
+  typeof IssueAdoptionScheduleAction
+>
+
 const RequestedCorrectionAction = ActionBase.merge(
   z.object({
     type: z.literal(ActionType.REQUEST_CORRECTION)
@@ -274,6 +282,7 @@ export const ActionDocument = z
     ApprovedCorrectionAction.openapi({ ref: 'ApprovedCorrectionAction' }),
     RejectedCorrectionAction.openapi({ ref: 'RejectedCorrectionAction' }),
     UnassignedAction.openapi({ ref: 'UnassignedAction' }),
+    IssueAdoptionScheduleAction.openapi({ ref: 'IssueAdoptionScheduleAction' }),
     PrintCertificateAction.openapi({ ref: 'PrintCertificateAction' }),
     ReadAction.openapi({ ref: 'ReadAction' })
   ])

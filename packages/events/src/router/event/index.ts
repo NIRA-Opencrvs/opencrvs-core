@@ -240,6 +240,9 @@ export const eventRouter = router({
     printCertificate: router(
       getDefaultActionProcedures(ActionType.PRINT_CERTIFICATE)
     ),
+    issueAdoptionSchedule: router(
+      getDefaultActionProcedures(ActionType.ISSUE_ADOPTION_SCHEDULE)
+    ),
     assignment: router({
       assign: publicProcedure
         .input(AssignActionInput)

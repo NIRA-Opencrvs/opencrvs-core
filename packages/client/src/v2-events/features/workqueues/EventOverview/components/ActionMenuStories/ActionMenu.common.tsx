@@ -163,6 +163,19 @@ function getMockActions(
       id: generateUuid(rng),
       type: ActionType.PRINT_CERTIFICATE
     },
+    [ActionType.ISSUE_ADOPTION_SCHEDULE]: {
+      ...actionProps,
+      createdBy,
+      id: generateUuid(rng),
+      type: ActionType.ISSUE_ADOPTION_SCHEDULE
+    },
+    [ActionType.ESCALATE]: {
+      ...actionProps,
+      createdBy,
+      id: generateUuid(rng),
+      type: ActionType.ESCALATE,
+      content: { reason: 'Test escalation' }
+    },
     [ActionType.MARK_AS_DUPLICATE]: {
       ...actionProps,
       createdBy,
