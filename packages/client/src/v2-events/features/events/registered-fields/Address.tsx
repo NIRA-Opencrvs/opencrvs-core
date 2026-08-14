@@ -545,6 +545,10 @@ function AddressInput(props: Props) {
     touched = {},
     ...otherProps
   } = props
+  const normalizedValue = value ?? {
+    addressType: AddressType.DOMESTIC,
+    country: ''
+  }
   const { config } = useSelector(getOfflineData)
   const { getLocations } = useLocations()
   const [adminStructureLocations] = getLocations.useSuspenseQuery({
@@ -559,7 +563,7 @@ function AddressInput(props: Props) {
   const streetAddressFieldIds = streetAddressFields.map((f) => f.id)
 
   const nestedValue = transformParentValueToNestedValue(
-    value,
+    normalizedValue,
     adminLevelIds,
     adminStructureLocations
   )
@@ -583,7 +587,7 @@ function AddressInput(props: Props) {
         ...validatorContext,
         baseFormState: {
           ...validatorContext.baseFormState,
-          addressType: value.addressType
+          addressType: normalizedValue.addressType
         }
       }}
       onFormChange={(nestedVal) =>

@@ -76,16 +76,22 @@ export function omitUncorrectableFields(
  */
 export function getInvalidUpdateKeys<T>({
   update,
-  cleaned
+  cleaned,
+  ignoreNullValues = false
 }: {
   update: T
   cleaned: T
+  ignoreNullValues?: boolean
 }): ValidationError[] {
   const updateEntries = flattenEntries(update)
   const cleanedKeys = flattenEntries(cleaned).map(([key]) => key)
 
   return updateEntries
-    .filter(([key]) => !cleanedKeys.includes(key))
+    // A null correction explicitly clears a now-hidden field and is valid.
+    .filter(
+      ([key, value]) =>
+        (!ignoreNullValues || value !== null) && !cleanedKeys.includes(key)
+    )
     .map(([key, value]) => ({
       message: errorMessages.hiddenField.defaultMessage,
       id: key,
