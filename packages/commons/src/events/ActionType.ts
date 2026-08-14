@@ -33,6 +33,7 @@ export const ActionType = {
   MARK_AS_NOT_DUPLICATE: 'MARK_AS_NOT_DUPLICATE',
   ARCHIVE: 'ARCHIVE',
   // Record actions
+  ISSUE_ADOPTION_SCHEDULE: 'ISSUE_ADOPTION_SCHEDULE',
   PRINT_CERTIFICATE: 'PRINT_CERTIFICATE',
   REQUEST_CORRECTION: 'REQUEST_CORRECTION',
   REJECT_CORRECTION: 'REJECT_CORRECTION',
@@ -53,6 +54,7 @@ export const ConfirmableActions = [
   ActionType.REJECT,
   ActionType.ARCHIVE,
   ActionType.ESCALATE,
+  ActionType.ISSUE_ADOPTION_SCHEDULE,
   ActionType.PRINT_CERTIFICATE,
   ActionType.REQUEST_CORRECTION,
   ActionType.APPROVE_CORRECTION,
@@ -67,12 +69,13 @@ export const ActionTypes = z.enum([
   'DECLARE',
   'VALIDATE',
   'REGISTER',
-  'ESCALATE', 
+  'ESCALATE',
   'DUPLICATE_DETECTED',
   'REJECT',
   'MARK_AS_DUPLICATE',
   'MARK_AS_NOT_DUPLICATE',
   'ARCHIVE',
+  'ISSUE_ADOPTION_SCHEDULE',
   'PRINT_CERTIFICATE',
   'REQUEST_CORRECTION',
   'REJECT_CORRECTION',
@@ -86,7 +89,8 @@ export const ActionTypes = z.enum([
  * Non-persisted actions that are used in the client to control the UI.
  */
 export const ClientSpecificAction = {
-  REVIEW_CORRECTION_REQUEST: 'REVIEW_CORRECTION_REQUEST'
+  REVIEW_CORRECTION_REQUEST: 'REVIEW_CORRECTION_REQUEST',
+  PRINT_ADOPTION_SCHEDULE: 'PRINT_ADOPTION_SCHEDULE'
 } as const
 
 export type ClientSpecificAction =

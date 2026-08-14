@@ -20,6 +20,7 @@ import {
   EventConfig,
   defaultWorkqueueColumns,
   WorkqueueColumn,
+  ActionType,
   deepDropNulls,
   applyDraftToEventIndex,
   WorkqueueActionsWithDefault,
@@ -246,6 +247,7 @@ export const SearchResultComponent = ({
     (typeof SORT_ORDER)[keyof typeof SORT_ORDER]
   >(SORT_ORDER.DESCENDING)
   const isWideScreen = windowWidth > theme.grid.breakpoints.lg
+  const isAdoptionScheduleQueue = slug === 'adoption-schedule'
 
   const getSortFunction = (column: string) => {
     if (
@@ -384,7 +386,8 @@ export const SearchResultComponent = ({
     if (isWideScreen) {
       return columns.map(({ label, value }) => ({
         label: intl.formatMessage(label),
-        width: value.$event === 'outbox' ? 35 : 15,
+        width:
+          value.$event === 'outbox' ? 35 : isAdoptionScheduleQueue ? 12 : 15,
         key: value.$event,
         sortFunction: getSortFunction(value.$event),
         isSorted: sortedCol === value.$event
@@ -468,7 +471,10 @@ export const SearchResultComponent = ({
         ...getDefaultColumns(),
         ...getColumns(),
         {
-          width: 20,
+          // The adoption schedule CTA has a longer label than the usual
+          // workqueue actions. Give that queue a little more room without
+          // changing the layout of other workqueues.
+          width: isAdoptionScheduleQueue ? 30 : 20,
           key: COLUMNS.ACTIONS,
           isActionColumn: true,
           alignment: ColumnContentAlignment.RIGHT

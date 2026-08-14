@@ -58,6 +58,7 @@ export function getStatusFromActions(actions: Array<Action>) {
         case ActionType.NOTIFY:
           return EventStatus.enum.NOTIFIED
         case ActionType.PRINT_CERTIFICATE:
+        case ActionType.ISSUE_ADOPTION_SCHEDULE:
         case ActionType.ASSIGN:
         case ActionType.UNASSIGN:
         case ActionType.REJECT:

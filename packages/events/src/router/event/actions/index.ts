@@ -24,6 +24,7 @@ import {
   ArchiveActionInput,
   EscalateActionInput,
   PrintCertificateActionInput,
+  IssueAdoptionScheduleActionInput,
   DeclareActionInput,
   ValidateActionInput,
   ACTION_SCOPE_MAP,
@@ -120,6 +121,10 @@ const ACTION_PROCEDURE_CONFIG = {
   [ActionType.PRINT_CERTIFICATE]: {
     ...defaultConfig,
     inputSchema: PrintCertificateActionInput
+  },
+  [ActionType.ISSUE_ADOPTION_SCHEDULE]: {
+    ...defaultConfig,
+    inputSchema: IssueAdoptionScheduleActionInput
   },
   [ActionType.REQUEST_CORRECTION]: {
     ...defaultConfig,

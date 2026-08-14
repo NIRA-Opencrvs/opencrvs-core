@@ -8,7 +8,7 @@
  *
  * Copyright (C) The OpenCRVS Authors located at https://github.com/opencrvs/opencrvs-core/blob/master/AUTHORS.
  */
-import React from 'react'
+import React, { useState } from 'react'
 import { useIntl } from 'react-intl'
 import {
   EventIndex,
@@ -23,6 +23,7 @@ import {
   ActionMenuActionType,
   useAllowedActionConfigurations
 } from '../../workqueues/EventOverview/components/useAllowedActionConfigurations'
+import { AdoptionScheduleIssuanceModal } from '../../workqueues/EventOverview/components/AdoptionScheduleIssuanceModal'
 import { withSuspense } from '../../../components/withSuspense'
 
 // Actions which should never be shown as a CTA
@@ -41,6 +42,8 @@ function ActionCtaComponent({
   redirectParam?: string
 }) {
   const intl = useIntl()
+  const [showAdoptionScheduleModal, setShowAdoptionScheduleModal] =
+    useState(false)
   const maybeAuth = useAuthentication()
   const auth = getOrThrow(
     maybeAuth,
@@ -57,6 +60,26 @@ function ActionCtaComponent({
 
   if (!config || EXCLUDED_ACTIONS.includes(config.type)) {
     return null
+  }
+
+  if (actionType === ActionType.ISSUE_ADOPTION_SCHEDULE) {
+    return (
+      <>
+        <Button
+          disabled={'disabled' in config && Boolean(config.disabled)}
+          type="primary"
+          onClick={() => setShowAdoptionScheduleModal(true)}
+        >
+          {intl.formatMessage(config.label)}
+        </Button>
+        {showAdoptionScheduleModal && (
+          <AdoptionScheduleIssuanceModal
+            eventId={event.id}
+            close={() => setShowAdoptionScheduleModal(false)}
+          />
+        )}
+      </>
+    )
   }
 
   return (

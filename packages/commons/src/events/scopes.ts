@@ -39,14 +39,20 @@ export const ACTION_SCOPE_MAP = {
   [ActionType.DELETE]: ['record.declare'],
   [ActionType.VALIDATE]: ['record.declared.validate', 'record.register'],
   [ActionType.REGISTER]: ['record.register'],
-  [ActionType.ESCALATE]: ['record.declared.validate', 'record.register'], 
+  [ActionType.ESCALATE]: ['record.declared.validate', 'record.register'],
   [ActionType.PRINT_CERTIFICATE]: ['record.registered.print-certified-copies'],
+  [ActionType.ISSUE_ADOPTION_SCHEDULE]: [
+    'record.registered.print-certified-copies'
+  ],
   [ActionType.REQUEST_CORRECTION]: [
     'record.registered.request-correction',
     'record.registered.correct'
   ],
   [ClientSpecificAction.REVIEW_CORRECTION_REQUEST]: [
     'record.registered.correct'
+  ],
+  [ClientSpecificAction.PRINT_ADOPTION_SCHEDULE]: [
+    'record.registered.print-certified-copies'
   ],
   [ActionType.REJECT_CORRECTION]: ['record.registered.correct'],
   [ActionType.APPROVE_CORRECTION]: ['record.registered.correct'],

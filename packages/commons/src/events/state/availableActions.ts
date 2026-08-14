@@ -33,7 +33,7 @@ const AVAILABLE_ACTIONS_BY_EVENT_STATUS = {
   [EventStatus.enum.DECLARED]: [
     ActionType.READ,
     ActionType.VALIDATE,
-    ActionType.ESCALATE,  
+    ActionType.ESCALATE,
     ActionType.MARK_AS_DUPLICATE,
     ActionType.ARCHIVE,
     ActionType.REJECT
@@ -41,13 +41,14 @@ const AVAILABLE_ACTIONS_BY_EVENT_STATUS = {
   [EventStatus.enum.VALIDATED]: [
     ActionType.READ,
     ActionType.REGISTER,
-    ActionType.ESCALATE,    
+    ActionType.ESCALATE,
     ActionType.MARK_AS_DUPLICATE,
     ActionType.ARCHIVE,
     ActionType.REJECT
   ],
   [EventStatus.enum.REGISTERED]: [
     ActionType.READ,
+    ActionType.ISSUE_ADOPTION_SCHEDULE,
     ActionType.PRINT_CERTIFICATE,
     ActionType.REQUEST_CORRECTION,
     ActionType.APPROVE_CORRECTION,
@@ -94,7 +95,7 @@ const ACTION_FILTERS: {
   [ActionType.ARCHIVE]: (flags) =>
     !flags.some((flag) => flag.endsWith(':requested')),
   [ActionType.ESCALATE]: (flags) =>
-  !flags.some((flag) => flag.endsWith(':requested')),
+    !flags.some((flag) => flag.endsWith(':requested'))
 }
 
 /**
@@ -177,8 +178,24 @@ export function getAvailableActions(
 export function getAvailableActionsForEvent(
   event: EventIndex
 ): DisplayableAction[] {
-  return filterActionsByFlags(
+  const actions = filterActionsByFlags(
     getAvailableActionsWithoutFlagFilters(event.status, event.flags),
     event.flags
   )
+
+  // Adoption is the only event type that supports the intermediate schedule
+  // issuance. Keep the action completely invisible to all other event flows.
+  if (event.type !== 'adoption') {
+    return actions.filter(
+      (action) => action !== ActionType.ISSUE_ADOPTION_SCHEDULE
+    )
+  }
+
+  const scheduleIssued = event.flags.includes(
+    InherentFlags.ADOPTION_SCHEDULE_ISSUED
+  )
+
+  return scheduleIssued
+    ? actions.filter((action) => action !== ActionType.ISSUE_ADOPTION_SCHEDULE)
+    : actions.filter((action) => action !== ActionType.PRINT_CERTIFICATE)
 }

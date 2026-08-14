@@ -136,7 +136,7 @@ setMutationDefaults(trpcOptionsProxy.event.actions.declare.request, {
   ),
   retry: retryUnlessConflict,
   retryDelay,
-  onSuccess: (updatedEvent, variables) => {
+  onSuccess: async (updatedEvent, variables) => {
     const { keepEventInCache } = variables as typeof variables & {
       keepEventInCache?: boolean
     }
@@ -227,6 +227,20 @@ setMutationDefaults(trpcOptionsProxy.event.actions.printCertificate.request, {
   onError: errorToastOnConflict,
   meta: { actionType: ActionType.PRINT_CERTIFICATE }
 })
+
+setMutationDefaults(
+  trpcOptionsProxy.event.actions.issueAdoptionSchedule.request,
+  {
+    mutationFn: createEventActionMutationFn(
+      trpcOptionsProxy.event.actions.issueAdoptionSchedule.request
+    ),
+    retry: retryUnlessConflict,
+    retryDelay,
+    onSuccess: updateLocalEvent,
+    onError: errorToastOnConflict,
+    meta: { actionType: ActionType.ISSUE_ADOPTION_SCHEDULE }
+  }
+)
 
 setMutationDefaults(trpcOptionsProxy.event.actions.correction.request.request, {
   mutationFn: createEventActionMutationFn(

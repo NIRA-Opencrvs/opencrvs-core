@@ -98,6 +98,10 @@ const PrintCertificateActionConfig = ActionConfigBase.merge(
   })
 )
 
+const IssueAdoptionScheduleActionConfig = ActionConfigBase.merge(
+  z.object({ type: z.literal(ActionType.ISSUE_ADOPTION_SCHEDULE) })
+)
+
 const RequestCorrectionConfig = ActionConfigBase.merge(
   z.object({
     type: z.literal(ActionType.REQUEST_CORRECTION),
@@ -134,6 +138,7 @@ export type AllActionConfigFields =
   | typeof RegisterConfig
   | typeof DeleteConfig
   | typeof PrintCertificateActionConfig
+  | typeof IssueAdoptionScheduleActionConfig
   | typeof RequestCorrectionConfig
   | typeof RejectCorrectionConfig
   | typeof ApproveCorrectionConfig
@@ -149,6 +154,7 @@ export type InferredActionConfig =
   | z.infer<typeof RegisterConfig>
   | z.infer<typeof DeleteConfig>
   | z.infer<typeof PrintCertificateActionConfig>
+  | z.infer<typeof IssueAdoptionScheduleActionConfig>
   | z.infer<typeof RequestCorrectionConfig>
   | z.infer<typeof RejectCorrectionConfig>
   | z.infer<typeof ApproveCorrectionConfig>
@@ -169,6 +175,9 @@ export const ActionConfig = z
     DeleteConfig.openapi({ ref: 'DeleteActionConfig' }),
     PrintCertificateActionConfig.openapi({
       ref: 'PrintCertificateActionConfig'
+    }),
+    IssueAdoptionScheduleActionConfig.openapi({
+      ref: 'IssueAdoptionScheduleActionConfig'
     }),
     RequestCorrectionConfig.openapi({ ref: 'RequestCorrectionActionConfig' }),
     RejectCorrectionConfig.openapi({ ref: 'RejectCorrectionActionConfig' }),

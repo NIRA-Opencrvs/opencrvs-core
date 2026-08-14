@@ -32,6 +32,7 @@ export type EventStatus = z.infer<typeof EventStatus>
 
 export const InherentFlags = {
   PENDING_CERTIFICATION: 'pending-certification',
+  ADOPTION_SCHEDULE_ISSUED: 'adoption-schedule-issued',
   INCOMPLETE: 'incomplete',
   REJECTED: 'rejected',
   CORRECTION_REQUESTED: 'correction-requested',
