@@ -49,6 +49,8 @@ import { UnassignModal } from '@client/v2-events/components/UnassignModal'
 import { useUsers } from '@client/v2-events/hooks/useUsers'
 import { useLocations } from '@client/v2-events/hooks/useLocations'
 import { useArchiveModal } from '@client/v2-events/hooks/useArchiveModal'
+import { AdoptionScheduleIssuanceModal } from './AdoptionScheduleIssuanceModal'
+import { PrintAdoptionScheduleModal } from './PrintAdoptionScheduleModal'
 
 /**
  * TEMPORARY (parent re-verification campaign).
@@ -154,6 +156,11 @@ export const actionLabels = {
       'This is shown as the action name anywhere the user can trigger the action from',
     id: 'event.birth.action.collect-certificate.label'
   },
+  [ActionType.ISSUE_ADOPTION_SCHEDULE]: {
+    defaultMessage: 'Issue schedule',
+    description: 'Label for issuing an adoption schedule',
+    id: 'event.adoption.action.issue-adoption-schedule.label'
+  },
   [ActionType.DELETE]: {
     defaultMessage: 'Delete',
     description: 'Label for delete button in dropdown menu',
@@ -168,6 +175,11 @@ export const actionLabels = {
     defaultMessage: 'Review',
     description: 'Label for review correction button in dropdown menu',
     id: 'event.action.review-correction.label'
+  },
+  [ClientSpecificAction.PRINT_ADOPTION_SCHEDULE]: {
+    defaultMessage: 'Print Adoption Schedule',
+    description: 'Print an issued adoption schedule',
+    id: 'event.adoption.action.print-adoption-schedule.label'
   }
 } as const
 
@@ -206,6 +218,7 @@ function useViewableActionConfigurations(
   const isDownloaded = Boolean(findFromCache(event.id).data)
 
   const [assignModal, openAssignModal] = useModal()
+  const [scheduleModal, openScheduleModal] = useModal()
   const intl = useIntl()
   const { getUser } = useUsers()
   const { getLocations } = useLocations()
@@ -290,7 +303,7 @@ function useViewableActionConfigurations(
    * If you need to extend the functionality, consider whether it can be done elsewhere.
    */
   return {
-    modals: [assignModal, archiveModal, deleteModal],
+    modals: [assignModal, scheduleModal, archiveModal, deleteModal],
     config: {
       [ActionType.READ]: {
         label: actionLabels[ActionType.READ],
@@ -430,6 +443,29 @@ function useViewableActionConfigurations(
         },
         disabled: !isDownloadedAndAssignedToUser || eventIsWaitingForCorrection,
         hidden: eventIsWaitingForCorrection
+      },
+      [ActionType.ISSUE_ADOPTION_SCHEDULE]: {
+        label: actionLabels[ActionType.ISSUE_ADOPTION_SCHEDULE],
+        icon: 'FileText' as const,
+        onClick: async () => {
+          await openScheduleModal<boolean>((close) => (
+            <AdoptionScheduleIssuanceModal eventId={eventId} close={close} />
+          ))
+        },
+        disabled: !isDownloadedAndAssignedToUser || eventIsWaitingForCorrection
+      },
+      [ClientSpecificAction.PRINT_ADOPTION_SCHEDULE]: {
+        label: actionLabels[ClientSpecificAction.PRINT_ADOPTION_SCHEDULE],
+        icon: 'Printer' as const,
+        onClick: async () => {
+          await openScheduleModal<boolean>((close) => (
+            <PrintAdoptionScheduleModal
+              eventId={eventId}
+              close={(result) => close(result ?? false)}
+            />
+          ))
+        },
+        disabled: !isDownloadedAndAssignedToUser
       },
       [ActionType.DELETE]: {
         label: actionLabels[ActionType.DELETE],
@@ -616,6 +652,16 @@ export function useAllowedActionConfigurations(
   const hasOnlyMetaActions = allowedWorkqueueConfigs.every(({ type }) =>
     isMetaAction(type)
   )
+
+  if (
+    event.type === 'adoption' &&
+    event.flags.includes(InherentFlags.ADOPTION_SCHEDULE_ISSUED)
+  ) {
+    allowedWorkqueueConfigs.push({
+      ...config[ClientSpecificAction.PRINT_ADOPTION_SCHEDULE],
+      type: ClientSpecificAction.PRINT_ADOPTION_SCHEDULE
+    })
+  }
 
   // If user has no other allowed actions, return only READ.
   // This is to prevent users from assigning or unassigning themselves to events which they cannot do anything with.

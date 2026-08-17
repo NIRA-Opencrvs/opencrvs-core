@@ -42,6 +42,7 @@ import { getUsersFullName } from '@client/v2-events/utils'
 import { getFormDataStringifier } from '@client/v2-events/hooks/useFormDataStringifier'
 import { LocationSearch } from '@client/v2-events/features/events/registered-fields'
 import { AdminStructureItem } from '@client/utils/referenceApi'
+import { getToken } from '@client/utils/authUtils'
 
 interface FontFamilyTypes {
   normal: string
@@ -83,6 +84,21 @@ function findUserById(userId: string, users: UserOrSystem[]) {
     signature: user.signature ?? '',
     fullHonorificName: user.fullHonorificName ?? ''
   }
+}
+
+function getSignatureUrl(
+  signature: string | null | undefined,
+  userId: string,
+  users: UserOrSystem[]
+) {
+  const signaturePath =
+    signature || users.find((user) => user.id === userId)?.signature
+
+  if (!signaturePath) {
+    return undefined
+  }
+
+  return new URL(signaturePath, window.config.MINIO_BASE_URL).href
 }
 
 export const stringifyEventMetadata = ({
@@ -176,8 +192,11 @@ export const stringifyEventMetadata = ({
               { intl, locations }
             ),
             createdByRole: metadata.legalStatuses.DECLARED.createdByRole,
-            createdBySignature:
-              metadata.legalStatuses.DECLARED.createdBySignature
+            createdBySignature: getSignatureUrl(
+              metadata.legalStatuses.DECLARED.createdBySignature,
+              metadata.legalStatuses.DECLARED.createdBy,
+              users
+            )
           }
         : null,
       [EventStatus.enum.REGISTERED]: metadata.legalStatuses.REGISTERED
@@ -201,13 +220,11 @@ export const stringifyEventMetadata = ({
             createdByRole: metadata.legalStatuses.REGISTERED.createdByRole,
             registrationNumber:
               metadata.legalStatuses.REGISTERED.registrationNumber,
-            createdBySignature: metadata.legalStatuses.REGISTERED
-              .createdBySignature
-              ? new URL(
-                  metadata.legalStatuses.REGISTERED.createdBySignature,
-                  window.config.MINIO_BASE_URL
-                ).href
-              : undefined
+            createdBySignature: getSignatureUrl(
+              metadata.legalStatuses.REGISTERED.createdBySignature,
+              metadata.legalStatuses.REGISTERED.createdBy,
+              users
+            )
           }
         : null
     },
@@ -644,7 +661,7 @@ src: url("${url}") format("truetype");
   return serializer.serializeToString(svg)
 }
 
-async function downloadAndEmbedImages(svgString: string): Promise<string> {
+export async function downloadAndEmbedImages(svgString: string): Promise<string> {
   const parser = new DOMParser()
   const doc = parser.parseFromString(svgString, 'image/svg+xml')
   const svg = doc.documentElement
@@ -657,15 +674,37 @@ async function downloadAndEmbedImages(svgString: string): Promise<string> {
         imageElement.getAttribute('xlink:href')
 
       if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
-        const response = await fetch(href)
-        const blob = await response.blob()
+        const imageUrl = new URL(href)
+        let response: Response
+
+        // User signatures may be represented by an unsigned MinIO path in
+        // the V2 users cache. Resolve a fresh signed URL before downloading,
+        // avoiding a predictable 403 request in the browser console.
+        if (!imageUrl.searchParams.has('X-Amz-Signature')) {
+          const presignedResponse = await fetch(
+            `/api/presigned-url${imageUrl.pathname}`,
+            {
+              headers: { Authorization: `Bearer ${getToken()}` }
+            }
+          )
+
+          if (!presignedResponse.ok) {
+            throw new Error(
+              `Failed to get certificate image URL (${presignedResponse.status})`
+            )
+          }
+
+          const { presignedURL } = await presignedResponse.json()
+          response = await fetch(presignedURL)
+        } else {
+          response = await fetch(href)
+        }
 
         if (!response.ok) {
-          console.error('Failed to fetch image:', href)
-          console.error(
-            'Ensure the URL is correct and image is requested before cache is cleaned.'
-          )
+          throw new Error(`Failed to fetch certificate image (${response.status})`)
         }
+
+        const blob = await response.blob()
 
         const base64 = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader()

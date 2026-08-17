@@ -175,10 +175,15 @@ function validateDeclarationUpdateAction({
     context
   )
 
-  // 4. When completeDeclaration update has fields that are not in the cleaned declaration, payload is invalid.
+  // 4. For corrections, validate only fields submitted by the officer. Existing
+  // declaration values are needed for conditionals but may now be hidden.
   const invalidKeys = getInvalidUpdateKeys({
-    update: completeDeclaration,
-    cleaned: cleanedDeclaration
+    update:
+      actionType === ActionType.REQUEST_CORRECTION
+        ? declarationUpdate
+        : completeDeclaration,
+    cleaned: cleanedDeclaration,
+    ignoreNullValues: actionType === ActionType.REQUEST_CORRECTION
   })
 
   if (invalidKeys.length > 0) {
@@ -190,8 +195,15 @@ function validateDeclarationUpdateAction({
     .filter((page) => isPageVisible(page, cleanedDeclaration, context))
     .flatMap((page) => page.fields)
 
+  const fieldsForDeclarationValidation =
+    actionType === ActionType.REQUEST_CORRECTION
+      ? allVisiblePageFields.filter(
+          (field) => declarationUpdate[field.id] !== undefined
+        )
+      : allVisiblePageFields
+
   const declarationErrors = getFieldErrors(
-    allVisiblePageFields,
+    fieldsForDeclarationValidation,
     cleanedDeclaration,
     context
   )

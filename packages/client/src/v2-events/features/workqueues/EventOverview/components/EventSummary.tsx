@@ -149,6 +149,11 @@ const flagMessages = {
     id: 'flags.builtin.escalated.label',
     defaultMessage: 'Escalated',
     description: 'Flag label for escalation'
+  },
+  [InherentFlags.ADOPTION_SCHEDULE_ISSUED]: {
+    id: 'flags.builtin.adoption-schedule-issued.label',
+    defaultMessage: 'Adoption schedule issued',
+    description: 'Flag label for an issued adoption schedule'
   }
 } satisfies Record<InherentFlags, TranslationConfig>
 

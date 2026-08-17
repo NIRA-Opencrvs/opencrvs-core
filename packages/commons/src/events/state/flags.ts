@@ -31,6 +31,15 @@ function isPendingCertification(actions: Action[]) {
   }, true)
 }
 
+function isAdoptionScheduleIssued(actions: Action[]) {
+  return actions.reduce((issued, action) => {
+    if (action.status !== ActionStatus.Accepted) return issued
+    if (action.type === ActionType.ISSUE_ADOPTION_SCHEDULE) return true
+    if (action.type === ActionType.APPROVE_CORRECTION) return false
+    return issued
+  }, false)
+}
+
 function isCorrectionRequested(actions: Action[]) {
   return actions.reduce<boolean>((prev, { type }) => {
     if (type === ActionType.REQUEST_CORRECTION) {
@@ -115,6 +124,9 @@ export function getFlagsFromActions(actions: Action[]): Flag[] {
 
   if (isPendingCertification(sortedActions)) {
     flags.push(InherentFlags.PENDING_CERTIFICATION)
+  }
+  if (isAdoptionScheduleIssued(sortedActions)) {
+    flags.push(InherentFlags.ADOPTION_SCHEDULE_ISSUED)
   }
   if (isCorrectionRequested(sortedActions)) {
     flags.push(InherentFlags.CORRECTION_REQUESTED)

@@ -266,7 +266,9 @@ export const GeneratedInputField = <T extends FieldConfig>(
   const error = disabled ? '' : meta.error
   // If label is hidden or default message is empty, we don't need to render label
   const label =
-    fieldDefinition.hideLabel || !fieldDefinition.label.defaultMessage
+    fieldDefinition.type === FieldType.PARAGRAPH ||
+    fieldDefinition.hideLabel ||
+    !fieldDefinition.label.defaultMessage
       ? undefined
       : intl.formatMessage(fieldDefinition.label)
 

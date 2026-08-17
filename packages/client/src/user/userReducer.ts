@@ -31,6 +31,7 @@ import {
 import * as offlineActions from '@client/offline/actions'
 import * as profileActions from '@client/profile/profileActions'
 import { modifyUserDetails } from '@client/profile/profileActions'
+import { queries as profileQueries } from '@client/profile/queries'
 import { IStoreState } from '@client/store'
 import { gqlToDraftTransformer } from '@client/transformer'
 import { GET_USER, SEARCH_USERS } from '@client/user/queries'
@@ -341,9 +342,13 @@ export const userFormReducer: LoopReducer<IUserFormState, UserFormAction> = (
           }
         )
       ]
-      if (isSelfUpdate) {
+      if (isSelfUpdate && tokenPayload) {
         commandList.push(
-          Cmd.action(modifyUserDetails({ mobile: userDetails.mobile }))
+          Cmd.action(modifyUserDetails({ mobile: userDetails.mobile })),
+          Cmd.run(profileQueries.fetchUserDetails, {
+            successActionCreator: profileActions.setUserDetails,
+            args: [tokenPayload.sub]
+          })
         )
       }
       return loop(

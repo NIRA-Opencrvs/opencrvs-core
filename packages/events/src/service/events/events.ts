@@ -41,10 +41,7 @@ import {
   deleteFile,
   fileExists
 } from '@events/service/files'
-import {
-  indexEvent,
-  deleteEventIndex
-} from '@events/service/indexing/indexing'
+import { indexEvent, deleteEventIndex } from '@events/service/indexing/indexing'
 import * as draftsRepo from '@events/storage/postgres/events/drafts'
 import * as eventsRepo from '@events/storage/postgres/events/events'
 
@@ -280,7 +277,8 @@ export function buildAction(
     }
     case ActionType.REJECT:
     case ActionType.ARCHIVE:
-    case ActionType.ESCALATE: 
+    case ActionType.ESCALATE:
+    case ActionType.ISSUE_ADOPTION_SCHEDULE:
     case ActionType.PRINT_CERTIFICATE:
     case ActionType.READ:
     case ActionType.CREATE:
