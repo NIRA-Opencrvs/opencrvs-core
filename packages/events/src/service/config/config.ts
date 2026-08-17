@@ -12,11 +12,14 @@
 import fetch from 'node-fetch'
 import { array } from 'zod'
 import {
+  DEFAULT_ROLES_DEFINITION,
   EventConfig,
   getOrThrow,
   Location,
   LocationType,
   logger,
+  Roles,
+  Scope,
   TokenWithBearer,
   WorkqueueConfig
 } from '@opencrvs/commons'
@@ -184,4 +187,35 @@ export async function getLocations() {
     })
 
   return array(Location).parse(locations)
+}
+
+/**
+ * Role id -> scopes, from the same /roles the auth service uses for login
+ * tokens. Users have no scopes of their own. Uncached so role changes apply.
+ */
+export async function getUserRoleScopeMapping(): Promise<
+  Record<string, Scope[]>
+> {
+  const res = await fetch(new URL('/roles', env.COUNTRY_CONFIG_URL), {
+    headers: { 'Content-Type': 'application/json' }
+  })
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch roles: ${res.status}`)
+  }
+
+  const roles = (await res.json()) as Roles
+
+  const defaults = DEFAULT_ROLES_DEFINITION.reduce<Record<string, Scope[]>>(
+    (acc, { id, scopes }) => {
+      acc[id] = scopes
+      return acc
+    },
+    {}
+  )
+
+  return roles.reduce<Record<string, Scope[]>>((acc, { id, scopes }) => {
+    acc[id] = scopes
+    return acc
+  }, defaults)
 }
