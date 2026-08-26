@@ -12,16 +12,7 @@ import { TRPCError } from '@trpc/server'
 import { MutationProcedure } from '@trpc/server/unstable-core-do-not-import'
 import { z } from 'zod'
 import { OpenApiMeta } from 'trpc-to-openapi'
-import {
-  ActionBase,
-  ActionDocument,
-  getAssignedUserFromActions,
-  isActionInScope,
-  logger,
-  Scope,
-  TokenUserType,
-  UUID
-} from '@opencrvs/commons'
+import { logger, UUID } from '@opencrvs/commons'
 import {
   ActionType,
   ActionStatus,
@@ -43,7 +34,8 @@ import {
   getPendingAction,
   ActionInputWithType,
   EventConfig,
-  BaseActionInput
+  BaseActionInput,
+  ConfirmableActions
 } from '@opencrvs/commons/events'
 import { TokenWithBearer } from '@opencrvs/commons/authentication'
 import * as middleware from '@events/router/middleware'
@@ -61,17 +53,17 @@ import {
   ensureEventIndexed,
   processAction
 } from '@events/service/events/events'
-import {
-  getEventConfigurationById,
-  getUserRoleScopeMapping
-} from '@events/service/config/config'
+import { getEventConfigurationById } from '@events/service/config/config'
 import { TrpcUserContext } from '@events/context'
 import { getActionConfirmationToken } from '@events/service/auth'
-import { getUser } from '@events/service/users/api'
 import {
   ActionConfirmationResponse,
   requestActionConfirmation
 } from './actionConfirmationRequest'
+import {
+  planRegisterContinuation,
+  resumeRegister
+} from './registerContinuation'
 
 /**
  * Configuration for an action procedure
@@ -249,8 +241,26 @@ export async function defaultRequestHandler(
     setBearerForToken(eventActionToken)
   )
 
-  // If we get an unexpected failure response, we just return HTTP 500 without saving the
+  // If we get an unexpected failure response, a requested action whose own
+  // `:requested` flag would otherwise block every further action on the event
   if (responseStatus === ActionConfirmationResponse.UnexpectedFailure) {
+    if (input.type !== ActionType.DECLARE && input.type !== ActionType.NOTIFY) {
+      await addAsyncRejectAction(
+        {
+          transactionId: input.transactionId,
+          originalActionId: requestedAction.id,
+          type: input.type as (typeof ConfirmableActions)[number],
+          keepAssignment:
+            input.keepAssignmentIfRejected ?? input.keepAssignment ?? false
+        },
+        {
+          event: eventWithRequestedAction,
+          user,
+          configuration
+        }
+      )
+    }
+
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Unexpected failure from country config action confirmation API'
@@ -326,172 +336,6 @@ export async function defaultRequestHandler(
     },
     { event, user, token, status, configuration }
   )
-}
-
-/** Revoked states; 'pending' is a normal pre-first-login state, so it passes. */
-const REVOKED_USER_STATUS = {
-  deactivated: 'deactivated',
-  disabled: 'disabled'
-} as const
-
-/**
- * Whether to resume the REGISTER the client was chaining when the VALIDATE was
- * deferred. Intent is derived from the requester's *current* register scope,
- * which is exactly the rule `useReviewActionConfig` uses to chain it.
- *
- * @NOTE If a client path ever lets a register-scoped human validate WITHOUT
- * chaining a REGISTER, this must become an explicit intent flag on the input.
- * Must run before the accept, which can release the assignment it depends on.
- */
-async function planRegisterContinuation({
-  event,
-  requestedAction,
-  token
-}: {
-  event: EventDocument
-  /** The Requested action being confirmed. */
-  requestedAction: Pick<
-    ActionBase,
-    'id' | 'transactionId' | 'createdBy' | 'createdByUserType'
-  >
-  token: TokenWithBearer
-}): Promise<{ requesterId: string; transactionId: string } | undefined> {
-  const context = { eventId: event.id, actionId: requestedAction.id }
-
-  // A system integration may hold a register scope without intending to register.
-  if (requestedAction.createdByUserType !== TokenUserType.enum.user) {
-    return undefined
-  }
-
-  if (event.actions.some(({ type }) => type === ActionType.REGISTER)) {
-    logger.debug(context, 'Deferred REGISTER continuation not applicable')
-    return undefined
-  }
-
-  const assignedTo = getAssignedUserFromActions(
-    event.actions.filter(
-      (action): action is ActionDocument =>
-        action.type === ActionType.ASSIGN || action.type === ActionType.UNASSIGN
-    )
-  )
-
-  if (assignedTo !== requestedAction.createdBy) {
-    logger.info(
-      context,
-      'Deferred REGISTER continuation skipped: record is no longer assigned to original registrar'
-    )
-    return undefined
-  }
-
-  let role: string
-  let scopes: Scope[]
-
-  try {
-    const requester = await getUser(requestedAction.createdBy, token)
-
-
-    if (
-      requester.status === REVOKED_USER_STATUS.deactivated ||
-      requester.status === REVOKED_USER_STATUS.disabled
-    ) {
-      logger.info(
-        { ...context, status: requester.status },
-        'Deferred REGISTER continuation skipped: user account is no longer active'
-      )
-      return undefined
-    }
-
-    // Users have no scopes; the role does. Same resolution the auth service uses.
-    role = requester.role
-    scopes = (await getUserRoleScopeMapping())[role] ?? []
-  } catch (error) {
-    // A lookup failure must never break the accepted VALIDATE.
-    logger.error(
-      { ...context, error },
-      'Deferred REGISTER continuation skipped: could not resolve the current permissions of the requester'
-    )
-    return undefined
-  }
-
-  const hasRegisterScope = isActionInScope(
-    scopes,
-    ActionType.REGISTER,
-    event.type
-  )
-
-  logger.info(
-    {
-      ...context,
-      createdBy: requestedAction.createdBy,
-      createdByUserType: requestedAction.createdByUserType,
-      role,
-      assignedTo,
-      hasRegisterScope,
-      shouldResume: hasRegisterScope
-    },
-    'Deferred REGISTER continuation evaluated'
-  )
-
-  if (!hasRegisterScope) {
-    logger.info(
-      { ...context, role },
-      'Deferred REGISTER continuation skipped: role does not grant permission to register this event type'
-    )
-    return undefined
-  }
-
-  return {
-    requesterId: requestedAction.createdBy,
-    transactionId: requestedAction.transactionId
-  }
-}
-
-/**
- * Goes through the ordinary request handler, so availability, duplicate
- * detection and confirmation behave as for a browser-sent REGISTER.
- */
-async function resumeRegister({
-  event,
-  continuation,
-  user,
-  token,
-  configuration
-}: {
-  event: EventDocument
-  continuation: { requesterId: string; transactionId: string }
-  user: TrpcUserContext
-  token: TokenWithBearer
-  configuration: EventConfig
-}): Promise<EventDocument> {
-  const context = { eventId: event.id, requesterId: continuation.requesterId }
-
-  try {
-    logger.info(context, 'Deferred VALIDATE accepted; resuming REGISTER')
-
-    await defaultRequestHandler(
-      RegisterActionInput.parse({
-        eventId: event.id,
-        // Derived from the original chain: one transaction id, one action type.
-        transactionId: `${continuation.transactionId}-register-continuation`,
-        declaration: {}
-      }),
-      user,
-      token,
-      event,
-      configuration,
-      ACTION_PROCEDURE_CONFIG[ActionType.REGISTER]
-        .actionConfirmationResponseSchema
-    )
-
-    return getEventById(event.id)
-  } catch (error) {
-    logger.error(
-      { ...context, error },
-      'Deferred REGISTER continuation failed; record left validated for manual registration'
-    )
-
-    return event
-  }
 }
 
 /**
@@ -647,6 +491,7 @@ export function getDefaultActionProcedures(
         }
 
         return resumeRegister({
+          requestHandler: defaultRequestHandler,
           event: acceptedEvent,
           continuation,
           user,
