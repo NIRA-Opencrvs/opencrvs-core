@@ -10,6 +10,8 @@
  */
 
 import fetch from 'node-fetch'
+import http from 'http'
+import https from 'https'
 import {
   joinUrl,
   FullDocumentPath,
@@ -21,6 +23,29 @@ import {
   SystemRole
 } from '@opencrvs/commons'
 import { env } from '@events/environment'
+
+/**
+ * Shared HTTP agent with keepAlive enabled.
+ * Reuses TCP connections across requests to user-mgnt instead of
+ * opening a new connection per fetch — critical for concurrent load.
+ */
+const httpAgent = new http.Agent({
+  keepAlive: true,
+  // Queue excess requests instead of overwhelming user-mgnt during a login
+  // burst. Each Events instance uses the same agent.
+  maxSockets: 10,
+  maxFreeSockets: 10
+})
+
+const httpsAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: 10,
+  maxFreeSockets: 10
+})
+
+function getAgent(url: string) {
+  return url.startsWith('https:') ? httpsAgent : httpAgent
+}
 
 type UserAPIResult = {
   id: string
@@ -48,13 +73,15 @@ export async function getUser(
   userId: string,
   token: string
 ): Promise<UserAPIResult> {
-  const res = await fetch(joinUrl(env.USER_MANAGEMENT_URL, 'getUser').href, {
+  const url = joinUrl(env.USER_MANAGEMENT_URL, 'getUser').href
+  const res = await fetch(url, {
     method: 'POST',
     body: JSON.stringify({ userId }),
     headers: {
       'Content-Type': 'application/json',
       Authorization: token
-    }
+    },
+    agent: getAgent(url)
   })
 
   if (!res.ok) {
@@ -81,13 +108,15 @@ export async function getSystem(
   systemId: string,
   token: string
 ): Promise<SystemAPIResult> {
-  const res = await fetch(joinUrl(env.USER_MANAGEMENT_URL, 'getSystem').href, {
+  const url = joinUrl(env.USER_MANAGEMENT_URL, 'getSystem').href
+  const res = await fetch(url, {
     method: 'POST',
     body: JSON.stringify({ systemId }),
     headers: {
       'Content-Type': 'application/json',
       Authorization: token
-    }
+    },
+    agent: getAgent(url)
   })
 
   if (!res.ok) {
