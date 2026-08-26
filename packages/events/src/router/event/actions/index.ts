@@ -34,7 +34,8 @@ import {
   getPendingAction,
   ActionInputWithType,
   EventConfig,
-  BaseActionInput
+  BaseActionInput,
+  ConfirmableActions
 } from '@opencrvs/commons/events'
 import { TokenWithBearer } from '@opencrvs/commons/authentication'
 import * as middleware from '@events/router/middleware'
@@ -59,6 +60,10 @@ import {
   ActionConfirmationResponse,
   requestActionConfirmation
 } from './actionConfirmationRequest'
+import {
+  planRegisterContinuation,
+  resumeRegister
+} from './registerContinuation'
 
 /**
  * Configuration for an action procedure
@@ -236,13 +241,14 @@ export async function defaultRequestHandler(
     setBearerForToken(eventActionToken)
   )
 
-  // If we get an unexpected failure response, we just return HTTP 500 without saving the
+  // If we get an unexpected failure response, we just return HTTP 500 without saving
   if (responseStatus === ActionConfirmationResponse.UnexpectedFailure) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Unexpected failure from country config action confirmation API'
     })
   }
+  
 
   // For Async flow, we just return the event with the requested action and ensure it is indexed
   if (responseStatus === ActionConfirmationResponse.RequiresProcessing) {
@@ -437,9 +443,21 @@ export function getDefaultActionProcedures(
           return getEventById(input.eventId)
         }
 
-        return processAction(
+        // Before the accept, which can release the assignment it depends on.
+        const continuation =
+          actionType === ActionType.VALIDATE
+            ? await planRegisterContinuation({
+                event,
+                requestedAction: originalAction,
+                token
+              })
+            : undefined
+
+        const acceptedEvent = await processAction(
           {
             ...input,
+            // The resumed REGISTER needs it; its own accept releases it after.
+            ...(continuation ? { keepAssignment: true } : {}),
             originalActionId: actionId
           },
           {
@@ -450,6 +468,19 @@ export function getDefaultActionProcedures(
             configuration
           }
         )
+
+        if (!continuation) {
+          return acceptedEvent
+        }
+
+        return resumeRegister({
+          requestHandler: defaultRequestHandler,
+          event: acceptedEvent,
+          continuation,
+          user,
+          token,
+          configuration
+        })
       }),
 
     reject: systemProcedure
