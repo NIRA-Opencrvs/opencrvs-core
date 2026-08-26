@@ -241,31 +241,14 @@ export async function defaultRequestHandler(
     setBearerForToken(eventActionToken)
   )
 
-  // If we get an unexpected failure response, a requested action whose own
-  // `:requested` flag would otherwise block every further action on the event
+  // If we get an unexpected failure response, we just return HTTP 500 without saving
   if (responseStatus === ActionConfirmationResponse.UnexpectedFailure) {
-    if (input.type !== ActionType.DECLARE && input.type !== ActionType.NOTIFY) {
-      await addAsyncRejectAction(
-        {
-          transactionId: input.transactionId,
-          originalActionId: requestedAction.id,
-          type: input.type as (typeof ConfirmableActions)[number],
-          keepAssignment:
-            input.keepAssignmentIfRejected ?? input.keepAssignment ?? false
-        },
-        {
-          event: eventWithRequestedAction,
-          user,
-          configuration
-        }
-      )
-    }
-
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Unexpected failure from country config action confirmation API'
     })
   }
+  
 
   // For Async flow, we just return the event with the requested action and ensure it is indexed
   if (responseStatus === ActionConfirmationResponse.RequiresProcessing) {
