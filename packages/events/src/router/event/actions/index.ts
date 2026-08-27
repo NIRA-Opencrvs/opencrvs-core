@@ -34,8 +34,7 @@ import {
   getPendingAction,
   ActionInputWithType,
   EventConfig,
-  BaseActionInput,
-  ConfirmableActions
+  BaseActionInput
 } from '@opencrvs/commons/events'
 import { TokenWithBearer } from '@opencrvs/commons/authentication'
 import * as middleware from '@events/router/middleware'
