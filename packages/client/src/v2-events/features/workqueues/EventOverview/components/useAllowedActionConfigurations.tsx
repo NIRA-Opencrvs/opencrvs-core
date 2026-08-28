@@ -599,6 +599,7 @@ export function useAllowedActionConfigurations(
   const CROSS_DISTRICT_ALLOWED_ACTIONS: ActionMenuActionType[] = [
     ActionType.ASSIGN,
     ActionType.UNASSIGN,
+    ActionType.READ,
     ActionType.PRINT_CERTIFICATE
   ]
   const isCIDOrLegalOfficer =
