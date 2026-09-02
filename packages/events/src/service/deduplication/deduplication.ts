@@ -151,7 +151,8 @@ export function generateElasticsearchQuery(
           [queryKey]: {
             query: queryValue,
             fuzziness: queryInput.options.fuzziness,
-            boost: queryInput.options.boost
+            boost: queryInput.options.boost,
+            operator: 'and'
           }
         }
       }
