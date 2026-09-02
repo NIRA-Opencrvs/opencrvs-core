@@ -86,6 +86,64 @@ export function hasDeclarationFieldChanged(
   )
 }
 
+export function getChangedFieldIdsForForm(
+  form: EventState,
+  fields: FieldConfig[],
+  previousFormValues: EventState,
+  eventConfiguration: EventConfig,
+  validatorContext: ValidatorContext
+) {
+  const changedFieldIds = new Set<string>()
+
+  Object.keys(form).forEach((key) => {
+    const matchingFields = fields.filter((field) => field.id === key)
+
+    if (matchingFields.length === 0) {
+      return
+    }
+
+    const hasChanged = matchingFields.some((field) =>
+      hasDeclarationFieldChanged(
+        field,  
+        form,
+        previousFormValues,
+        eventConfiguration,
+        validatorContext
+      )
+    )
+
+    if (hasChanged) {
+      changedFieldIds.add(key)
+    }
+  })
+
+  return Array.from(changedFieldIds)
+}
+
+export function getHiddenFieldIdsForForm(
+  fields: FieldConfig[],
+  form: EventState,
+  previousFormValues: EventState,
+  validatorContext: ValidatorContext
+) {
+  const hiddenFieldIds = new Set<string>()
+
+  fields.forEach((field) => {
+    const wasVisible = isFieldVisible(
+      field,
+      previousFormValues,
+      validatorContext
+    )
+    const isHidden = !isFieldVisible(field, form, validatorContext)
+
+    if (wasVisible && isHidden) {
+      hiddenFieldIds.add(field.id)
+    }
+  })
+
+  return Array.from(hiddenFieldIds)
+}
+
 export function isLastActionCorrectionRequest(event: EventDocument) {
   const writeActions = event.actions.filter((a) => !isMetaAction(a.type))
   const lastWriteAction = writeActions[writeActions.length - 1]
