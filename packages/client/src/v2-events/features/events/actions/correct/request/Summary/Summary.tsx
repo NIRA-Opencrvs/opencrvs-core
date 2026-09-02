@@ -41,7 +41,7 @@ import { ROUTES } from '@client/v2-events/routes'
 import { useActionAnnotation } from '@client/v2-events/features/events/useActionAnnotation'
 import { useUserAllowedActions } from '@client/v2-events/features/workqueues/EventOverview/components/useAllowedActionConfigurations'
 import { useValidatorContext } from '@client/v2-events/hooks/useValidatorContext'
-import { hasDeclarationFieldChanged } from '../../utils'
+import { getChangedFieldIdsForForm, getHiddenFieldIdsForForm } from '../../utils'
 import { CorrectionDetails } from './CorrectionDetails'
 
 const messages = defineMessages({
@@ -105,33 +105,34 @@ export function Summary() {
 
   const submitCorrection = React.useCallback(() => {
     const formWithOnlyChangedValues = Object.fromEntries(
-      Object.entries(form).filter(([key]) => {
+      getChangedFieldIdsForForm(
+        form,
+        fields,
+        previousFormValues,
+        eventConfiguration,
+        validatorContext
+      ).map((key) => [key, form[key]])
+    )
+
+    console.log("formWithOnlyChangedValues ",formWithOnlyChangedValues)
+
+    const valuesThatGotHidden = getHiddenFieldIdsForForm(
+      fields,
+      form,
+      previousFormValues,
+      validatorContext
+    )
+
+    const nullifiedHiddenValues = setEmptyValuesForFields(
+      valuesThatGotHidden.map((key) => {
         const field = fields.find((f) => f.id === key)
         if (!field) {
-          return false
+          throw new Error(`Field config for hidden field ${key} was not found.`)
         }
-
-        return hasDeclarationFieldChanged(
-          field,
-          form,
-          previousFormValues,
-          eventConfiguration,
-          validatorContext
-        )
+        return field
       })
     )
 
-    const valuesThatGotHidden = fields.filter((field) => {
-      const wasVisible = isFieldVisible(
-        field,
-        previousFormValues,
-        validatorContext
-      )
-      const isHidden = !isFieldVisible(field, form, validatorContext)
-      return wasVisible && isHidden
-    })
-
-    const nullifiedHiddenValues = setEmptyValuesForFields(valuesThatGotHidden)
 
     const uncorrectableFieldIds = getDeclarationFields(eventConfiguration)
       .filter((f) => f.uncorrectable)
