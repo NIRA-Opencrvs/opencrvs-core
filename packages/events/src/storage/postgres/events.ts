@@ -30,7 +30,20 @@ let pool: Pool | undefined
 
 export const getPool = (connectionString = env.EVENTS_POSTGRES_URL) => {
   if (!pool) {
-    pool = new Pool({ connectionString })
+    pool = new Pool({
+      connectionString,
+      // Fail fast instead of hanging forever on a blocked lock or a stuck
+      // transaction. A draft autosave that cannot acquire its lock within
+      // lock_timeout errors out and is simply retried by the client on the
+      // next autosave tick.
+      max: 20,
+      connectionTimeoutMillis: 10_000,
+      idleTimeoutMillis: 30_000,
+      statement_timeout: 30_000,
+      query_timeout: 35_000,
+      idle_in_transaction_session_timeout: 60_000,
+      options: '-c lock_timeout=10000'
+    })
   }
 
   return pool
