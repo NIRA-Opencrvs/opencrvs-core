@@ -374,7 +374,10 @@ export const isNumberWithUnitFieldType = (field: {
 export const isNameFieldType = (field: {
   config: FieldConfig
   value: FieldValue
-}): field is { value: NameFieldValue; config: NameField } => {
+}): field is {
+  value: NameFieldValue | null | undefined
+  config: NameField
+} => {
   return field.config.type === FieldType.NAME
 }
 
