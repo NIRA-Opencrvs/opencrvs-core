@@ -15,6 +15,8 @@ import { ResponsiveModal } from '@opencrvs/components/lib/ResponsiveModal'
 import { PrimaryButton } from '@opencrvs/components/lib/buttons'
 import { IStoreState } from '@client/store'
 import { redirectToAuthentication } from '@client/profile/profileActions'
+import { showSessionExpireConfirmation } from '@client/notification/actions'
+import { SESSION_EXPIRED_EVENT } from '@client/v2-events/retryPolicy'
 import { messages } from '@client/i18n/messages/views/session'
 import { buttonMessages } from '@client/i18n/messages'
 
@@ -23,13 +25,24 @@ type SessionExpireProps = {
 }
 interface IProps {
   redirectToAuthentication: typeof redirectToAuthentication
+  showSessionExpireConfirmation: typeof showSessionExpireConfirmation
 }
 
 const SessionExpireComponent = ({
   intl,
   sessionExpired,
-  redirectToAuthentication
+  redirectToAuthentication,
+  showSessionExpireConfirmation
 }: SessionExpireProps & IProps & IntlShapeProps) => {
+  // v2 (tRPC) requests report a 401 through a window event, because they have
+  // no access to the redux store. Show the same dialog as for GraphQL 401s.
+  React.useEffect(() => {
+    const onSessionExpired = () => showSessionExpireConfirmation()
+    window.addEventListener(SESSION_EXPIRED_EVENT, onSessionExpired)
+    return () =>
+      window.removeEventListener(SESSION_EXPIRED_EVENT, onSessionExpired)
+  }, [showSessionExpireConfirmation])
+
   if (!sessionExpired) {
     return null
   }
@@ -64,6 +77,7 @@ export const SessionExpireConfirmation = connect<
   SessionExpireProps & IProps,
   IStoreState
 >(mapStateToProps, {
-  redirectToAuthentication
+  redirectToAuthentication,
+  showSessionExpireConfirmation
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 })(injectIntl(SessionExpireComponent)) as any

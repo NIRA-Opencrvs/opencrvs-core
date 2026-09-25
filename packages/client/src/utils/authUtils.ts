@@ -61,26 +61,49 @@ function isTokenAboutToExpire(token: string) {
 }
 
 export async function refreshToken() {
-  const token = getToken()
-  if (isTokenAboutToExpire(token)) {
-    const refreshUrl = new URL('refreshToken', window.config.AUTH_URL)
-    const res = await fetch(refreshUrl.toString(), {
+  const oldToken = getToken()
+  if (!isTokenAboutToExpire(oldToken)) {
+    return true
+  }
+
+  const refreshUrl = new URL('refreshToken', window.config.AUTH_URL)
+  let res: Response
+  try {
+    res = await fetch(refreshUrl.toString(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        token
+        token: oldToken
       })
     })
-
-    if (!res.ok) {
-      return false
-    } else {
-      const data = await res.json()
-      removeToken()
-      storeToken(data.token)
-    }
+  } catch (err) {
+    // Network error: we could not ask for a new token. Keep the current
+    // session and try again on the next check instead of logging the user out.
+    Sentry.captureException(err)
+    return true
   }
+
+  if (!res.ok) {
+    return false
+  }
+
+  const data = await res.json()
+
+  // Save the new token FIRST.
+  // Previously this called removeToken() without awaiting it and then stored the
+  // new token. removeToken() finished later and deleted the NEW token from
+  // localStorage, so every request got 401 until the user was logged out.
+  storeToken(data.token)
+
+  // Then invalidate the old token on the server only. Do not call removeToken()
+  // here: it also clears localStorage, which now holds the new token.
+  try {
+    await authApi.invalidateToken(oldToken)
+  } catch (err) {
+    Sentry.captureException(err)
+  }
+
   return true
 }
