@@ -54,20 +54,37 @@ import {
   trpcOptionsProxy
 } from '@client/v2-events/trpc'
 import { ToastKey } from '@client/v2-events/routes/Toaster'
+import {
+  getHttpStatus,
+  retryUnlessPermanentFailure
+} from '@client/v2-events/retryPolicy'
 import { useValidatorContext } from '@client/v2-events/hooks/useValidatorContext'
 
-function retryUnlessConflict(
+/** Exported for tests. */
+export function retryUnlessConflict(
   _failureCount: number,
   error: TRPCClientError<AppRouter>
 ) {
   if (_failureCount === 10) {
     toast.error(ToastKey.SOMETHING_WENT_WRONG)
   }
-  return error.data?.httpStatus !== 409
+  // Previously only 409 stopped the retries; 401/400/403/404 were retried forever.
+  // 409 is still a permanent failure (see retryPolicy), so conflict behaviour is unchanged.
+  if (getHttpStatus(error) === 409) {
+    return false
+  }
+  return retryUnlessPermanentFailure(_failureCount, error)
 }
 
-function retryDelay(attemptIndex: number) {
-  return Math.max(10000, 1000 * 2 ** attemptIndex)
+const MAX_ACTION_RETRY_DELAY_MS = 5 * 60 * 1000
+
+/** Exported for tests. */
+export function retryDelay(attemptIndex: number) {
+  // Previously grew without limit (17 min, 34 min, 68 min, ...). Capped at 5 minutes.
+  return Math.min(
+    MAX_ACTION_RETRY_DELAY_MS,
+    Math.max(10000, 1000 * 2 ** attemptIndex)
+  )
 }
 
 function errorToastOnConflict(error: TRPCClientError<AppRouter>) {
