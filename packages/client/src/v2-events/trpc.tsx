@@ -32,6 +32,7 @@ import superjson from 'superjson'
 import { getUUID } from '@opencrvs/commons/client'
 import { getToken } from '@client/utils/authUtils'
 import { storage } from '@client/storage'
+import { sessionExpiryLink } from '@client/v2-events/sessionExpiryLink'
 
 const { TRPCProvider: TRPCProviderRaw, useTRPC } =
   createTRPCContext<AppRouter>()
@@ -63,6 +64,7 @@ function getTrpcClient() {
       loggerLink({
         enabled: (op) => op.direction === 'down' && op.result instanceof Error
       }),
+      sessionExpiryLink,
       httpBatchLink({
         url: '/api/events',
         transformer: superjson,
@@ -211,6 +213,12 @@ export function TRPCProvider({
             if (mutation.state.status === 'error') {
               const error = mutation.state.error
               if (error instanceof TRPCClientError && error.data?.httpStatus) {
+                // 401 = session expired: the request itself was fine, so keep it and
+                // send it again after the user logs back in (restored on next app load).
+                // Previously it was never dropped because it never stopped retrying.
+                if (error.data.httpStatus === 401) {
+                  return true
+                }
                 return !error.data.httpStatus.toString().startsWith('4')
               }
 

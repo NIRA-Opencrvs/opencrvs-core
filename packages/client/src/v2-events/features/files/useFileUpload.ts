@@ -21,6 +21,10 @@ import {
 import { getToken } from '@client/utils/authUtils'
 import { queryClient } from '@client/v2-events/trpc'
 import {
+  backoff,
+  retryUnlessPermanentFailure
+} from '@client/v2-events/retryPolicy'
+import {
   cacheFile,
   getFullDocumentPath,
   getUnsignedFileUrl,
@@ -58,7 +62,9 @@ async function uploadFile({
   })
 
   if (!response.ok) {
-    throw new Error('File upload failed')
+    // Keep the HTTP status so the retry policy can tell permanent failures
+    // (e.g. 400 for an empty upload, 401 for an expired session) from temporary ones.
+    throw new Error('File upload failed', { cause: response.status })
   }
 
   return response
@@ -100,7 +106,8 @@ async function deleteFile({ filename }: { filename: string }): Promise<void> {
   return
 }
 
-const UPLOAD_MUTATION_KEY = 'uploadFile'
+/** Exported for tests. */
+export const UPLOAD_MUTATION_KEY = 'uploadFile'
 const DELETE_MUTATION_KEY = 'deleteFile'
 
 async function getPresignedUrl(filePath: FullDocumentPath) {
@@ -145,8 +152,9 @@ queryClient.setMutationDefaults([DELETE_MUTATION_KEY], {
   mutationFn: deleteFile
 })
 queryClient.setMutationDefaults([UPLOAD_MUTATION_KEY], {
-  retry: true,
-  retryDelay: 5000,
+  // Was `retry: true` + fixed 5s: empty uploads (400) were resent forever.
+  retry: retryUnlessPermanentFailure,
+  retryDelay: backoff(5000),
   mutationFn: uploadFile,
   meta: { ignoreOutbox: true }
 })

@@ -32,6 +32,10 @@ import {
 import { queryClient, useTRPC, trpcOptionsProxy } from '@client/v2-events/trpc'
 
 import { createTemporaryId } from '@client/v2-events/utils'
+import {
+  backoff,
+  retryUnlessPermanentFailure
+} from '@client/v2-events/retryPolicy'
 import { setMutationDefaults } from './utils'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,8 +63,9 @@ function createEventCreationMutation<P extends DecorateMutationProcedure<any>>(
 }
 
 setMutationDefaults(trpcOptionsProxy.event.create, {
-  retry: true,
-  retryDelay: 3333,
+  // Was `retry: true` + fixed 3.3s: retried 401/400/409 forever (retry storm).
+  retry: retryUnlessPermanentFailure,
+  retryDelay: backoff(3333),
   mutationFn: createEventCreationMutation(trpcOptionsProxy.event.create),
   onMutate: (newEvent) => {
     const token = window.localStorage.getItem('opencrvs')
