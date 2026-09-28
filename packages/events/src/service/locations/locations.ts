@@ -50,6 +50,8 @@ export async function getLocations(params?: {
   locationIds?: UUID[]
   isActive?: boolean
 }) {
+
+  console.log("!!!!!!!! : Fetching All locations :",params)
   const locations = await locationsRepo.getLocations(params)
 
   return locations

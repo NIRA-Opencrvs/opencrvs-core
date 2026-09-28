@@ -16,7 +16,8 @@ import { api } from '@gateway/v2-events/events/service'
 import {
   bustLocationsCache,
   fetchAndCache,
-  getCachedLocations
+  getCachedLocations,
+  LocationsCacheSource
 } from '@gateway/utils/locations-cache'
 import { logger } from '@opencrvs/commons'
 import z from 'zod'
@@ -52,14 +53,32 @@ const getLocationsHandler = async (req: Request, h: ResponseToolkit) => {
   const noStore = cacheControl.includes('no-store')
   const noCache = cacheControl.includes('no-cache')
 
+  const startedAt = Date.now()
+  logger.debug(
+    `Locations request received query=${query} acceptsGzip=${acceptsGzip} cacheControl="${cacheControl}"`
+  )
+
   if (!query.includes('_count=0') || noStore) {
+    logger.info(
+      `Locations served from UPSTREAM (proxied, uncacheable) query=${query} reason=${
+        noStore ? 'cache-control:no-store' : 'not a _count=0 query'
+      }`
+    )
     return h.proxy({
       uri: `${APPLICATION_CONFIG_URL}locations${query}`,
       passThrough: true
     })
   }
 
-  let compressed = noCache ? null : await getCachedLocations(query)
+  if (noCache) {
+    logger.debug(
+      `Locations cache bypassed by cache-control:no-cache, revalidating from upstream query=${query}`
+    )
+  }
+
+  const cached = noCache ? null : await getCachedLocations(query)
+  let compressed = cached?.compressed ?? null
+  let source: LocationsCacheSource = cached?.source ?? 'upstream'
 
   if (!compressed) {
     try {
@@ -69,13 +88,19 @@ const getLocationsHandler = async (req: Request, h: ResponseToolkit) => {
           throw new Error(`upstream locations returned ${res.status}`)
         return res.text()
       })
+      source = 'upstream'
     } catch (e) {
-      logger.error(`Locations fetch failed: ${e}`)
+      logger.error(
+        `Locations fetch failed query=${query} totalMs=${Date.now() - startedAt}: ${e}`
+      )
       return h.response({ statusCode: 502, error: 'Bad Gateway' }).code(502)
     }
   }
 
   if (acceptsGzip) {
+    logger.info(
+      `Locations served from ${source.toUpperCase()} query=${query} encoding=gzip bytes=${compressed.length} totalMs=${Date.now() - startedAt}`
+    )
     return h
       .response(compressed)
       .type('application/json')
@@ -85,6 +110,9 @@ const getLocationsHandler = async (req: Request, h: ResponseToolkit) => {
 
   try {
     const body = await gunzip(compressed)
+    logger.info(
+      `Locations served from ${source.toUpperCase()} query=${query} encoding=identity gzipBytes=${compressed.length} bytes=${body.length} totalMs=${Date.now() - startedAt}`
+    )
     return h
       .response(body)
       .type('application/json')
