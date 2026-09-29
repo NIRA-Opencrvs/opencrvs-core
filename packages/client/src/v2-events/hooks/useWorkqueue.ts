@@ -56,9 +56,7 @@ export const useWorkqueue = (workqueueSlug: string) => {
         query: getDeserializedQuery(workqueueConfig, user),
         offset,
         limit,
-        sort: [{ field: 'updatedAt', direction: 'desc' as const }],
-        // Undeclared drafts have their own "My Draft" view; keep them out of workqueues.
-        excludeDrafts: true
+        sort: [{ field: 'updatedAt', direction: 'desc' as const }]
       }
       return {
         useSuspenseQuery: () =>
@@ -98,9 +96,7 @@ export function useWorkqueues() {
           query: getDeserializedQuery(workqueueConfig, user),
           offset: 0,
           limit: 10,
-          sort: [{ field: 'updatedAt', direction: 'desc' as const }],
-          // Undeclared drafts have their own "My Draft" view; keep them out of workqueues.
-          excludeDrafts: true
+          sort: [{ field: 'updatedAt', direction: 'desc' as const }]
         }
         const options = trpc.event.search.queryOptions(searchInput)
 
