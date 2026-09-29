@@ -385,7 +385,11 @@ describe('Event indexing behavior', () => {
       await assignEvent(event, createAction.createdBy)
       await registerEvent(event)
       await client.event.get(event.id)
-      expect(indexEvent).toHaveBeenCalledTimes(8) // declare -> view -> assign -> validate -> view -> assign -> register -> view
+      /*
+       * Identical to 'indexes on register': READ cannot change any indexed
+       * field, so the three interleaved reads must add no indexing at all.
+       */
+      expect(indexEvent).toHaveBeenCalledTimes(5) // declare -> assign -> validate -> assign -> register
     })
 
     test('indexes on notify', async () => {
