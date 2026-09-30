@@ -12,15 +12,13 @@
 import React from 'react'
 import { first, orderBy } from 'lodash'
 import { useTypedSearchParams } from 'react-router-typesafe-routes/dom'
-import { defineMessages, useIntl } from 'react-intl'
+import { useIntl } from 'react-intl'
 import {
   EventDocument,
   getOrThrow,
   mandatoryColumns,
   getCurrentEventState,
-  applyDraftToEventIndex,
-  event,
-  WorkqueueColumn
+  applyDraftToEventIndex
 } from '@opencrvs/commons/client'
 
 import { ROUTES } from '@client/v2-events/routes'
@@ -30,23 +28,6 @@ import { SearchResultComponent } from '../events/Search/SearchResult'
 import { useDrafts } from '../drafts/useDrafts'
 import { useOutbox } from '../events/useEvents/outbox'
 import { findLocalEventDocument } from '../events/useEvents/api'
-
-const messages = defineMessages({
-  trackingId: {
-    id: 'workqueue.draft.column.trackingId',
-    defaultMessage: 'Tracking ID',
-    description: 'Label for the tracking ID column in the My Draft workqueue'
-  }
-})
-
-// My Draft shows the tracking ID in addition to the default mandatory columns.
-const draftColumns: WorkqueueColumn[] = [
-  {
-    label: messages.trackingId,
-    value: event.field('trackingId')
-  },
-  ...mandatoryColumns
-]
 
 export function Draft() {
   const [searchParams] = useTypedSearchParams(ROUTES.V2.WORKQUEUES.WORKQUEUE)
@@ -66,15 +47,15 @@ export function Draft() {
 
   const eventsWithDrafts = drafts
     .map(({ eventId }) => findLocalEventDocument(eventId))
-    .filter((doc): doc is EventDocument => !!doc)
-    .map((doc) => {
-      const draft = first(drafts.filter((d) => d.eventId === doc.id))
+    .filter((event): event is EventDocument => !!event)
+    .map((event) => {
+      const draft = first(drafts.filter((d) => d.eventId === event.id))
       const configuration = getOrThrow(
-        eventConfigs.find(({ id }) => id === doc.type),
-        `Event configuration not found for ${doc.type}`
+        eventConfigs.find(({ id }) => id === event.type),
+        `Event configuration not found for ${event.type}`
       )
 
-      const currentEventState = getCurrentEventState(doc, configuration)
+      const currentEventState = getCurrentEventState(event, configuration)
       return draft
         ? applyDraftToEventIndex(currentEventState, draft, configuration)
         : currentEventState
@@ -91,7 +72,7 @@ export function Draft() {
     <SearchResultComponent
       key={`${CoreWorkqueues.DRAFT}-${outboxIds.length}`}
       actions={['DEFAULT']}
-      columns={draftColumns}
+      columns={mandatoryColumns}
       eventConfigs={eventConfigs}
       paginationVisibleOffline={true}
       queryData={currentPageDrafts}
