@@ -14,7 +14,6 @@ import { extendZodWithOpenApi } from 'zod-openapi'
 import {
   getScopes,
   getUUID,
-  logger,
   SCOPES,
   UUID,
   findScope
@@ -57,10 +56,7 @@ import {
 } from '@events/service/events/events'
 import * as draftsRepo from '@events/storage/postgres/events/drafts'
 import { bulkImportEvents } from '@events/service/events/import'
-import {
-  findRecordsByQuery,
-  indexEventWithDraft
-} from '@events/service/indexing/indexing'
+import { findRecordsByQuery } from '@events/service/indexing/indexing'
 import { reindex } from '@events/service/reindex'
 import {
   getReindexingStatusHistory,
@@ -212,29 +208,6 @@ export const eventRouter = router({
         })
 
         const event = await getEventById(eventId)
-
-        const config = await getEventConfigurationById({
-          token: ctx.token,
-          eventType: event.type
-        })
-
-        // Re-index the (still undeclared) event with the draft's declaration
-        // applied, so it can be found in search by name and other fields.
-        //
-        // The draft is already committed at this point. Indexing is a
-        // read-model update and must never fail the user's save: a failure
-        // here leaves the draft searchable-stale, not lost.
-        try {
-          await indexEventWithDraft(event, currentDraft, config)
-        } catch (error) {
-          logger.error(
-            `Failed to index draft ${currentDraft.id} for event ${eventId}: ${
-              error instanceof Error
-                ? (error.stack ?? error.message)
-                : String(error)
-            }`
-          )
-        }
 
         const actionFromDraft = ActionDocument.safeParse({
           ...currentDraft.action,

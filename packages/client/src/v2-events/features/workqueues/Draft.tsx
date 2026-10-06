@@ -66,15 +66,15 @@ export function Draft() {
 
   const eventsWithDrafts = drafts
     .map(({ eventId }) => findLocalEventDocument(eventId))
-    .filter((event): event is EventDocument => !!event)
-    .map((event) => {
-      const draft = first(drafts.filter((d) => d.eventId === event.id))
+    .filter((doc): doc is EventDocument => !!doc)
+    .map((doc) => {
+      const draft = first(drafts.filter((d) => d.eventId === doc.id))
       const configuration = getOrThrow(
-        eventConfigs.find(({ id }) => id === event.type),
-        `Event configuration not found for ${event.type}`
+        eventConfigs.find(({ id }) => id === doc.type),
+        `Event configuration not found for ${doc.type}`
       )
 
-      const currentEventState = getCurrentEventState(event, configuration)
+      const currentEventState = getCurrentEventState(doc, configuration)
       return draft
         ? applyDraftToEventIndex(currentEventState, draft, configuration)
         : currentEventState
