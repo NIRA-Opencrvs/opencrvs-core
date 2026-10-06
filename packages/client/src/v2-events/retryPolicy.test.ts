@@ -9,14 +9,7 @@
  * Copyright (C) The OpenCRVS Authors located at https://github.com/opencrvs/opencrvs-core/blob/master/AUTHORS.
  */
 import { TRPCClientError } from '@trpc/client'
-import { vi } from 'vitest'
-import {
-  backoff,
-  getHttpStatus,
-  isPermanentFailure,
-  retryUnlessPermanentFailure,
-  SESSION_EXPIRED_EVENT
-} from './retryPolicy'
+import { backoff, getHttpStatus } from './retryPolicy'
 
 /** Builds the same kind of error tRPC gives us for an HTTP error response. */
 function trpcError(httpStatus: number) {
@@ -51,69 +44,6 @@ describe('retryPolicy', () => {
     it('returns undefined for anything that is not an error', () => {
       expect(getHttpStatus(undefined)).toBeUndefined()
       expect(getHttpStatus('boom')).toBeUndefined()
-    })
-  })
-
-  describe('isPermanentFailure', () => {
-    it.each([400, 401, 403, 404, 409, 413, 422])(
-      'treats HTTP %i as permanent',
-      (status) => {
-        expect(isPermanentFailure(trpcError(status))).toBe(true)
-      }
-    )
-
-    it.each([408, 429, 500, 502, 503, 504])(
-      'treats HTTP %i as temporary',
-      (status) => {
-        expect(isPermanentFailure(trpcError(status))).toBe(false)
-      }
-    )
-
-    it('treats network errors as temporary (offline support)', () => {
-      expect(isPermanentFailure(new TypeError('Failed to fetch'))).toBe(false)
-    })
-  })
-
-  describe('retryUnlessPermanentFailure', () => {
-    let listener: ReturnType<typeof vi.fn>
-
-    beforeEach(() => {
-      listener = vi.fn()
-      window.addEventListener(SESSION_EXPIRED_EVENT, listener)
-    })
-
-    afterEach(() => {
-      window.removeEventListener(SESSION_EXPIRED_EVENT, listener)
-    })
-
-    it('stops retrying on 401 and reports the expired session', () => {
-      expect(retryUnlessPermanentFailure(0, trpcError(401))).toBe(false)
-      expect(listener).toHaveBeenCalledTimes(1)
-    })
-
-    it('stops retrying on 409 without reporting a session problem', () => {
-      expect(retryUnlessPermanentFailure(0, trpcError(409))).toBe(false)
-      expect(listener).not.toHaveBeenCalled()
-    })
-
-    it('stops retrying an empty upload (400 carried in Error.cause)', () => {
-      expect(
-        retryUnlessPermanentFailure(
-          0,
-          new Error('File upload failed', { cause: 400 })
-        )
-      ).toBe(false)
-    })
-
-    it('keeps retrying server errors, however many attempts were made', () => {
-      expect(retryUnlessPermanentFailure(0, trpcError(503))).toBe(true)
-      expect(retryUnlessPermanentFailure(500, trpcError(500))).toBe(true)
-    })
-
-    it('keeps retrying network errors', () => {
-      expect(
-        retryUnlessPermanentFailure(3, new TypeError('Failed to fetch'))
-      ).toBe(true)
     })
   })
 

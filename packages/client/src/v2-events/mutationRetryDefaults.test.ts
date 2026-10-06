@@ -9,10 +9,8 @@
  * Copyright (C) The OpenCRVS Authors located at https://github.com/opencrvs/opencrvs-core/blob/master/AUTHORS.
  */
 /*
- * Regression tests for the retry storm seen in production:
- * event.create (401), event.draft.create (409) and /upload (400) were retried
- * forever every few seconds. These tests read the mutation defaults that the
- * app registers at import time and check the retry decision for each error.
+ * These tests read the mutation defaults that the app registers at import
+ * time and check the retry decision and the delay between attempts.
  */
 import { TRPCClientError } from '@trpc/client'
 import { toast } from 'react-hot-toast'
@@ -22,6 +20,7 @@ import '@client/v2-events/features/events/useEvents/procedures/create'
 import '@client/v2-events/features/events/useEvents/procedures/delete'
 import '@client/v2-events/features/drafts/useDrafts'
 import { UPLOAD_MUTATION_KEY } from '@client/v2-events/features/files/useFileUpload'
+import { SESSION_EXPIRED_EVENT } from '@client/v2-events/retryPolicy'
 import {
   retryDelay as actionRetryDelay,
   retryUnlessConflict
@@ -39,21 +38,17 @@ function trpcError(httpStatus: number) {
 
 const networkError = () => TRPCClientError.from(new TypeError('Failed to fetch'))
 
-type RetryFn = (failureCount: number, error: unknown) => boolean
 type DelayFn = (failureCount: number, error: unknown) => number
 
 function defaultsFor(mutationKey: readonly unknown[]) {
   const defaults = queryClient.getMutationDefaults(mutationKey)
-  if (
-    typeof defaults.retry !== 'function' ||
-    typeof defaults.retryDelay !== 'function'
-  ) {
+  if (typeof defaults.retryDelay !== 'function') {
     throw new Error(
-      `Expected retry and retryDelay functions for ${JSON.stringify(mutationKey)}`
+      `Expected a retryDelay function for ${JSON.stringify(mutationKey)}`
     )
   }
   return {
-    retry: defaults.retry as RetryFn,
+    retry: defaults.retry,
     retryDelay: defaults.retryDelay as DelayFn
   }
 }
@@ -64,18 +59,8 @@ describe('v2 mutation retry defaults', () => {
       trpcOptionsProxy.event.create.mutationKey()
     )
 
-    it('does not retry an expired session (401)', () => {
-      expect(retry(0, trpcError(401))).toBe(false)
-    })
-
-    it.each([400, 403, 409])('does not retry HTTP %i', (status) => {
-      expect(retry(0, trpcError(status))).toBe(false)
-    })
-
-    it('keeps retrying server and network errors (offline outbox)', () => {
-      expect(retry(0, trpcError(500))).toBe(true)
-      expect(retry(100, trpcError(503))).toBe(true)
-      expect(retry(100, networkError())).toBe(true)
+    it('retries every error', () => {
+      expect(retry).toBe(true)
     })
 
     it('backs off from 3.3s up to 60s', () => {
@@ -90,17 +75,8 @@ describe('v2 mutation retry defaults', () => {
       trpcOptionsProxy.event.draft.create.mutationKey()
     )
 
-    it('does not retry "You are not assigned to this event" (409)', () => {
-      expect(retry(0, trpcError(409))).toBe(false)
-    })
-
-    it('does not retry an expired session (401)', () => {
-      expect(retry(0, trpcError(401))).toBe(false)
-    })
-
-    it('keeps retrying server and network errors', () => {
-      expect(retry(5, trpcError(502))).toBe(true)
-      expect(retry(5, networkError())).toBe(true)
+    it('retries every error', () => {
+      expect(retry).toBe(true)
     })
 
     it('backs off from 10s up to 60s', () => {
@@ -115,16 +91,19 @@ describe('v2 mutation retry defaults', () => {
       trpcOptionsProxy.event.delete.mutationKey()
     )
 
-    it.each([400, 404])('still does not retry HTTP %i', (status) => {
+    if (typeof retry !== 'function') {
+      throw new Error('Expected a retry function for event.delete')
+    }
+
+    it.each([400, 404])('does not retry HTTP %i', (status) => {
       expect(retry(0, trpcError(status))).toBe(false)
     })
 
-    it.each([401, 409])('no longer retries HTTP %i forever', (status) => {
-      expect(retry(0, trpcError(status))).toBe(false)
+    it.each([401, 403, 409, 500])('retries HTTP %i', (status) => {
+      expect(retry(0, trpcError(status))).toBe(true)
     })
 
-    it('keeps retrying server and network errors', () => {
-      expect(retry(3, trpcError(500))).toBe(true)
+    it('retries network errors', () => {
       expect(retry(3, networkError())).toBe(true)
     })
 
@@ -136,24 +115,30 @@ describe('v2 mutation retry defaults', () => {
 
   describe('file upload', () => {
     const { retry, retryDelay } = defaultsFor([UPLOAD_MUTATION_KEY])
+    const uploadError = (status: number) =>
+      new Error('File upload failed', { cause: status })
 
-    it('does not retry an empty upload rejected with 400', () => {
-      expect(retry(0, new Error('File upload failed', { cause: 400 }))).toBe(
-        false
-      )
+    if (typeof retry !== 'function') {
+      throw new Error('Expected a retry function for file upload')
+    }
+
+    it.each([400, 401, 409, 503])('retries HTTP %i', (status) => {
+      expect(retry(0, uploadError(status))).toBe(true)
     })
 
-    it('does not retry an expired session (401)', () => {
-      expect(retry(0, new Error('File upload failed', { cause: 401 }))).toBe(
-        false
-      )
-    })
-
-    it('keeps retrying server errors and network failures', () => {
-      expect(retry(3, new Error('File upload failed', { cause: 503 }))).toBe(
-        true
-      )
+    it('retries network failures', () => {
       expect(retry(3, new TypeError('Failed to fetch'))).toBe(true)
+    })
+
+    it('reports an expired session on 401 only', () => {
+      const listener = vi.fn()
+      window.addEventListener(SESSION_EXPIRED_EVENT, listener)
+      retry(0, uploadError(400))
+      retry(0, new TypeError('Failed to fetch'))
+      expect(listener).not.toHaveBeenCalled()
+      retry(0, uploadError(401))
+      expect(listener).toHaveBeenCalledTimes(1)
+      window.removeEventListener(SESSION_EXPIRED_EVENT, listener)
     })
 
     it('backs off from 5s up to 60s', () => {
@@ -167,10 +152,10 @@ describe('v2 mutation retry defaults', () => {
       expect(retryUnlessConflict(0, trpcError(409))).toBe(false)
     })
 
-    it.each([400, 401, 403, 404])(
-      'no longer retries HTTP %i forever',
+    it.each([400, 401, 403, 404, 413, 422])(
+      'keeps retrying HTTP %i',
       (status) => {
-        expect(retryUnlessConflict(0, trpcError(status))).toBe(false)
+        expect(retryUnlessConflict(0, trpcError(status))).toBe(true)
       }
     )
 

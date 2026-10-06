@@ -18,16 +18,16 @@ import {
   setDraftData
 } from '@client/v2-events/features/events/useEvents/api'
 import { trpcOptionsProxy } from '@client/v2-events/trpc'
-import {
-  backoff,
-  retryUnlessPermanentFailure
-} from '@client/v2-events/retryPolicy'
+import { backoff } from '@client/v2-events/retryPolicy'
 import { setMutationDefaults, waitUntilEventIsCreated } from './utils'
 
 setMutationDefaults(trpcOptionsProxy.event.delete, {
-  // Previously stopped only on 404/400: 401 and 409 were retried every 10s forever.
-  // 404 and 400 are still permanent failures in the shared policy.
-  retry: retryUnlessPermanentFailure,
+    retry: (_, error) => {
+    if (error.data?.httpStatus === 404 || error.data?.httpStatus === 400) {
+      return false
+    }
+    return true
+  },
   retryDelay: backoff(10000),
   onSuccess: ({ id }) => {
     void refetchAllSearchQueries()

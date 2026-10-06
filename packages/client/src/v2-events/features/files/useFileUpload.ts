@@ -22,7 +22,7 @@ import { getToken } from '@client/utils/authUtils'
 import { queryClient } from '@client/v2-events/trpc'
 import {
   backoff,
-  retryUnlessPermanentFailure
+  retryAndReportExpiredSession
 } from '@client/v2-events/retryPolicy'
 import {
   cacheFile,
@@ -152,8 +152,7 @@ queryClient.setMutationDefaults([DELETE_MUTATION_KEY], {
   mutationFn: deleteFile
 })
 queryClient.setMutationDefaults([UPLOAD_MUTATION_KEY], {
-  // Was `retry: true` + fixed 5s: empty uploads (400) were resent forever.
-  retry: retryUnlessPermanentFailure,
+  retry: retryAndReportExpiredSession,
   retryDelay: backoff(5000),
   mutationFn: uploadFile,
   meta: { ignoreOutbox: true }

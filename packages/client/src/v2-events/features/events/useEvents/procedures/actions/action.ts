@@ -54,10 +54,7 @@ import {
   trpcOptionsProxy
 } from '@client/v2-events/trpc'
 import { ToastKey } from '@client/v2-events/routes/Toaster'
-import {
-  getHttpStatus,
-  retryUnlessPermanentFailure
-} from '@client/v2-events/retryPolicy'
+import { getHttpStatus } from '@client/v2-events/retryPolicy'
 import { useValidatorContext } from '@client/v2-events/hooks/useValidatorContext'
 
 /** Exported for tests. */
@@ -68,12 +65,9 @@ export function retryUnlessConflict(
   if (_failureCount === 10) {
     toast.error(ToastKey.SOMETHING_WENT_WRONG)
   }
-  // Previously only 409 stopped the retries; 401/400/403/404 were retried forever.
-  // 409 is still a permanent failure (see retryPolicy), so conflict behaviour is unchanged.
-  if (getHttpStatus(error) === 409) {
-    return false
-  }
-  return retryUnlessPermanentFailure(_failureCount, error)
+  // Actions keep retrying every error except 409, including the other statuses
+  // the shared retryPolicy treats as permanent (400, 401, 403, 404, 413, 422).
+  return getHttpStatus(error) !== 409
 }
 
 const MAX_ACTION_RETRY_DELAY_MS = 5 * 60 * 1000

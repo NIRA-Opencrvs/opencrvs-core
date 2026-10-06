@@ -19,10 +19,7 @@ import {
   UUID
 } from '@opencrvs/commons/client'
 import { storage } from '@client/storage'
-import {
-  backoff,
-  retryUnlessPermanentFailure
-} from '@client/v2-events/retryPolicy'
+import { backoff } from '@client/v2-events/retryPolicy'
 import {
   clearPendingDraftCreationRequests,
   findLocalEventDocument,
@@ -122,8 +119,7 @@ export const localDraftStore = create<DraftStore>()(
 )
 
 setMutationDefaults(trpcOptionsProxy.event.draft.create, {
-  // Was `retry: true`: a 409 ("You are not assigned to this event") was retried every 10s forever.
-  retry: retryUnlessPermanentFailure,
+  retry: true,
   mutationFn: createEventActionMutationFn(trpcOptionsProxy.event.draft.create),
   onMutate: (variables) => {
     const optimisticDraft: Draft = {
