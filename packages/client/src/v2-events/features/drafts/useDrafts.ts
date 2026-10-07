@@ -19,6 +19,7 @@ import {
   UUID
 } from '@opencrvs/commons/client'
 import { storage } from '@client/storage'
+import { backoff } from '@client/v2-events/retryPolicy'
 import {
   clearPendingDraftCreationRequests,
   findLocalEventDocument,
@@ -157,7 +158,7 @@ setMutationDefaults(trpcOptionsProxy.event.draft.create, {
     await refetchAllSearchQueries()
     await refetchDraftsList()
   },
-  retryDelay: 10000
+  retryDelay: backoff(10000)
 })
 
 function useCreateDraft() {

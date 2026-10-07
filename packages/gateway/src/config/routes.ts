@@ -34,6 +34,18 @@ export const getRoutes = () => {
         return 'success'
       }
     },
+    // lightweight liveness probe for Traefik / Docker healthchecks.
+    // Intentionally does not call any downstream service, so a degraded dependency
+    // never causes the gateway itself to be taken out of the load balancer.
+    {
+      method: 'GET',
+      path: '/health/live',
+      handler: () => ({ status: 'ok' }),
+      options: {
+        auth: false,
+        description: 'Gateway process liveness check (no downstream calls).'
+      }
+    },
     // health check endpoint for all services
     {
       method: 'GET',

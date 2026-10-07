@@ -9,6 +9,8 @@
  * Copyright (C) The OpenCRVS Authors located at https://github.com/opencrvs/opencrvs-core/blob/master/AUTHORS.
  */
 
+import http from 'http'
+import https from 'https'
 import fetch from 'node-fetch'
 import {
   joinUrl,
@@ -21,6 +23,83 @@ import {
   SystemRole
 } from '@opencrvs/commons'
 import { env } from '@events/environment'
+
+/**
+ * Every tRPC request resolves the caller through user-mgnt (see context.ts), so this
+ * client sits on the hot path of the whole events service.
+ *
+ * - Keep-alive agents avoid opening a new TCP connection (through the Swarm VIP) for
+ *   every call.
+ * - An explicit timeout stops a stuck connection from hanging the request forever.
+ * - One retry on connection-level failures covers stale keep-alive sockets
+ *   (ECONNRESET / "socket hang up") and transient overlay-network problems.
+ *   getUser/getSystem are read-only, so retrying is safe.
+ */
+const USER_MGNT_TIMEOUT_MS = Number(process.env.USER_MGNT_TIMEOUT_MS) || 5000
+const USER_MGNT_MAX_ATTEMPTS = Math.max(
+  1,
+  Number(process.env.USER_MGNT_MAX_ATTEMPTS) || 2
+)
+
+const keepAliveOptions = {
+  keepAlive: true,
+  keepAliveMsecs: 1000,
+  maxSockets: 50,
+  maxFreeSockets: 10
+}
+const httpAgent = new http.Agent(keepAliveOptions)
+const httpsAgent = new https.Agent(keepAliveOptions)
+function agentFor(url: URL) {
+  return url.protocol === 'https:' ? httpsAgent : httpAgent
+}
+
+const RETRYABLE_ERROR_CODES = new Set([
+  'ECONNRESET',
+  'ECONNREFUSED',
+  'EPIPE',
+  'ETIMEDOUT',
+  'EAI_AGAIN'
+])
+
+function isRetryable(error: unknown): boolean {
+  const { type, code } = (error ?? {}) as { type?: string; code?: string }
+  return (
+    type === 'request-timeout' ||
+    (typeof code === 'string' && RETRYABLE_ERROR_CODES.has(code))
+  )
+}
+
+async function postToUserManagement(
+  endpoint: 'getUser' | 'getSystem',
+  payload: Record<string, string>,
+  token: string
+) {
+  const url = joinUrl(env.USER_MANAGEMENT_URL, endpoint).href
+
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token
+        },
+        agent: agentFor,
+        timeout: USER_MGNT_TIMEOUT_MS
+      })
+    } catch (error) {
+      if (attempt >= USER_MGNT_MAX_ATTEMPTS || !isRetryable(error)) {
+        throw error
+      }
+      logger.warn(
+        `user-mgnt ${endpoint} attempt ${attempt}/${USER_MGNT_MAX_ATTEMPTS} failed: ${
+          error instanceof Error ? error.message : String(error)
+        }. Retrying.`
+      )
+    }
+  }
+}
 
 type UserAPIResult = {
   id: string
@@ -48,14 +127,7 @@ export async function getUser(
   userId: string,
   token: string
 ): Promise<UserAPIResult> {
-  const res = await fetch(joinUrl(env.USER_MANAGEMENT_URL, 'getUser').href, {
-    method: 'POST',
-    body: JSON.stringify({ userId }),
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: token
-    }
-  })
+  const res = await postToUserManagement('getUser', { userId }, token)
 
   if (!res.ok) {
     throw new Error(
@@ -81,14 +153,7 @@ export async function getSystem(
   systemId: string,
   token: string
 ): Promise<SystemAPIResult> {
-  const res = await fetch(joinUrl(env.USER_MANAGEMENT_URL, 'getSystem').href, {
-    method: 'POST',
-    body: JSON.stringify({ systemId }),
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: token
-    }
-  })
+  const res = await postToUserManagement('getSystem', { systemId }, token)
 
   if (!res.ok) {
     throw new Error(

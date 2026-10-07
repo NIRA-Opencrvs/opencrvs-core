@@ -18,16 +18,17 @@ import {
   setDraftData
 } from '@client/v2-events/features/events/useEvents/api'
 import { trpcOptionsProxy } from '@client/v2-events/trpc'
+import { backoff } from '@client/v2-events/retryPolicy'
 import { setMutationDefaults, waitUntilEventIsCreated } from './utils'
 
 setMutationDefaults(trpcOptionsProxy.event.delete, {
-  retry: (_, error) => {
+    retry: (_, error) => {
     if (error.data?.httpStatus === 404 || error.data?.httpStatus === 400) {
       return false
     }
     return true
   },
-  retryDelay: 10000,
+  retryDelay: backoff(10000),
   onSuccess: ({ id }) => {
     void refetchAllSearchQueries()
     deleteDraft(id)
