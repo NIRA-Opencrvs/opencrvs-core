@@ -49,7 +49,9 @@ const keepAliveOptions = {
 }
 const httpAgent = new http.Agent(keepAliveOptions)
 const httpsAgent = new https.Agent(keepAliveOptions)
-const agentFor = (url: URL) => (url.protocol === 'https:' ? httpsAgent : httpAgent)
+function agentFor(url: URL) {
+  return url.protocol === 'https:' ? httpsAgent : httpAgent
+}
 
 const RETRYABLE_ERROR_CODES = new Set([
   'ECONNRESET',
