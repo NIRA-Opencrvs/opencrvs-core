@@ -21,10 +21,36 @@ import {
 import { logger } from '@opencrvs/commons'
 import z from 'zod'
 import { promisify } from 'util'
+import { createHash } from 'crypto'
 import { gunzip as _gunzip } from 'zlib'
 import { ServerRoute, ResponseToolkit, Request } from '@hapi/hapi'
 
 const gunzip = promisify(_gunzip)
+
+/**
+ * Location lists (2-5 MB gzipped each) are fetched by the client on every load.
+ * Serve them with an ETag and force revalidation so unchanged lists cost a tiny
+ * 304 instead of the full payload. The ETag changes whenever the cache is rebuilt
+ * (e.g. after bustLocationsCache), so updates are picked up immediately.
+ */
+const LOCATIONS_CACHE_CONTROL = 'private, no-cache'
+const locationEtagBase = new WeakMap<Buffer, string>()
+
+const getLocationEtag = (compressed: Buffer, gzipped: boolean) => {
+  let base = locationEtagBase.get(compressed)
+  if (!base) {
+    base = createHash('sha1').update(compressed).digest('hex')
+    locationEtagBase.set(compressed, base)
+  }
+  return `"${base}${gzipped ? '-gzip' : ''}"`
+}
+
+const matchesIfNoneMatch = (header: string | undefined, etag: string) =>
+  !!header &&
+  header
+    .split(',')
+    .map((tag) => tag.trim().replace(/^W\//, ''))
+    .some((tag) => tag === etag || tag === '*')
 
 const LegacyLocationUpdate = z.object({
   name: z.string().optional(),
@@ -75,11 +101,24 @@ const getLocationsHandler = async (req: Request, h: ResponseToolkit) => {
     }
   }
 
+  const etag = getLocationEtag(compressed, acceptsGzip)
+
+  if (matchesIfNoneMatch(req.headers['if-none-match'], etag)) {
+    return h
+      .response()
+      .code(304)
+      .header('ETag', etag)
+      .header('Cache-Control', LOCATIONS_CACHE_CONTROL)
+      .header('Vary', 'Accept-Encoding')
+  }
+
   if (acceptsGzip) {
     return h
       .response(compressed)
       .type('application/json')
       .header('Content-Encoding', 'gzip')
+      .header('ETag', etag)
+      .header('Cache-Control', LOCATIONS_CACHE_CONTROL)
       .header('Vary', 'Accept-Encoding')
   }
 
@@ -88,6 +127,8 @@ const getLocationsHandler = async (req: Request, h: ResponseToolkit) => {
     return h
       .response(body)
       .type('application/json')
+      .header('ETag', etag)
+      .header('Cache-Control', LOCATIONS_CACHE_CONTROL)
       .header('Vary', 'Accept-Encoding')
   } catch (e) {
     logger.error(`Locations gunzip failed for query=${query}: ${e}`)

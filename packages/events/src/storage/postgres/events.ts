@@ -30,7 +30,13 @@ let pool: Pool | undefined
 
 export const getPool = (connectionString = env.EVENTS_POSTGRES_URL) => {
   if (!pool) {
-    pool = new Pool({ connectionString })
+    pool = new Pool({
+      connectionString,
+      max: 10,
+      connectionTimeoutMillis: 5000,
+      idleTimeoutMillis: 30000,
+      statement_timeout: 30000
+    })
   }
 
   return pool
