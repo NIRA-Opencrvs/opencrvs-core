@@ -379,22 +379,22 @@ export async function getEventsAuditTrailed(
   user: TrpcUserContext,
   eventIds: UUID[]
 ) {
-  const readActions = eventIds.map((eventId) =>
-    buildAction(
-      {
-        type: ActionType.READ,
-        declaration: {},
-        eventId,
-        transactionId: getUUID()
-      },
-      ActionStatus.Accepted,
-      user
-    )
-  )
+  // const readActions = eventIds.map((eventId) =>
+  //   buildAction(
+  //     {
+  //       type: ActionType.READ,
+  //       declaration: {},
+  //       eventId,
+  //       transactionId: getUUID()
+  //     },
+  //     ActionStatus.Accepted,
+  //     user
+  //   )
+  // )
 
   const db = getClient()
   return db.transaction().execute(async (trx) => {
-    await createActionsInTrx(readActions, trx)
+    // await createActionsInTrx(readActions, trx)
 
     return getEventsByIdsInTrx(trx, eventIds)
   })
