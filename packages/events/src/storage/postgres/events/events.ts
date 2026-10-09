@@ -17,13 +17,12 @@ import {
   EventDocument,
   EventStatus,
   getStatusFromActions,
-  getUUID,
   logger,
   UUID
 } from '@opencrvs/commons'
 import { getClient } from '@events/storage/postgres/events'
 import { dropNulls } from '../drop-nulls'
-import { buildAction } from '../../../service/events/events'
+// import { buildAction } from '../../../service/events/events'
 import { TrpcUserContext } from '../../../context'
 import { EventActions, NewEventActions } from './schema/app/EventActions'
 import { Events, NewEvents } from './schema/app/Events'
@@ -353,22 +352,22 @@ export const getOrCreateEventAndAssign = async (
  * Creates multiple actions in one query.
  * Useful for reducing the number of database round trips (e.g. marking multiple events as read)
  */
-async function createActionsInTrx(
-  actions: NewEventActions[],
-  trx: Kysely<Schema>
-) {
-  if (actions.length === 0) {
-    return
-  }
-
-  await trx
-    .insertInto('eventActions')
-    .values(actions)
-    .onConflict((oc) =>
-      oc.columns(['transactionId', 'actionType', 'status']).doNothing()
-    )
-    .execute()
-}
+// async function createActionsInTrx(
+//   actions: NewEventActions[],
+//   trx: Kysely<Schema>
+// ) {
+//   if (actions.length === 0) {
+//     return
+//   }
+//
+//   await trx
+//     .insertInto('eventActions')
+//     .values(actions)
+//     .onConflict((oc) =>
+//       oc.columns(['transactionId', 'actionType', 'status']).doNothing()
+//     )
+//     .execute()
+// }
 
 /**
  *
