@@ -254,7 +254,7 @@ export function getCurrentEventState(
     trackingId: event.trackingId,
     updatedByUserRole: requestActionMetadata.createdByRole,
     potentialDuplicates: extractPotentialDuplicatesFromActions(sortedActions),
-    flags: getFlagsFromActions(sortedActions)
+    flags: getFlagsFromActions(sortedActions, declaration)
   })
 
   return deepDropNulls({
