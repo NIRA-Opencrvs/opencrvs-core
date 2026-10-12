@@ -11,24 +11,37 @@
 
 import { joinValues } from '../../utils'
 import { getStatusFromActions } from '.'
-import { Action, ActionStatus } from '../ActionDocument'
+import { Action, ActionStatus, EventState } from '../ActionDocument'
 import { ActionType, isMetaAction } from '../ActionType'
 import { InherentFlags, EventStatus, Flag } from '../EventMetadata'
 
-function isPendingCertification(actions: Action[]) {
+const CERTIFICATE_COUNT_FIELD = 'courtOrder.numberOfChildren'
+
+function getRequiredCertificateCount(declaration?: EventState) {
+  const required = Number(declaration?.[CERTIFICATE_COUNT_FIELD])
+
+  return Number.isFinite(required) && required > 1 ? Math.ceil(required) : 1
+}
+
+function isPendingCertification(actions: Action[], declaration?: EventState) {
   if (getStatusFromActions(actions) !== EventStatus.enum.REGISTERED) {
     return false
   }
 
-  return actions.reduce<boolean>((prev, { type }) => {
-    if (type === ActionType.PRINT_CERTIFICATE) {
-      return false
-    }
+  const printed = actions.reduce<number>((count, { type, status }) => {
     if (type === ActionType.APPROVE_CORRECTION) {
-      return true
+      return 0
     }
-    return prev
-  }, true)
+    if (
+      type === ActionType.PRINT_CERTIFICATE &&
+      status === ActionStatus.Accepted
+    ) {
+      return count + 1
+    }
+    return count
+  }, 0)
+
+  return printed < getRequiredCertificateCount(declaration)
 }
 
 function isAdoptionScheduleIssued(actions: Action[]) {
@@ -94,7 +107,10 @@ function isPotentialDuplicate(actions: Action[]): boolean {
   }, false)
 }
 
-export function getFlagsFromActions(actions: Action[]): Flag[] {
+export function getFlagsFromActions(
+  actions: Action[],
+  declaration?: EventState
+): Flag[] {
   const sortedActions = actions
     .filter(({ type }) => !isMetaAction(type))
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
@@ -122,7 +138,7 @@ export function getFlagsFromActions(actions: Action[]): Flag[] {
       return flag satisfies Flag
     })
 
-  if (isPendingCertification(sortedActions)) {
+  if (isPendingCertification(sortedActions, declaration)) {
     flags.push(InherentFlags.PENDING_CERTIFICATION)
   }
   if (isAdoptionScheduleIssued(sortedActions)) {
