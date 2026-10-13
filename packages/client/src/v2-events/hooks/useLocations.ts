@@ -48,15 +48,19 @@ export function useLocations() {
         // Then we re-attach the queryKey explicitly so React Query can identify this cache.
         const { queryFn, ...rest } =
           trpcOptionsProxy.locations.list.queryOptions()
+        const input = { isActive, locationIds, locationType }
+        const hasInput =
+          isActive !== undefined ||
+          locationIds !== undefined ||
+          locationType !== undefined
+        const queryKey = hasInput
+          ? trpc.locations.list.queryKey(input)
+          : trpc.locations.list.queryKey()
 
         return [
           useSuspenseQuery({
             ...rest,
-            queryKey: trpc.locations.list.queryKey({
-              isActive,
-              locationIds,
-              locationType
-            })
+            queryKey
           }).data
         ]
       }

@@ -268,10 +268,11 @@ function delay(cmd: RunCmd<any>, time: number) {
   )
 }
 
-function getDataLoadingCommands() {
+function getDataLoadingCommands(cachedOfflineData?: Partial<IOfflineData>) {
   return Cmd.list<actions.Action>([
-    FACILITIES_CMD,
-    LOCATIONS_CMD,
+    // Reuse restored reference data on startup; REFRESH_OFFLINE_DATA still fetches it explicitly.
+    ...(cachedOfflineData?.facilities === undefined ? [FACILITIES_CMD] : []),
+    ...(cachedOfflineData?.locations === undefined ? [LOCATIONS_CMD] : []),
     CONFIG_CMD,
     CONDITIONALS_CMD,
     VALIDATORS_CMD,
@@ -344,7 +345,7 @@ function reducer(
         offlineDataString ? offlineDataString : '{}'
       )
 
-      const dataLoadingCmds = getDataLoadingCommands()
+      const dataLoadingCmds = getDataLoadingCommands(offlineData)
       const offlineDataLoaded = isOfflineDataLoaded(offlineData)
       if (offlineDataLoaded) {
         return loop(
