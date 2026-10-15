@@ -159,6 +159,9 @@ export const requestParamsSchema = Joi.object({
 
 const LOCATION_CHUNK_SIZE = 400
 
+const PART_OF_REFERENCE_PATTERN =
+  /^Location\/(0|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i
+
 export async function fetchLocationsHandler(
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
@@ -271,6 +274,13 @@ export async function createLocationHandler(
     return batchLocationsHandler(request.payload as Location[])
   }
   const payload = request.payload as Location | Facility
+
+  if (!PART_OF_REFERENCE_PATTERN.test(payload.partOf)) {
+    throw badRequest(
+      `partOf must be in the format Location/<UUID> or 'Location/0', got '${payload.partOf}'`
+    )
+  }
+
   const newLocation = composeFhirLocation(payload)
   const partOfLocation = payload.partOf.split('/')[1]
 
