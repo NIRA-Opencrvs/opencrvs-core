@@ -282,7 +282,8 @@ export const usePrintableCertificate = ({
    * 1. Prepare 2. Trigger print action 3. Open the PDF in a new window 4. Redirect user to workqueue.
    *
    * Prepares the PDF certificate by resolving image urls to base64 and compiles them into SVG template.
-   * @returns function that opens a new window with the PDF certificate
+   * @returns function that prints the PDF certificate, optionally in a window
+   * opened synchronously by the caller.
    */
   const preparePdfCertificate = async (updatedEvent: EventDocument) => {
     const { declaration: updatedDeclaration, ...updatedMetadata } =
@@ -336,7 +337,8 @@ export const usePrintableCertificate = ({
       certificateFonts
     )
 
-    return () => printAndDownloadPdf(pdfTemplate, event.id)
+    return (printWindow?: Window) =>
+      printAndDownloadPdf(pdfTemplate, event.id, printWindow)
   }
 
   return {
