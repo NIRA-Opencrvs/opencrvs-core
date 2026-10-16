@@ -681,8 +681,11 @@ export async function downloadAndEmbedImages(
 
         if (imageUrl.pathname.startsWith('/ocrvs/')) {
           const presignedResponse = await fetch(
-            `/api/presigned-url${imageUrl.pathname}`,
+            `/api/presigned-url${imageUrl.pathname}?cacheBust=${Date.now()}`,
             {
+              // Presigned URLs expire. Never reuse a cached signing response
+              // when preparing a certificate or adoption schedule PDF.
+              cache: 'no-store',
               headers: {
                 Authorization: `Bearer ${getToken()}`
               }
