@@ -17,7 +17,7 @@ import { Icon } from '@opencrvs/components/lib/Icon'
 import { CaretDown } from '@opencrvs/components/lib/Icon/all-icons'
 import { PrimaryButton } from '@opencrvs/components/lib/buttons'
 import { DropdownMenu } from '@opencrvs/components/lib/Dropdown'
-import { ActionType, getOrThrow } from '@opencrvs/commons/client'
+import { getOrThrow } from '@opencrvs/commons/client'
 import { useEvents } from '@client/v2-events/features/events/useEvents/useEvents'
 import { messages } from '@client/i18n/messages/views/action'
 import { useAuthentication } from '@client/utils/userUtils'
@@ -70,14 +70,6 @@ export function ActionMenu({
     eventState,
     auth
   )
-  const actionMenuItems = configuredActionMenuItems.filter(
-    ({ type }) =>
-      !(
-        eventState.type === 'adoption' &&
-        type === ActionType.ISSUE_ADOPTION_SCHEDULE
-      )
-  )
-
   const assignedToOther =
     eventState.assignedTo && eventState.assignedTo !== auth.sub
 
@@ -104,7 +96,7 @@ export function ActionMenu({
               <DropdownMenu.Separator />
             </>
           )}
-          {actionMenuItems.map((action) => {
+          {configuredActionMenuItems.map((action) => {
             return (
               <DropdownMenu.Item
                 key={action.type}
