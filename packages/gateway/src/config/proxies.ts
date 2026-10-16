@@ -261,7 +261,10 @@ export const catchAllProxy = {
       })
 
       if (!response.ok) {
-        return h.response({}).code(response.status)
+        return h
+          .response(await response.text())
+          .code(response.status)
+          .type('application/json')
       }
 
       await api.locations.sync.mutate(undefined, {
