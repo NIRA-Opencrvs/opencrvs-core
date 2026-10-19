@@ -31,9 +31,9 @@ function assignmentMutation(mutationKey: MutationKey) {
     hashKey(trpcOptionsProxy.event.actions.assignment.unassign.mutationKey())
   ].includes(hashKey(mutationKey))
 }
-function hasConflict(error: unknown) {
+function hasPermanentlyFailed(error: unknown) {
   if (error instanceof TRPCClientError) {
-    return error.data.code === 'CONFLICT'
+    return error.data?.code === 'CONFLICT' || error.data?.code === 'NOT_FOUND'
   }
   return false
 }
@@ -46,7 +46,7 @@ export function useOutbox() {
     filters: {
       predicate: (mutation) =>
         mutation.state.status !== 'success' &&
-        !hasConflict(mutation.state.error) &&
+        !hasPermanentlyFailed(mutation.state.error) &&
         !assignmentMutation(mutation.options.mutationKey as MutationKey)
     },
     select: (mutation) => mutation

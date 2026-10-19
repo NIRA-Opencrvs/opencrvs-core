@@ -34,6 +34,10 @@ export function getHttpStatus(error: unknown): number | undefined {
   return undefined
 }
 
+export function isEventNotFound(error: unknown) {
+  return getHttpStatus(error) === 404
+}
+
 /** Tells the app shell that the session is no longer valid. */
 export function notifySessionExpired() {
   window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))

@@ -54,7 +54,7 @@ import {
   trpcOptionsProxy
 } from '@client/v2-events/trpc'
 import { ToastKey } from '@client/v2-events/routes/Toaster'
-import { getHttpStatus } from '@client/v2-events/retryPolicy'
+import { getHttpStatus, isEventNotFound } from '@client/v2-events/retryPolicy'
 import { useValidatorContext } from '@client/v2-events/hooks/useValidatorContext'
 
 /** Exported for tests. */
@@ -65,9 +65,9 @@ export function retryUnlessConflict(
   if (_failureCount === 10) {
     toast.error(ToastKey.SOMETHING_WENT_WRONG)
   }
-  // Actions keep retrying every error except 409, including the other statuses
-  // the shared retryPolicy treats as permanent (400, 401, 403, 404, 413, 422).
-  return getHttpStatus(error) !== 409
+  // Actions keep retrying every error except 409 (conflict) and 404 (the event
+  // was deleted), so offline declarations are still sent once the server is back.
+  return getHttpStatus(error) !== 409 && !isEventNotFound(error)
 }
 
 const MAX_ACTION_RETRY_DELAY_MS = 5 * 60 * 1000
@@ -303,7 +303,7 @@ setMutationDefaults(trpcOptionsProxy.event.actions.assignment.unassign, {
     trpcOptionsProxy.event.actions.assignment.unassign
   ),
   retry: (_, error: TRPCClientError<AppRouter>) =>
-    error.data?.httpStatus !== 403,
+    error.data?.httpStatus !== 403 && !isEventNotFound(error),
   retryDelay,
   onSuccess: cleanUpOnUnassign,
   onError: errorToastOnConflict,
