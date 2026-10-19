@@ -19,7 +19,7 @@ import {
   UUID
 } from '@opencrvs/commons/client'
 import { storage } from '@client/storage'
-import { backoff } from '@client/v2-events/retryPolicy'
+import { backoff, isEventNotFound } from '@client/v2-events/retryPolicy'
 import {
   clearPendingDraftCreationRequests,
   findLocalEventDocument,
@@ -119,7 +119,7 @@ export const localDraftStore = create<DraftStore>()(
 )
 
 setMutationDefaults(trpcOptionsProxy.event.draft.create, {
-  retry: true,
+  retry: (_, error) => !isEventNotFound(error),
   mutationFn: createEventActionMutationFn(trpcOptionsProxy.event.draft.create),
   onMutate: (variables) => {
     const optimisticDraft: Draft = {
