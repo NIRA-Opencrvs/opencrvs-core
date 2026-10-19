@@ -31,19 +31,44 @@ const inflight = new Map<string, Promise<Buffer>>()
 type MemEntry = { compressed: Buffer; expiresAt: number }
 const memCache = new Map<string, MemEntry>()
 
+/** Where a locations payload was ultimately served from. */
+export type LocationsCacheSource = 'memory' | 'redis' | 'upstream'
+
+export type CachedLocations = {
+  compressed: Buffer
+  source: LocationsCacheSource
+}
+
 export const getCachedLocations = async (
   query: string
-): Promise<Buffer | null> => {
+): Promise<CachedLocations | null> => {
   const mem = memCache.get(query)
-  if (mem && Date.now() < mem.expiresAt) return mem.compressed
+  if (mem && Date.now() < mem.expiresAt) {
+    logger.debug(
+      `Locations cache HIT (memory) query=${query} bytes=${mem.compressed.length} ttlLeftMs=${mem.expiresAt - Date.now()}`
+    )
+    return { compressed: mem.compressed, source: 'memory' }
+  }
 
+  if (mem) {
+    logger.debug(`Locations memory cache EXPIRED query=${query}`)
+    memCache.delete(query)
+  }
+
+  const start = Date.now()
   try {
     const stored = await redis.get(`${KEY_PREFIX}${query}`)
     if (stored) {
       const compressed = Buffer.from(stored, 'base64')
       memCache.set(query, { compressed, expiresAt: Date.now() + MEM_TTL_MS })
-      return compressed
+      logger.debug(
+        `Locations cache HIT (redis) query=${query} bytes=${compressed.length} redisMs=${Date.now() - start} (promoted to memory cache)`
+      )
+      return { compressed, source: 'redis' }
     }
+    logger.debug(
+      `Locations cache MISS (memory+redis) query=${query} redisMs=${Date.now() - start}`
+    )
   } catch (e) {
     logger.warn(`Locations Redis GET failed, falling through to upstream: ${e}`)
   }
@@ -54,15 +79,24 @@ export const getCachedLocations = async (
 const setCachedLocations = (query: string, compressed: Buffer) =>
   redis
     .set(`${KEY_PREFIX}${query}`, compressed.toString('base64'), { EX: TTL })
+    .then(() =>
+      logger.debug(
+        `Locations cache STORED in redis query=${query} bytes=${compressed.length} ttlSeconds=${TTL}`
+      )
+    )
     .catch((e) => logger.warn(`Locations Redis SET failed: ${e}`))
 
 export const bustLocationsCache = async () => {
+  const memKeys = memCache.size
   memCache.clear()
+  logger.info(`Locations memory cache cleared: ${memKeys} entries`)
   try {
     const keys = await redis.keys(`${KEY_PREFIX}*`)
     if (keys.length) {
       await redis.del(keys)
       logger.info(`Locations cache busted: ${keys.length} keys cleared`)
+    } else {
+      logger.info('Locations cache bust: no redis keys to clear')
     }
   } catch (e) {
     logger.warn(`Locations Redis bust failed: ${e}`)
@@ -74,14 +108,34 @@ export const fetchAndCache = (
   fetcher: () => Promise<string>
 ): Promise<Buffer> => {
   const existing = inflight.get(query)
-  if (existing) return existing
+  if (existing) {
+    logger.debug(
+      `Locations upstream fetch COALESCED onto in-flight request query=${query} inflight=${inflight.size}`
+    )
+    return existing
+  }
+
+  logger.info(
+    `Locations fetching from upstream (config service) query=${query}`
+  )
+  const start = Date.now()
 
   const promise = fetcher()
     .then(async (body) => {
+      const fetchedMs = Date.now() - start
       const compressed = await gzip(body)
       memCache.set(query, { compressed, expiresAt: Date.now() + MEM_TTL_MS })
+      logger.info(
+        `Locations fetched from upstream query=${query} rawBytes=${Buffer.byteLength(body)} gzipBytes=${compressed.length} upstreamMs=${fetchedMs} totalMs=${Date.now() - start}`
+      )
       setCachedLocations(query, compressed)
       return compressed
+    })
+    .catch((e) => {
+      logger.error(
+        `Locations upstream fetch failed query=${query} afterMs=${Date.now() - start}: ${e}`
+      )
+      throw e
     })
     .finally(() => inflight.delete(query))
 

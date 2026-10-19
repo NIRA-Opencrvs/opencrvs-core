@@ -13,7 +13,7 @@ on:
     branches:
       - develop
       - main
-      - tf_nira
+      - tf_yogi
     tags:
       - '*'
   workflow_call:
