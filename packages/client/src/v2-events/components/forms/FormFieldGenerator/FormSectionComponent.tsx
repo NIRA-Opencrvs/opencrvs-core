@@ -144,7 +144,8 @@ export function applyVisibilityTransitions(
   fieldValues: Record<string, FieldValue>,
   validatorContext: ValidatorContext,
   cacheHiddenFieldValue: (key: string, value: FieldValue) => void,
-  popHiddenFieldValue: (key: string) => FieldValue | undefined
+  popHiddenFieldValue: (key: string) => FieldValue | undefined,
+  recalculatedFieldIds: ReadonlySet<string> = new Set()
 ): void {
   const prevCleaned = omitHiddenPaginatedFields(
     eventConfig.declaration,
@@ -166,11 +167,15 @@ export function applyVisibilityTransitions(
   const isUgandaAdoption =
     prevCleaned['courtOrder.numberOfChildren'] !== undefined
 
+  recalculatedFieldIds.forEach((fieldId) => {
+    popHiddenFieldValue(fieldId)
+  })
+
   // When a field transitions from visible to hidden, cache its value and clear it
   newHiddenKeys.forEach((key) => {
     const fieldValue = get(prevCleaned, key)
 
-    if (!isNil(fieldValue)) {
+    if (!isNil(fieldValue) && !recalculatedFieldIds.has(key)) {
       cacheHiddenFieldValue(key, fieldValue)
     }
 
@@ -273,8 +278,11 @@ export function FormSectionComponent({
     // update the value of the field that was changed
     set(updatedFormikPageForm, formikFieldId, value)
 
+    const recalculatedFieldIds = new Set<string>()
+
     for (const listenerField of interactiveListenerFields) {
       setValueForListenerField(listenerField, updatedFormikPageForm)
+      recalculatedFieldIds.add(listenerField[0].join('.'))
     }
 
     if (eventConfig) {
@@ -290,7 +298,8 @@ export function FormSectionComponent({
         updatedFormikPageForm,
         validatorContext,
         cacheHiddenFieldValue,
-        popHiddenFieldValue
+        popHiddenFieldValue,
+        recalculatedFieldIds
       )
     }
 
@@ -317,6 +326,7 @@ export function FormSectionComponent({
   ) => {
     const updatedValues = cloneDeep(formikPageForm)
     const updatedTouched = cloneDeep(touched)
+    const recalculatedFieldIds = new Set<string>()
 
     for (const { name: formikFieldId, value } of newValues) {
       set(updatedValues, formikFieldId, value)
@@ -330,6 +340,7 @@ export function FormSectionComponent({
 
       for (const listenerField of interactiveListenerFields) {
         setValueForListenerField(listenerField, updatedValues)
+        recalculatedFieldIds.add(listenerField[0].join('.'))
         unset(
           updatedTouched,
           listenerField[0].map(makeFormFieldIdFormikCompatible)
@@ -350,7 +361,8 @@ export function FormSectionComponent({
         updatedValues,
         validatorContext,
         cacheHiddenFieldValue,
-        popHiddenFieldValue
+        popHiddenFieldValue,
+        recalculatedFieldIds
       )
     }
 
