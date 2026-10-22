@@ -13,7 +13,6 @@ import React from 'react'
 import { useIntl } from 'react-intl'
 import { useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import toast from 'react-hot-toast'
 import { Button, Icon } from '@opencrvs/components'
 import {
   getAcceptedActions,
@@ -29,7 +28,6 @@ import { useUsers } from '@client/v2-events/hooks/useUsers'
 import { useLocations } from '@client/v2-events/hooks/useLocations'
 import { useAppConfig } from '@client/v2-events/hooks/useAppConfig'
 import { isTemporaryId } from '@client/v2-events/utils'
-import { isMobileDevice } from '@client/utils/commonUtils'
 import { useEventFormData } from '../useEventFormData'
 
 interface PrintButtonProps {
@@ -126,58 +124,20 @@ export const AlphaPrintButton = {
       language
     })
 
-    const handlePrint = () => {
+    const handlePrint = async () => {
       if (!certificateConfig || !language || !preparePdfCertificate) {
         return
       }
 
       onChange?.(new Date().toISOString())
 
-      // This must happen synchronously in the click handler. Opening the
-      // window after PDF preparation causes browsers to treat it as a popup.
-      const isMobile = isMobileDevice()
-      const printWindow = isMobile
-        ? undefined
-        : (window.open('', '_blank') ?? undefined)
-      if (!isMobile && !printWindow) {
-        toast.error(
-          intl.formatMessage({
-            id: 'errors.popupBlocked',
-            defaultMessage:
-              'Browser permission is required to print the certificate. Please allow the required browser permission and try again.'
-          })
-        )
-        return
-      }
-
-      if (printWindow) {
-        const message = intl.formatMessage({
-          id: 'certificate.preparing',
-          defaultMessage: 'Preparing certificate…'
-        })
-        printWindow.document.title = message
-        printWindow.document.body.textContent = message
-      }
-
-      void preparePdfCertificate({
+      // Follow the new print flow: prepare first, then mutate, then print in the prepared window
+      const openPreparedPdf = await preparePdfCertificate({
         ...event,
         actions: actionsWithAnOptimisticPrintAction
       } as EventDocument)
-        .then((printPreparedPdf) => {
-          // Defer recording print action to the dedicated review flow; button
-          // just opens the prepared PDF in the window created above.
-          printPreparedPdf(printWindow)
-        })
-        .catch(() => {
-          printWindow?.close()
-          toast.error(
-            intl.formatMessage({
-              id: 'errors.certificatePreparationFailed',
-              defaultMessage:
-                'The certificate could not be prepared. Please try again.'
-            })
-          )
-        })
+      // Defer recording print action to the dedicated review flow; button just opens prepared PDF
+      openPreparedPdf()
     }
 
     const label = buttonLabel
