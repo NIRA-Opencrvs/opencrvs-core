@@ -851,15 +851,12 @@ function createPdf(template: PdfTemplate): pdfMake.TCreatedPdf {
 
 export function printAndDownloadPdf(
   template: PdfTemplate,
-  declarationId: string,
-  printWindow?: Window
+  declarationId: string
 ) {
   const pdf = createPdf(template)
   if (isMobileDevice()) {
     pdf.download(`${declarationId}`)
   } else {
-    // Passing a window that was created in the click handler preserves the
-    // browser's user-gesture context and avoids popup blockers.
-    pdf.print({}, printWindow)
+    pdf.print()
   }
 }

@@ -56,7 +56,6 @@ import { useActionAnnotation } from '@client/v2-events/features/events/useAction
 import { validationErrorsInActionFormExist } from '@client/v2-events/components/forms/validation'
 import { useEventConfiguration } from '@client/v2-events/features/events/useEventConfiguration'
 import { useOnlineStatus } from '@client/utils'
-import { isMobileDevice } from '@client/utils/commonUtils'
 import { getUserDetails } from '@client/profile/profileSelectors'
 import { useUserAllowedActions } from '@client/v2-events/features/workqueues/EventOverview/components/useAllowedActionConfigurations'
 import { useValidatorContext } from '@client/v2-events/hooks/useValidatorContext'
@@ -130,22 +129,6 @@ const messages = defineMessages({
     id: 'print.certificate.toast.message',
     defaultMessage: 'Certificate is ready to print',
     description: 'Floating Toast message upon certificate ready to print'
-  },
-  preparingCertificate: {
-    id: 'print.certificate.preparing',
-    defaultMessage: 'Preparing certificate…',
-    description: 'Message shown while a certificate PDF is being prepared'
-  },
-  popupBlocked: {
-    id: 'errors.popupBlocked',
-    defaultMessage:
-      'Browser permission is required to print the certificate. Please allow the required browser permission and try again.',
-    description: 'Error shown when the browser blocks the certificate window'
-  },
-  preparationFailed: {
-    id: 'errors.certificatePreparationFailed',
-    defaultMessage: 'The certificate could not be prepared. Please try again.',
-    description: 'Error shown when preparing a certificate PDF fails'
   }
 })
 
@@ -158,18 +141,6 @@ function getPrintForm(configuration: EventConfig) {
     actionConfig?.printForm,
     `No form found for action: ${ActionType.PRINT_CERTIFICATE}`
   )
-}
-
-function showPreparingCertificate(printWindow: Window, message: string) {
-  const { document } = printWindow
-  document.title = message
-  document.body.replaceChildren()
-  document.body.style.cssText =
-    'display: grid; min-height: 100vh; margin: 0; place-items: center; font: 18px sans-serif; color: #222;'
-
-  const status = document.createElement('p')
-  status.textContent = message
-  document.body.append(status)
 }
 
 export function Review() {
@@ -188,7 +159,6 @@ export function Review() {
   const navigate = useNavigate()
   const isOnline = useOnlineStatus()
   const [modal, openModal] = useModal()
-  const [isPreparing, setIsPreparing] = useState(false)
 
   const { getEvent, onlineActions } = useEvents()
   const fullEvent = getEvent.getFromCache(eventId)
@@ -288,7 +258,6 @@ export function Review() {
     )
 
   const handlePrint = async () => {
-    let printWindow: Window | undefined
     const confirmed = await openModal<boolean>((close) => (
       <ResponsiveModal
         actions={[
@@ -307,12 +276,7 @@ export function Review() {
             disabled={!isOnline || isPending}
             id="print-certificate"
             type="primary"
-            onClick={() => {
-              if (!isMobileDevice()) {
-                printWindow = window.open('', '_blank') ?? undefined
-              }
-              close(true)
-            }}
+            onClick={() => close(true)}
           >
             {intl.formatMessage(messages.print)}
           </Button>
@@ -331,19 +295,6 @@ export function Review() {
      * NOTE: We have separated the preparing and printing of the PDF certificate. Without the separation, user is already unassigned from the event and cache is cleared. @see preparePdfCertificate for more details.
      */
     if (confirmed) {
-      if (!isMobileDevice() && !printWindow) {
-        toast.error(intl.formatMessage(messages.popupBlocked))
-        return
-      }
-
-      if (printWindow) {
-        showPreparingCertificate(
-          printWindow,
-          intl.formatMessage(messages.preparingCertificate)
-        )
-      }
-
-      setIsPreparing(true)
       try {
         const printCertificate = await preparePdfCertificate(fullEvent)
 
@@ -357,7 +308,7 @@ export function Review() {
           type: ActionType.PRINT_CERTIFICATE
         })
 
-        printCertificate(printWindow)
+        printCertificate()
 
         toast.custom(
           <Toast
@@ -374,11 +325,9 @@ export function Review() {
 
         slug
           ? navigate(ROUTES.V2.WORKQUEUES.WORKQUEUE.buildPath({ slug }))
-          : navigate(ROUTES.V2.buildPath({}))
+          : navigate(ROUTES.V2.EVENTS.OVERVIEW.buildPath({ eventId }))
       } catch (error) {
-        printWindow?.close()
-        setIsPreparing(false)
-        toast.error(intl.formatMessage(messages.preparationFailed))
+        // TODO: add notification alert
         // eslint-disable-next-line no-console
         console.error(error)
       }
@@ -411,12 +360,6 @@ export function Review() {
               dangerouslySetInnerHTML={{ __html: svgCode }}
               id="print"
             />
-            {isPreparing && (
-              <Stack alignItems="center" direction="column">
-                <Spinner id="preparing-certificate" size={32} />
-                <p>{intl.formatMessage(messages.preparingCertificate)}</p>
-              </Stack>
-            )}
           </Box>
 
           {!isOnline && (
@@ -438,7 +381,7 @@ export function Review() {
               >
                 <Button
                   fullWidth
-                  disabled={!isOnline || isPending || isPreparing}
+                  disabled={!isOnline || isPending}
                   id="confirm-print"
                   size="large"
                   type="positive"

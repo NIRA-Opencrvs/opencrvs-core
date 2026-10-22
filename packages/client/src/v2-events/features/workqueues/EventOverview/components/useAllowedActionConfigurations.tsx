@@ -303,12 +303,7 @@ function useViewableActionConfigurations(
    * If you need to extend the functionality, consider whether it can be done elsewhere.
    */
   return {
-    modals: [
-      <React.Fragment key="assign-modal">{assignModal}</React.Fragment>,
-      <React.Fragment key="schedule-modal">{scheduleModal}</React.Fragment>,
-      <React.Fragment key="archive-modal">{archiveModal}</React.Fragment>,
-      <React.Fragment key="delete-modal">{deleteModal}</React.Fragment>
-    ],
+    modals: [assignModal, scheduleModal, archiveModal, deleteModal],
     config: {
       [ActionType.READ]: {
         label: actionLabels[ActionType.READ],
