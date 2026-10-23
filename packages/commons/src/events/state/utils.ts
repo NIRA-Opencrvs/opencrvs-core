@@ -77,8 +77,7 @@ function getDeclarationActionCreationMetadata(
       requestAction?.createdAtLocation ?? acceptAction.createdAtLocation,
     acceptedAt: acceptAction.createdAt,
     createdByRole: requestAction?.createdByRole ?? acceptAction.createdByRole,
-    createdBySignature:
-      requestAction?.createdBySignature ?? acceptAction.createdBySignature,
+    createdBySignature: requestAction?.createdBySignature ?? null,
     registrationNumber
   }
 }
