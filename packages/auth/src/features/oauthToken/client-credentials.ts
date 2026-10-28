@@ -29,9 +29,14 @@ export async function clientCredentialsHandler(
   const clientId = request.query.client_id
   const clientSecret = request.query.client_secret
 
+  console.log("Called");
+
   if (!clientId || !clientSecret) {
     return oauthResponse.invalidRequest(h)
   }
+
+  console.log("Called1");
+
 
   let result
   try {
@@ -40,12 +45,21 @@ export async function clientCredentialsHandler(
     return oauthResponse.invalidClient(h)
   }
 
+  console.log("Called3");
+
+
   if (result.status !== 'active') {
     return oauthResponse.invalidClient(h)
   }
 
+  console.log("Called4");
+
+
   const isNotificationAPIUser = result.scope.includes(SCOPES.NOTIFICATION_API)
   const isImportExportClient = result.scope.includes(SCOPES.RECORD_IMPORT)
+
+  console.log("Called5");
+  
 
   const token = await createToken(
     result.systemId,
@@ -58,5 +72,7 @@ export async function clientCredentialsHandler(
     !isImportExportClient,
     TokenUserType.enum.system
   )
+  console.log("Called6");
+
   return oauthResponse.success(h, token)
 }
