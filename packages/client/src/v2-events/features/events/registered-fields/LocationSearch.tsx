@@ -22,6 +22,7 @@ import { getOfflineData } from '@client/offline/selectors'
 import { Stringifiable } from '@client/v2-events/components/forms/utils'
 import { useLocations } from '@client/v2-events/hooks/useLocations'
 import { AdminStructureItem } from '@client/utils/referenceApi'
+import { generateLocationName } from '@client/utils/locationUtils'
 import { getAdminLevelHierarchy } from '@client/v2-events/utils'
 import { withSuspense } from '@client/v2-events/components/withSuspense'
 
@@ -43,9 +44,9 @@ const resourceTypeMap: Record<
 function useAdministrativeAreas(
   searchableResource: ('locations' | 'facilities' | 'offices')[]
 ) {
+  const intl = useIntl()
+  const { locations: offlineLocations } = useSelector(getOfflineData)
   const { getLocations } = useLocations()
-  // Only active locations should be selectable. Inactive ones (validUntil in
-  // the past) are filtered server-side via the backend's `isActive` flag.
   const [allLocations] = getLocations.useSuspenseQuery({ isActive: true })
 
   return React.useMemo(() => {
@@ -59,12 +60,23 @@ function useAdministrativeAreas(
         )
     )
 
-    return resourceLocations.map((location) => ({
-      id: location.id,
-      searchableText: location.name.toLowerCase(),
-      displayLabel: location.name
-    }))
-  }, [searchableResource, allLocations])
+    return resourceLocations.map((location) => {
+      const parent =
+        location.locationType === LocationType.Enum.HEALTH_FACILITY &&
+        location.parentId
+          ? offlineLocations[location.parentId]
+          : undefined
+
+      return {
+        id: location.id,
+        searchableText: location.name.toLowerCase(),
+        displayLabel: joinValues(
+          [location.name, parent && generateLocationName(parent, intl)],
+          ', '
+        )
+      }
+    })
+  }, [searchableResource, allLocations, offlineLocations, intl])
 }
 
 /**

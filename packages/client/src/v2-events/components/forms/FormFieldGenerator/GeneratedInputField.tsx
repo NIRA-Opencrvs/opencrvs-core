@@ -126,6 +126,7 @@ const fadeIn = keyframes`
   from { opacity: 0; }
   to { opacity: 1; }
 `
+const FACILITY_SEARCHABLE_RESOURCE: 'facilities'[] = ['facilities']
 
 export const FormItem = styled.div<{
   ignoreBottomMargin?: boolean
@@ -823,7 +824,7 @@ export const GeneratedInputField = <T extends FieldConfig>(
         <LocationSearch.Input
           {...field.config}
           disabled={disabled}
-          searchableResource={['facilities']}
+          searchableResource={FACILITY_SEARCHABLE_RESOURCE}
           value={field.value}
           onBlur={handleBlur}
           onChange={(val) => onFieldValueChange(name, val)}
