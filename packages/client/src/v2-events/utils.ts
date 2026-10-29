@@ -32,7 +32,7 @@ export function getUsersFullName(name: UserOrSystem['name'], language: string) {
 
   const match = name.find((n) => n.use === language) ?? name[0]
 
-  return joinValues([...match.given, match.family])
+  return joinValues([match.family, ...match.given])
 }
 
 /** Utility to get all keys from union */
