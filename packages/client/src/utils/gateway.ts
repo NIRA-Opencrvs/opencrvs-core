@@ -7195,15 +7195,6 @@ export type RefreshSystemSecretMutation = {
   refreshSystemSecret?: {
     __typename?: 'SystemSecret'
     clientSecret: string
-    system: {
-      __typename?: 'System'
-      _id: string
-      clientId: string
-      name: string
-      shaSecret: string
-      status: SystemStatus
-      type: SystemType
-    }
   } | null
 }
 
