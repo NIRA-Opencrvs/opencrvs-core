@@ -72,15 +72,15 @@ export const LocationSearchInputWithActiveLocations: StoryObj<
       await expect(args.onChange).toHaveBeenCalledWith(undefined)
 
       await expect(
-        canvas.findByText('Ibombo Rural Health Centre')
+        canvas.findByText('Ibombo Rural Health Centre, Ibombo District')
       ).resolves.toBeInTheDocument()
 
       await expect(
-        canvas.findByText('Ipongo Rural Health Centre')
+        canvas.findByText('Ipongo Rural Health Centre, Ibombo District')
       ).resolves.toBeInTheDocument()
 
       await expect(
-        canvas.findByText('Itumbwe Health Post')
+        canvas.findByText('Itumbwe Health Post, Ibombo District')
       ).resolves.toBeInTheDocument()
     })
   }
