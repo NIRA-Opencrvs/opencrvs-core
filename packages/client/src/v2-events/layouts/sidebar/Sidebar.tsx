@@ -130,7 +130,7 @@ export const SidebarComponent = ({
     const nameObj = getIndividualNameObj(userDetails.name, language)
     if (nameObj) {
       const { firstNames, familyName } = nameObj
-      name = joinValues([firstNames, familyName], ' ')
+      name = joinValues([familyName, firstNames], ' ')
     }
   }
 
