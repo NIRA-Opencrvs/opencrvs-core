@@ -32,7 +32,7 @@ export function Hamburger() {
   if (userDetails && userDetails.name) {
     const nameObj = getIndividualNameObj(userDetails.name, language)
     name = nameObj
-      ? `${String(nameObj.firstNames)} ${String(nameObj.familyName)}`
+      ? `${String(nameObj.familyName)} ${String(nameObj.firstNames)}`
       : ''
   }
 
