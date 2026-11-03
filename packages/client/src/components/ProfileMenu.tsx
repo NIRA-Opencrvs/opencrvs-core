@@ -84,7 +84,7 @@ const ProfileMenuComponent = ({
       const nameObj = getIndividualNameObj(userDetails.name, language)
 
       if (nameObj) {
-        userName = `${String(nameObj.firstNames)} ${String(nameObj.familyName)}`
+        userName = `${String(nameObj.familyName)} ${String(nameObj.firstNames)}`
       }
     }
 
