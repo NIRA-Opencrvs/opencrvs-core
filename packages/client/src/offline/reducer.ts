@@ -43,9 +43,14 @@ import { initHandlebarHelpers } from '@client/forms/handlebarHelpers'
 import { initValidators } from '@client/forms/validators'
 import {
   Action as NotificationAction,
-  configurationErrorNotification
+  configurationErrorNotification,
+  showSessionExpireConfirmation
 } from '@client/notification/actions'
 import { getToken } from '@client/utils/authUtils'
+import {
+  getHttpStatus,
+  notifySessionExpired
+} from '@client/v2-events/retryPolicy'
 
 export const OFFLINE_LOCATIONS_KEY = 'locations'
 export const OFFLINE_FACILITIES_KEY = 'facilities'
@@ -268,6 +273,15 @@ function delay(cmd: RunCmd<any>, time: number) {
   )
 }
 
+function retryUnlessSessionExpired(cmd: RunCmd<any>, error: Error) {
+  if (getHttpStatus(error) === 401) {
+    return Cmd.list<Action>([
+      Cmd.run(notifySessionExpired)
+    ])
+  }
+  return delay(cmd, RETRY_TIMEOUT)
+}
+
 function getDataLoadingCommands(cachedOfflineData?: Partial<IOfflineData>) {
   return Cmd.list<actions.Action>([
     // Reuse restored reference data on startup; REFRESH_OFFLINE_DATA still fetches it explicitly.
@@ -473,7 +487,7 @@ function reducer(
           ...state,
           loadingError: errorIfDataNotLoaded(state)
         },
-        delay(CONFIG_CMD, RETRY_TIMEOUT)
+        retryUnlessSessionExpired(CONFIG_CMD, action.payload)
       )
     }
 
@@ -496,7 +510,7 @@ function reducer(
           ...state,
           loadingError: errorIfDataNotLoaded(state)
         },
-        delay(CONTENT_CMD, RETRY_TIMEOUT)
+        retryUnlessSessionExpired(CONTENT_CMD, action.payload)
       )
     }
 
@@ -519,7 +533,7 @@ function reducer(
           ...state,
           loadingError: errorIfDataNotLoaded(state)
         },
-        delay(LOCATIONS_CMD, RETRY_TIMEOUT)
+        retryUnlessSessionExpired(LOCATIONS_CMD, action.payload)
       )
     }
 
@@ -552,7 +566,7 @@ function reducer(
           ...state,
           loadingError: errorIfDataNotLoaded(state)
         },
-        delay(FORMS_CMD, RETRY_TIMEOUT)
+        retryUnlessSessionExpired(FORMS_CMD, action.payload)
       )
     }
 
@@ -608,7 +622,7 @@ function reducer(
           ...state,
           loadingError: errorIfDataNotLoaded(state)
         },
-        delay(FACILITIES_CMD, RETRY_TIMEOUT)
+        retryUnlessSessionExpired(FACILITIES_CMD, action.payload)
       )
     }
 

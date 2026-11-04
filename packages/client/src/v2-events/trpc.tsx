@@ -33,6 +33,12 @@ import { getUUID } from '@opencrvs/commons/client'
 import { getToken } from '@client/utils/authUtils'
 import { storage } from '@client/storage'
 import { sessionExpiryLink } from '@client/v2-events/sessionExpiryLink'
+import {
+  getHttpStatus,
+  isSessionExpired,
+  SESSION_EXPIRED_EVENT,
+  SESSION_RESTORED_EVENT
+} from '@client/v2-events/retryPolicy'
 
 const { TRPCProvider: TRPCProviderRaw, useTRPC } =
   createTRPCContext<AppRouter>()
@@ -84,7 +90,10 @@ function getQueryClient() {
     defaultOptions: {
       queries: {
         gcTime: Infinity,
-        retry: 1
+        retry: (failureCount, error) =>
+          getHttpStatus(error) !== 401 && failureCount < 1,
+        refetchOnWindowFocus: () => !isSessionExpired(),
+        refetchOnReconnect: () => !isSessionExpired()
       },
       mutations: {
         gcTime: Infinity,
@@ -179,6 +188,18 @@ function createIDBPersister(storageIdentifier: string) {
 export const trpcClient = getTrpcClient()
 
 export const queryClient = getQueryClient()
+
+function refreshPollingTimers() {
+  for (const query of queryClient.getQueryCache().getAll()) {
+    for (const observer of query.observers) {
+      observer.setOptions(observer.options)
+    }
+  }
+}
+
+window.addEventListener(SESSION_EXPIRED_EVENT, refreshPollingTimers)
+window.addEventListener(SESSION_RESTORED_EVENT, refreshPollingTimers)
+
 export const trpcOptionsProxy = createTRPCOptionsProxy({
   queryClient,
   client: trpcClient
