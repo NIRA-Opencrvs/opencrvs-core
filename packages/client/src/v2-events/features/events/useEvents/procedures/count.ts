@@ -13,6 +13,7 @@ import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 
 import { WorkqueueCountInput } from '@opencrvs/commons/client'
 import { useTRPC, trpcOptionsProxy, queryClient } from '@client/v2-events/trpc'
+import { pollWhileSessionValid } from '@client/v2-events/retryPolicy'
 import { invalidateWorkqueueSearchQueries } from '../api'
 import { setQueryDefaults } from './utils'
 
@@ -53,7 +54,7 @@ export function useGetEventCountsByWorkqueue() {
         queryKey: trpc.workqueue.count.queryKey(query),
         refetchOnMount: 'always',
         staleTime: 0,
-        refetchInterval: 20000
+        refetchInterval: pollWhileSessionValid(20000)
       })
     },
     useSuspenseQuery: (queries: WorkqueueCountInput) => {
@@ -64,7 +65,7 @@ export function useGetEventCountsByWorkqueue() {
         queryKey: trpc.workqueue.count.queryKey(queries),
         refetchOnMount: 'always',
         staleTime: 0,
-        refetchInterval: 20000
+        refetchInterval: pollWhileSessionValid(20000)
       }).data
     }
   }

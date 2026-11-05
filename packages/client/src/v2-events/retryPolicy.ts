@@ -10,10 +10,14 @@
  */
 import { TRPCClientError } from '@trpc/client'
 
-/** Shared helpers for v2 mutation retries. */
+/** Shared helpers for v2 retries and session expiry. */
 
 /** Window event fired when the server rejects the session (HTTP 401). */
 export const SESSION_EXPIRED_EVENT = 'opencrvs:session-expired'
+
+export const SESSION_RESTORED_EVENT = 'opencrvs:session-restored'
+
+let sessionExpired = false
 
 /** Default ceiling for the gap between two attempts. */
 const MAX_RETRY_DELAY_MS = 60_000
@@ -40,7 +44,24 @@ export function isEventNotFound(error: unknown) {
 
 /** Tells the app shell that the session is no longer valid. */
 export function notifySessionExpired() {
+  sessionExpired = true
   window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))
+}
+
+export function notifySessionRestored() {
+  if (!sessionExpired) {
+    return
+  }
+  sessionExpired = false
+  window.dispatchEvent(new Event(SESSION_RESTORED_EVENT))
+}
+
+export function isSessionExpired() {
+  return sessionExpired
+}
+
+export function pollWhileSessionValid(intervalMs: number) {
+  return () => (sessionExpired ? false : intervalMs)
 }
 
 /**

@@ -20,6 +20,7 @@ import { getUserDetails } from '@client/profile/profileSelectors'
 import { useCountryConfigWorkqueueConfigurations } from '../features/events/useCountryConfigWorkqueueConfigurations'
 import { useEvents } from '../features/events/useEvents/useEvents'
 import { queryClient, useTRPC } from '../trpc'
+import { pollWhileSessionValid } from '../retryPolicy'
 import { useUsers } from './useUsers'
 
 function getDeserializedQuery(
@@ -64,12 +65,12 @@ export const useWorkqueue = (workqueueSlug: string) => {
             // Tag with workqueueSlug in meta so invalidateWorkqueueSearchQueries()
             // can target this query without extending the cache key.
             meta: { workqueueSlug },
-            refetchInterval: 20000
+            refetchInterval: pollWhileSessionValid(20000)
           }),
         useQuery: () =>
           searchEvent.useQuery(searchInput, {
             meta: { workqueueSlug },
-            refetchInterval: 10000
+            refetchInterval: pollWhileSessionValid(10000)
           })
       }
     },

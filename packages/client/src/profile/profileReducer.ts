@@ -30,6 +30,7 @@ import { EMPTY_STRING } from '@client/utils/constants'
 import { serviceApi } from '@client/profile/serviceApi'
 import { IStoreState } from '@client/store'
 import { ITokenPayload } from '@opencrvs/commons/client'
+import { notifySessionRestored } from '@client/v2-events/retryPolicy'
 
 export type ProfileState = {
   authenticated: boolean
@@ -126,6 +127,7 @@ export const profileReducer: LoopReducer<
           Cmd.run(() => {
             if (isTokenStillValid(payload)) {
               storeToken(token)
+              notifySessionRestored()
             }
           }),
           Cmd.action(actions.setInitialUserDetails())

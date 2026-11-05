@@ -165,6 +165,10 @@ export interface IApplicationConfigResponse {
   systems: System[]
 }
 
+function httpError(res: Response) {
+  return new Error(res.statusText, { cause: res.status })
+}
+
 async function loadConfig(): Promise<IApplicationConfigResponse> {
   const url = `${window.config.CONFIG_API_URL}/config`
   const res = await fetch(url, {
@@ -182,7 +186,7 @@ async function loadConfig(): Promise<IApplicationConfigResponse> {
   }
 
   if (res && res.status !== 200) {
-    throw Error(res.statusText)
+    throw httpError(res)
   }
   const response: IApplicationConfigResponse = await res.json()
   /*
@@ -216,7 +220,7 @@ async function loadConfigAnonymousUser(): Promise<
   })
 
   if (res && res.status !== 200) {
-    throw Error(res.statusText)
+    throw httpError(res)
   }
   return await res.json()
 }
@@ -238,7 +242,7 @@ async function loadForms(): Promise<LoadFormsResponse> {
   }
 
   if (res && !res.ok) {
-    throw new Error(res.statusText)
+    throw httpError(res)
   }
 
   const response = await res.json()
@@ -299,7 +303,7 @@ async function loadContent(): Promise<IContentResponse> {
   })
 
   if (res && res.status !== 200) {
-    throw Error(res.statusText)
+    throw httpError(res)
   }
 
   const response = await res.json()
@@ -320,7 +324,7 @@ async function loadLocations(): Promise<ILocationDataResponse> {
   })
 
   if (res && res.status !== 200) {
-    throw Error(res.statusText)
+    throw httpError(res)
   }
 
   const response = await res.json()
@@ -387,6 +391,12 @@ async function loadFacilities(): Promise<IFacilitiesDataResponse> {
   const resHealthFacilities = await fetch(
     `${window.config.API_GATEWAY_URL}location?type=HEALTH_FACILITY&_count=0`
   )
+
+  for (const res of [resCRVSOffices, resHealthFacilities]) {
+    if (!res.ok) {
+      throw httpError(res)
+    }
+  }
 
   const locationBundleCRVSOffices = await resCRVSOffices.json()
   const locationBundleHealthFacilities = await resHealthFacilities.json()

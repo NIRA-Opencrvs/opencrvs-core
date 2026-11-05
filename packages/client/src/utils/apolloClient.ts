@@ -19,6 +19,7 @@ import {
 import { setContext } from '@apollo/client/link/context'
 import { onError } from '@apollo/client/link/error'
 import { showSessionExpireConfirmation } from '@client/notification/actions'
+import { notifySessionExpired } from '@client/v2-events/retryPolicy'
 
 import { IStoreState } from '@client/store'
 import { AnyAction, Store } from 'redux'
@@ -67,6 +68,7 @@ export const createClient = (
         error.graphQLErrors[0].extensions.code === 'UNAUTHENTICATED')
     ) {
       store.dispatch(showSessionExpireConfirmation())
+      notifySessionExpired()
     } else {
       Sentry.captureException(error)
     }
