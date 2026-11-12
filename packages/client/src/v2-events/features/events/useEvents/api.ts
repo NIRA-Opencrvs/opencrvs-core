@@ -242,16 +242,10 @@ export async function refetchSearchQuery(eventId: string) {
   })
 }
 export async function refetchAllSearchQueries() {
-  /*
-   * Invalidate search queries
-   */
-  await Promise.all(
-    getQueriesData(trpcOptionsProxy.event.search).map(async ([queryKey]) => {
-      return queryClient.refetchQueries({
-        queryKey
-      })
-    })
-  )
+  await queryClient.invalidateQueries({
+    queryKey: trpcOptionsProxy.event.search.queryKey(),
+    refetchType: 'active'
+  })
 }
 
 /**

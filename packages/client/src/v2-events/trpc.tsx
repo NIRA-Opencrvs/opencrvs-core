@@ -75,6 +75,7 @@ function getTrpcClient() {
         url: '/api/events',
         transformer: superjson,
         methodOverride: 'POST',
+        maxItems: 10,
         headers() {
           return {
             authorization: `Bearer ${getToken()}`
