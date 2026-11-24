@@ -145,11 +145,10 @@ export function DownloadButton({
   const isAssignedToSomeoneElse =
     assignmentStatus === AssignmentStatus.ASSIGNED_TO_OTHERS
 
-  const download = async () =>
+  const download = () =>
     actions.assignment.assign.mutate({
       eventId: event.id,
-      assignedTo: authentication.sub,
-      refetchEvent: eventDocument.refetch
+      assignedTo: authentication.sub
     })
 
   const handleDownload = async () => {

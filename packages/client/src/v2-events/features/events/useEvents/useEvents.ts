@@ -214,19 +214,13 @@ export function useEvents() {
           isAssigning: (eventId: UUID) => {
             return useIsMutating(eventId, trpc.event.actions.assignment.assign)
           },
-          mutate: async ({
+          mutate: ({
             eventId,
-            assignedTo,
-            refetchEvent
+            assignedTo
           }: {
             eventId: string
             assignedTo: string
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            refetchEvent: () => Promise<any>
           }) => {
-            /**This makes sure all the files and users referenced in the event document is prefetched to be used even in offline */
-            await refetchEvent()
-
             return assignMutation.mutate({
               type: ActionType.ASSIGN,
               eventId,

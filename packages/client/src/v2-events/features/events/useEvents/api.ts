@@ -24,7 +24,8 @@ import {
   User
 } from '@opencrvs/commons/client'
 import { queryClient, trpcOptionsProxy } from '@client/v2-events/trpc'
-import { removeCachedFiles } from '../../files/cache'
+import { cacheFiles, removeCachedFiles } from '../../files/cache'
+import { cacheUsersFromEventDocument } from '../../users/cache'
 import { MutationType } from './procedures/utils'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -288,9 +289,19 @@ export async function deleteLocalEvent(updatedEvent: EventDocument) {
   return refetchAllSearchQueries()
 }
 
-export async function onAssign(updatedEvent: EventDocument) {
+export function onAssign(updatedEvent: EventDocument) {
   setEventData(updatedEvent.id, updatedEvent)
-  await invalidateWorkqueues()
+  void Promise.all([
+    cacheFiles(updatedEvent),
+    cacheUsersFromEventDocument(updatedEvent)
+  ]).catch((error) => {
+    // eslint-disable-next-line no-console
+    console.error('Failed to prepare assigned event for offline use', error)
+  })
+  void invalidateWorkqueues().catch((error) => {
+    // eslint-disable-next-line no-console
+    console.error('Failed to refresh workqueue counts after assignment', error)
+  })
 
   const lastAssignment = findLastAssignmentAction(updatedEvent.actions)
 

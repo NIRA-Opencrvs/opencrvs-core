@@ -246,8 +246,6 @@ function useViewableActionConfigurations(
    * Refer to https://tanstack.com/query/latest/docs/framework/react/guides/dependent-queries
    * This does not immediately execute the query but instead prepares it to be fetched conditionally when needed.
    */
-  const { refetch: refetchEvent } = events.getEvent.findFromCache(event.id)
-
   const { eventConfiguration } = useEventConfiguration(event.type)
 
   const assignmentStatus = getAssignmentStatus(event, authentication.sub)
@@ -321,10 +319,9 @@ function useViewableActionConfigurations(
           if (!assign) {
             return
           }
-          await events.actions.assignment.assign.mutate({
+          events.actions.assignment.assign.mutate({
             eventId,
-            assignedTo: authentication.sub,
-            refetchEvent
+            assignedTo: authentication.sub
           })
         },
         disabled:

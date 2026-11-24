@@ -206,7 +206,13 @@ export function createEventActionMutationFn<
         declaration: params.declaration
       })
       if (params.type === ActionType.ASSIGN) {
-        await prefetchPotentialDuplicates(params.eventId)
+        void prefetchPotentialDuplicates(params.eventId).catch((error) => {
+          // eslint-disable-next-line no-console
+          console.error(
+            'Failed to prefetch potential duplicates after assignment',
+            error
+          )
+        })
       }
       return response
     }
