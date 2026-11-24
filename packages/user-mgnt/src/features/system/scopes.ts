@@ -33,7 +33,7 @@ const DEFAULT_SYSTEM_INTEGRATION_ROLE_SCOPES = {
 
 const DEFAULT_SYSTEM_INTEGRATION_ROLE_CONFIGURABLE_SCOPES = {
   HEALTH: ['record.create', 'record.notify'],
-  NATIONAL_ID: [],
+  NATIONAL_ID: ['record.read', 'record.declared.reject'],
   RECORD_SEARCH: [],
   WEBHOOK: [],
   REINDEX: [],
